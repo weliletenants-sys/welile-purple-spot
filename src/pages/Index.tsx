@@ -30,7 +30,9 @@ const Index = () => {
   // Calculate statistics
   const stats = useMemo(() => {
     const totalTenants = TOTAL_TENANT_COUNT;
+    const sampleSize = tenants.length;
     const activeTenants = tenants.filter(t => t.status === 'active').length;
+    const activePercentage = Math.round((activeTenants / sampleSize) * 100);
     const avgPerformance = Math.round(
       tenants.reduce((acc, t) => acc + t.performance, 0) / tenants.length
     );
@@ -40,6 +42,7 @@ const Index = () => {
     return {
       total: totalTenants,
       active: activeTenants,
+      activePercentage,
       avgPerformance,
       paymentRate,
     };
@@ -92,7 +95,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           <StatsCard
             title="Total Tenants"
             value={stats.total.toLocaleString()}
@@ -100,10 +103,11 @@ const Index = () => {
             description="Across Africa"
           />
           <StatsCard
-            title="Active Sample"
+            title="Active Tenants"
             value={stats.active}
             icon={TrendingUp}
-            trend="Live tenant data"
+            trend={`${stats.activePercentage}% of sample`}
+            description="Currently active"
           />
           <StatsCard
             title="Avg Performance"
@@ -116,6 +120,12 @@ const Index = () => {
             value={`${stats.paymentRate}%`}
             icon={DollarSign}
             description="On-time payments"
+          />
+          <StatsCard
+            title="Sample Size"
+            value={tenants.length}
+            icon={Users}
+            description="Live data records"
           />
         </div>
 
