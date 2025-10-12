@@ -2,8 +2,10 @@ import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { TenantCard } from "@/components/TenantCard";
 import { StatsCard } from "@/components/StatsCard";
-import { tenants } from "@/data/tenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign } from "lucide-react";
+import { WelileLogo } from "@/components/WelileLogo";
+import { tenants, TOTAL_TENANT_COUNT } from "@/data/tenants";
+import { Search, Users, TrendingUp, MapPin, DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -12,9 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const ITEMS_PER_PAGE = 20;
+
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Get unique locations
   const locations = useMemo(() => {
@@ -24,13 +29,13 @@ const Index = () => {
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const totalTenants = tenants.length;
+    const totalTenants = TOTAL_TENANT_COUNT;
     const activeTenants = tenants.filter(t => t.status === 'active').length;
     const avgPerformance = Math.round(
       tenants.reduce((acc, t) => acc + t.performance, 0) / tenants.length
     );
-    const paidTenants = tenants.filter(t => t.paymentStatus === 'paid').length;
-    const paymentRate = Math.round((paidTenants / totalTenants) * 100);
+    const paidTenants = tenants.filter(t => t.paymentStatus === 'paid' || t.paymentStatus === 'cleared').length;
+    const paymentRate = Math.round((paidTenants / tenants.length) * 100);
 
     return {
       total: totalTenants,
@@ -51,21 +56,35 @@ const Index = () => {
     });
   }, [searchTerm, locationFilter]);
 
+  // Pagination
+  const totalPages = Math.ceil(filteredTenants.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedTenants = filteredTenants.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                Welile Tenants Hub
-              </h1>
-              <p className="text-muted-foreground mt-1">Monitor and manage tenant performance</p>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <WelileLogo />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  Tenants Hub
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">Monitor and manage tenant performance</p>
+              </div>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-accent">
               <Users className="w-5 h-5 text-primary-foreground" />
-              <span className="font-bold text-primary-foreground">{stats.total} Tenants</span>
+              <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
             </div>
           </div>
         </div>
@@ -76,15 +95,15 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
             title="Total Tenants"
-            value={stats.total}
+            value={stats.total.toLocaleString()}
             icon={Users}
-            description="Registered in the system"
+            description="Across Africa"
           />
           <StatsCard
-            title="Active Tenants"
+            title="Active Sample"
             value={stats.active}
             icon={TrendingUp}
-            trend={`${Math.round((stats.active / stats.total) * 100)}% of total`}
+            trend="Live tenant data"
           />
           <StatsCard
             title="Avg Performance"
@@ -107,11 +126,17 @@ const Index = () => {
             <Input
               placeholder="Search by name, location, or landlord..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="pl-10 bg-card border-border focus:ring-primary"
             />
           </div>
-          <Select value={locationFilter} onValueChange={setLocationFilter}>
+          <Select value={locationFilter} onValueChange={(value) => {
+            setLocationFilter(value);
+            setCurrentPage(1);
+          }}>
             <SelectTrigger className="w-full sm:w-[200px] bg-card border-border">
               <MapPin className="w-4 h-4 mr-2" />
               <SelectValue placeholder="All Locations" />
@@ -125,17 +150,22 @@ const Index = () => {
           </Select>
         </div>
 
-        {/* Results Count */}
-        <div className="flex items-center justify-between">
+        {/* Results Count & Pagination Info */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <p className="text-sm text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{filteredTenants.length}</span> of{" "}
-            <span className="font-semibold text-foreground">{stats.total}</span> tenants
+            Showing <span className="font-semibold text-foreground">{startIndex + 1}-{Math.min(endIndex, filteredTenants.length)}</span> of{" "}
+            <span className="font-semibold text-foreground">{filteredTenants.length}</span> tenants
+            {filteredTenants.length < tenants.length && " (filtered)"}
           </p>
+          <div className="text-sm text-muted-foreground">
+            Page <span className="font-semibold text-foreground">{currentPage}</span> of{" "}
+            <span className="font-semibold text-foreground">{totalPages}</span>
+          </div>
         </div>
 
         {/* Tenant Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredTenants.map(tenant => (
+          {paginatedTenants.map(tenant => (
             <TenantCard key={tenant.id} tenant={tenant} />
           ))}
         </div>
@@ -147,12 +177,99 @@ const Index = () => {
             <p className="text-muted-foreground">Try adjusting your search or filters</p>
           </div>
         )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-8">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="border-border"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            
+            {/* Page Numbers */}
+            <div className="flex gap-2">
+              {currentPage > 2 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(1)}
+                    className="border-border"
+                  >
+                    1
+                  </Button>
+                  {currentPage > 3 && <span className="px-2 py-1 text-muted-foreground">...</span>}
+                </>
+              )}
+              
+              {currentPage > 1 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  className="border-border"
+                >
+                  {currentPage - 1}
+                </Button>
+              )}
+              
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-gradient-to-r from-primary to-accent"
+              >
+                {currentPage}
+              </Button>
+              
+              {currentPage < totalPages && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  className="border-border"
+                >
+                  {currentPage + 1}
+                </Button>
+              )}
+              
+              {currentPage < totalPages - 1 && (
+                <>
+                  {currentPage < totalPages - 2 && <span className="px-2 py-1 text-muted-foreground">...</span>}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(totalPages)}
+                    className="border-border"
+                  >
+                    {totalPages}
+                  </Button>
+                </>
+              )}
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="border-border"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-border mt-16 py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>© 2025 Welile Tenants Hub - Performance Monitoring Platform</p>
+          <p className="text-sm mt-2">Scalable to 40M+ tenants across Africa</p>
         </div>
       </footer>
     </div>
