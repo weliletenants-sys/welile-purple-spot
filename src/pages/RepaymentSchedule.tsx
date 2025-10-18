@@ -27,6 +27,9 @@ export default function RepaymentSchedule() {
   const [recordedByName, setRecordedByName] = useState<string>("");
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
+  const [editingRentAmount, setEditingRentAmount] = useState(false);
+  const [editedRentAmount, setEditedRentAmount] = useState<string>("");
+  const [rentEditorName, setRentEditorName] = useState<string>("");
 
   useEffect(() => {
     if (tenant) {
@@ -212,6 +215,58 @@ export default function RepaymentSchedule() {
     });
   };
 
+  const handleStartEditRentAmount = () => {
+    setEditedRentAmount(tenant.rentAmount.toString());
+    setRentEditorName("");
+    setEditingRentAmount(true);
+  };
+
+  const handleSaveRentAmount = () => {
+    const amount = parseFloat(editedRentAmount);
+    
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid rent amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!rentEditorName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    tenant.rentAmount = amount;
+    
+    const newDetails = calculateRepaymentDetails(amount, tenant.repaymentDays);
+    const updatedPayments = payments.map(p => ({
+      ...p,
+      amount: newDetails.dailyInstallment
+    }));
+    setPayments(updatedPayments);
+    
+    setEditingRentAmount(false);
+    setEditedRentAmount("");
+    setRentEditorName("");
+    
+    toast({
+      title: "Rent Amount Updated",
+      description: `Updated to UGX ${amount.toLocaleString()} by ${rentEditorName}`,
+    });
+  };
+
+  const handleCancelEditRentAmount = () => {
+    setEditingRentAmount(false);
+    setEditedRentAmount("");
+    setRentEditorName("");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
@@ -249,15 +304,50 @@ export default function RepaymentSchedule() {
         {/* Repayment Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-primary" />
+            {editingRentAmount ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground font-medium">Edit Rent Amount</p>
+                <Input
+                  type="number"
+                  placeholder="Rent amount"
+                  value={editedRentAmount}
+                  onChange={(e) => setEditedRentAmount(e.target.value)}
+                  className="w-full"
+                />
+                <Input
+                  type="text"
+                  placeholder="Your name"
+                  value={rentEditorName}
+                  onChange={(e) => setRentEditorName(e.target.value)}
+                  className="w-full"
+                />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleSaveRentAmount} className="flex-1">
+                    <Check className="w-4 h-4 mr-1" />
+                    Save
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleCancelEditRentAmount} className="flex-1">
+                    <X className="w-4 h-4 mr-1" />
+                    Cancel
+                  </Button>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Rent Amount</p>
-                <p className="text-xl font-bold">UGX {tenant.rentAmount.toLocaleString()}</p>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Rent Amount</p>
+                    <p className="text-xl font-bold">UGX {tenant.rentAmount.toLocaleString()}</p>
+                  </div>
+                </div>
+                <Button size="sm" variant="ghost" onClick={handleStartEditRentAmount}>
+                  <Edit2 className="w-4 h-4" />
+                </Button>
               </div>
-            </div>
+            )}
           </Card>
 
           <Card className="p-4">
