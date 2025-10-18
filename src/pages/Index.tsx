@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { TenantCard } from "@/components/TenantCard";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
+import { AddTenantForm } from "@/components/AddTenantForm";
 import { tenants, TOTAL_TENANT_COUNT } from "@/data/tenants";
 import { Search, Users, TrendingUp, MapPin, DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Get unique locations
   const locations = useMemo(() => {
@@ -46,7 +48,7 @@ const Index = () => {
       avgPerformance,
       paymentRate,
     };
-  }, []);
+  }, [refreshKey]);
 
   // Filter tenants
   const filteredTenants = useMemo(() => {
@@ -85,9 +87,12 @@ const Index = () => {
                 <p className="text-muted-foreground text-sm mt-1">Monitor and manage tenant performance</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-accent">
-              <Users className="w-5 h-5 text-primary-foreground" />
-              <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-accent">
+                <Users className="w-5 h-5 text-primary-foreground" />
+                <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
+              </div>
+              <AddTenantForm onTenantAdded={() => setRefreshKey(k => k + 1)} />
             </div>
           </div>
         </div>
