@@ -24,6 +24,7 @@ export default function RepaymentSchedule() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedDays, setEditedDays] = useState<30 | 60 | 90>(30);
   const [paymentAmount, setPaymentAmount] = useState<string>("");
+  const [recordedByName, setRecordedByName] = useState<string>("");
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
 
@@ -97,20 +98,32 @@ export default function RepaymentSchedule() {
       return;
     }
 
+    if (!recordedByName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const updatedPayments = [...payments];
     updatedPayments[actualIndex] = {
       ...updatedPayments[actualIndex],
       paid: true,
       paidAmount: amount,
+      recordedBy: recordedByName.trim(),
+      recordedAt: new Date().toISOString(),
     };
     
     setPayments(updatedPayments);
     setPaymentAmount("");
+    setRecordedByName("");
     setSelectedPaymentIndex(null);
     
     toast({
       title: "Payment Recorded",
-      description: `UGX ${amount.toLocaleString()} recorded for ${updatedPayments[actualIndex].date}`,
+      description: `UGX ${amount.toLocaleString()} recorded by ${recordedByName}`,
     });
   };
 
@@ -118,6 +131,7 @@ export default function RepaymentSchedule() {
     const actualIndex = startIndex + index;
     const payment = payments[actualIndex];
     setPaymentAmount((payment.paidAmount || 0).toString());
+    setRecordedByName("");
     setEditingPaymentIndex(index);
   };
 
@@ -134,39 +148,67 @@ export default function RepaymentSchedule() {
       return;
     }
 
+    if (!recordedByName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const updatedPayments = [...payments];
     updatedPayments[actualIndex] = {
       ...updatedPayments[actualIndex],
       paid: true,
       paidAmount: amount,
+      modifiedBy: recordedByName.trim(),
+      modifiedAt: new Date().toISOString(),
     };
     
     setPayments(updatedPayments);
     setPaymentAmount("");
+    setRecordedByName("");
     setEditingPaymentIndex(null);
     
     toast({
       title: "Payment Updated",
-      description: `Updated to UGX ${amount.toLocaleString()} for ${updatedPayments[actualIndex].date}`,
+      description: `Updated by ${recordedByName}`,
     });
   };
 
   const handleDeletePayment = (index: number) => {
     const actualIndex = startIndex + index;
+    
+    if (!recordedByName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name to delete this payment",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const updatedPayments = [...payments];
+    const deletedBy = recordedByName.trim();
     updatedPayments[actualIndex] = {
       ...updatedPayments[actualIndex],
       paid: false,
       paidAmount: undefined,
+      modifiedBy: deletedBy,
+      modifiedAt: new Date().toISOString(),
+      recordedBy: undefined,
+      recordedAt: undefined,
     };
     
     setPayments(updatedPayments);
     setEditingPaymentIndex(null);
     setPaymentAmount("");
+    setRecordedByName("");
     
     toast({
       title: "Payment Deleted",
-      description: `Payment record removed for ${updatedPayments[actualIndex].date}`,
+      description: `Deleted by ${deletedBy}`,
     });
   };
 
@@ -331,53 +373,88 @@ export default function RepaymentSchedule() {
                   payment.paid 
                     ? 'bg-primary/5 border-primary/20' 
                     : 'bg-card border-border'
-                } flex items-center justify-between`}
+                } flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4`}
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                <div className="flex items-center gap-4 flex-1">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                     payment.paid ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                   }`}>
                     {payment.paid ? <Check className="w-4 h-4" /> : startIndex + index + 1}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium">{payment.date}</p>
                     <p className="text-sm text-muted-foreground">
                       Day {startIndex + index + 1} - UGX {payment.amount.toLocaleString()}
                     </p>
+                    {payment.recordedBy && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Recorded by: <span className="font-medium text-foreground">{payment.recordedBy}</span>
+                        {payment.recordedAt && (
+                          <span className="ml-1">
+                            on {new Date(payment.recordedAt).toLocaleString()}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                    {payment.modifiedBy && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Modified by: <span className="font-medium text-foreground">{payment.modifiedBy}</span>
+                        {payment.modifiedAt && (
+                          <span className="ml-1">
+                            on {new Date(payment.modifiedAt).toLocaleString()}
+                          </span>
+                        )}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                   {payment.paid ? (
                     editingPaymentIndex === index ? (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          placeholder="Amount"
-                          value={paymentAmount}
-                          onChange={(e) => setPaymentAmount(e.target.value)}
-                          className="w-32"
-                        />
-                        <Button size="sm" onClick={() => handleUpdatePayment(index)}>
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive" 
-                          onClick={() => handleDeletePayment(index)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => {
-                            setEditingPaymentIndex(null);
-                            setPaymentAmount("");
-                          }}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+                      <div className="flex flex-col gap-2 w-full sm:w-auto">
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Amount"
+                            value={paymentAmount}
+                            onChange={(e) => setPaymentAmount(e.target.value)}
+                            className="w-full sm:w-32"
+                          />
+                          <Input
+                            type="text"
+                            placeholder="Your name"
+                            value={recordedByName}
+                            onChange={(e) => setRecordedByName(e.target.value)}
+                            className="w-full sm:w-40"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleUpdatePayment(index)} className="flex-1">
+                            <Check className="w-4 h-4 mr-1" />
+                            Update
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => handleDeletePayment(index)}
+                            className="flex-1"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Delete
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => {
+                              setEditingPaymentIndex(null);
+                              setPaymentAmount("");
+                              setRecordedByName("");
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -395,20 +472,39 @@ export default function RepaymentSchedule() {
                       </div>
                     )
                   ) : selectedPaymentIndex === index ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        placeholder="Amount"
-                        value={paymentAmount}
-                        onChange={(e) => setPaymentAmount(e.target.value)}
-                        className="w-32"
-                      />
-                      <Button size="sm" onClick={() => handleRecordPayment(index)}>
-                        Record
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setSelectedPaymentIndex(null)}>
-                        Cancel
-                      </Button>
+                    <div className="flex flex-col gap-2 w-full sm:w-auto">
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Amount"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          className="w-full sm:w-32"
+                        />
+                        <Input
+                          type="text"
+                          placeholder="Your name"
+                          value={recordedByName}
+                          onChange={(e) => setRecordedByName(e.target.value)}
+                          className="w-full sm:w-40"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => handleRecordPayment(index)} className="flex-1">
+                          Record
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => {
+                            setSelectedPaymentIndex(null);
+                            setPaymentAmount("");
+                            setRecordedByName("");
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <Button size="sm" variant="outline" onClick={() => setSelectedPaymentIndex(index)}>

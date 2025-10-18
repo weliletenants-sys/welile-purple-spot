@@ -3,6 +3,10 @@ export interface DailyPayment {
   amount: number;
   paid: boolean;
   paidAmount?: number;
+  recordedBy?: string;
+  recordedAt?: string;
+  modifiedBy?: string;
+  modifiedAt?: string;
 }
 
 export interface Tenant {
