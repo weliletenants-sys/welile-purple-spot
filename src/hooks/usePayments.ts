@@ -14,7 +14,10 @@ export const usePayments = (tenantId: string) => {
         .eq("tenant_id", tenantId)
         .order("date", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching payments:", error);
+        return [];
+      }
 
       return data.map((payment: any) => ({
         date: payment.date,

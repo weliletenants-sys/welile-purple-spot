@@ -1,50 +1,23 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Session } from "@supabase/supabase-js";
 import Index from "./pages/Index";
 import RepaymentSchedule from "./pages/RepaymentSchedule";
 import NotFound from "./pages/NotFound";
-import { Auth } from "./components/Auth";
+import { AccessCode } from "./components/AccessCode";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [hasAccess, setHasAccess] = useState(() => {
+    return localStorage.getItem("welile_access") === "granted";
+  });
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return <Auth />;
+  if (!hasAccess) {
+    return <AccessCode onAccessGranted={() => setHasAccess(true)} />;
   }
 
   return (

@@ -5,8 +5,7 @@ import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { AddTenantForm } from "@/components/AddTenantForm";
 import { useTenants } from "@/hooks/useTenants";
-import { supabase } from "@/integrations/supabase/client";
-import { Search, Users, TrendingUp, MapPin, DollarSign, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -23,10 +22,6 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
 
   // Get unique locations
   const locations = useMemo(() => {
@@ -108,15 +103,6 @@ const Index = () => {
                 <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
               </div>
               <AddTenantForm />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </Button>
             </div>
           </div>
         </div>

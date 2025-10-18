@@ -13,7 +13,10 @@ export const useTenants = () => {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching tenants:", error);
+        return [];
+      }
 
       return data.map((tenant: any) => ({
         id: tenant.id,
