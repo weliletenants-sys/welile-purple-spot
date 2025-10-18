@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { tenants, DailyPayment } from "@/data/tenants";
+import { useTenants } from "@/hooks/useTenants";
 
 interface TenantFormData {
   name: string;
@@ -29,24 +29,10 @@ interface TenantFormData {
   cellOrVillage: string;
 }
 
-const generateDailyPayments = (days: number): DailyPayment[] => {
-  const payments: DailyPayment[] = [];
-  const today = new Date();
-  for (let i = 0; i < days; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    payments.push({
-      date: date.toISOString().split('T')[0],
-      amount: 0,
-      paid: false,
-    });
-  }
-  return payments;
-};
-
-export const AddTenantForm = ({ onTenantAdded }: { onTenantAdded: () => void }) => {
+export const AddTenantForm = () => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { addTenant } = useTenants();
   const [formData, setFormData] = useState<TenantFormData>({
     name: "",
     contact: "",
@@ -134,7 +120,7 @@ export const AddTenantForm = ({ onTenantAdded }: { onTenantAdded: () => void }) 
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -146,67 +132,70 @@ export const AddTenantForm = ({ onTenantAdded }: { onTenantAdded: () => void }) 
       return;
     }
 
-    const newTenant = {
-      id: (tenants.length + 1).toString(),
-      name: formData.name.trim(),
-      contact: formData.contact.trim(),
-      address: formData.address.trim(),
-      landlord: formData.landlord.trim(),
-      landlordContact: formData.landlordContact.trim(),
-      rentAmount: parseFloat(formData.rentAmount),
-      repaymentDays: parseInt(formData.repaymentDays) as 30 | 60 | 90,
-      status: formData.status,
-      paymentStatus: formData.paymentStatus,
-      performance: 80,
-      dailyPayments: generateDailyPayments(parseInt(formData.repaymentDays)),
-      guarantor1: formData.guarantor1Name.trim() ? {
-        name: formData.guarantor1Name.trim(),
-        contact: formData.guarantor1Contact.trim(),
-      } : undefined,
-      guarantor2: formData.guarantor2Name.trim() ? {
-        name: formData.guarantor2Name.trim(),
-        contact: formData.guarantor2Contact.trim(),
-      } : undefined,
-      location: {
-        country: formData.country.trim(),
-        county: formData.county.trim(),
-        district: formData.district.trim(),
-        subcountyOrWard: formData.subcountyOrWard.trim(),
-        cellOrVillage: formData.cellOrVillage.trim(),
-      },
-    };
+    try {
+      await addTenant({
+        name: formData.name.trim(),
+        contact: formData.contact.trim(),
+        address: formData.address.trim(),
+        landlord: formData.landlord.trim(),
+        landlordContact: formData.landlordContact.trim(),
+        rentAmount: parseFloat(formData.rentAmount),
+        repaymentDays: parseInt(formData.repaymentDays) as 30 | 60 | 90,
+        status: formData.status,
+        paymentStatus: formData.paymentStatus,
+        performance: 80,
+        guarantor1: formData.guarantor1Name.trim() ? {
+          name: formData.guarantor1Name.trim(),
+          contact: formData.guarantor1Contact.trim(),
+        } : undefined,
+        guarantor2: formData.guarantor2Name.trim() ? {
+          name: formData.guarantor2Name.trim(),
+          contact: formData.guarantor2Contact.trim(),
+        } : undefined,
+        location: {
+          country: formData.country.trim(),
+          county: formData.county.trim(),
+          district: formData.district.trim(),
+          subcountyOrWard: formData.subcountyOrWard.trim(),
+          cellOrVillage: formData.cellOrVillage.trim(),
+        },
+      });
 
-    tenants.push(newTenant);
+      toast({
+        title: "Tenant Added Successfully",
+        description: `${formData.name} has been added to the system`,
+      });
 
-    toast({
-      title: "Tenant Added Successfully",
-      description: `${newTenant.name} has been added to the system`,
-    });
-
-    // Reset form
-    setFormData({
-      name: "",
-      contact: "",
-      address: "",
-      landlord: "",
-      landlordContact: "",
-      rentAmount: "",
-      repaymentDays: "60",
-      status: "active",
-      paymentStatus: "pending",
-      guarantor1Name: "",
-      guarantor1Contact: "",
-      guarantor2Name: "",
-      guarantor2Contact: "",
-      country: "Uganda",
-      county: "",
-      district: "",
-      subcountyOrWard: "",
-      cellOrVillage: "",
-    });
-    setErrors({});
-    setOpen(false);
-    onTenantAdded();
+      // Reset form
+      setFormData({
+        name: "",
+        contact: "",
+        address: "",
+        landlord: "",
+        landlordContact: "",
+        rentAmount: "",
+        repaymentDays: "60",
+        status: "active",
+        paymentStatus: "pending",
+        guarantor1Name: "",
+        guarantor1Contact: "",
+        guarantor2Name: "",
+        guarantor2Contact: "",
+        country: "Uganda",
+        county: "",
+        district: "",
+        subcountyOrWard: "",
+        cellOrVillage: "",
+      });
+      setErrors({});
+      setOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add tenant",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleChange = (field: keyof TenantFormData, value: string) => {

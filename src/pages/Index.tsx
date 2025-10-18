@@ -4,8 +4,9 @@ import { TenantCard } from "@/components/TenantCard";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { AddTenantForm } from "@/components/AddTenantForm";
-import { tenants, TOTAL_TENANT_COUNT } from "@/data/tenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
+import { useTenants } from "@/hooks/useTenants";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, Users, TrendingUp, MapPin, DollarSign, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,10 +19,14 @@ import {
 const ITEMS_PER_PAGE = 20;
 
 const Index = () => {
+  const { tenants, isLoading } = useTenants();
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   // Get unique locations
   const locations = useMemo(() => {
@@ -31,15 +36,14 @@ const Index = () => {
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const totalTenants = TOTAL_TENANT_COUNT;
-    const sampleSize = tenants.length;
+    const totalTenants = tenants.length;
     const activeTenants = tenants.filter(t => t.status === 'active').length;
-    const activePercentage = Math.round((activeTenants / sampleSize) * 100);
-    const avgPerformance = Math.round(
+    const activePercentage = totalTenants > 0 ? Math.round((activeTenants / totalTenants) * 100) : 0;
+    const avgPerformance = totalTenants > 0 ? Math.round(
       tenants.reduce((acc, t) => acc + t.performance, 0) / tenants.length
-    );
+    ) : 0;
     const paidTenants = tenants.filter(t => t.paymentStatus === 'paid' || t.paymentStatus === 'cleared').length;
-    const paymentRate = Math.round((paidTenants / tenants.length) * 100);
+    const paymentRate = totalTenants > 0 ? Math.round((paidTenants / tenants.length) * 100) : 0;
 
     return {
       total: totalTenants,
@@ -48,7 +52,7 @@ const Index = () => {
       avgPerformance,
       paymentRate,
     };
-  }, [refreshKey]);
+  }, [tenants]);
 
   // Filter tenants
   const filteredTenants = useMemo(() => {
@@ -72,6 +76,17 @@ const Index = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading tenants...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
       {/* Header */}
@@ -92,7 +107,16 @@ const Index = () => {
                 <Users className="w-5 h-5 text-primary-foreground" />
                 <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
               </div>
-              <AddTenantForm onTenantAdded={() => setRefreshKey(k => k + 1)} />
+              <AddTenantForm />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
@@ -130,7 +154,7 @@ const Index = () => {
             title="Sample Size"
             value={tenants.length}
             icon={Users}
-            description="Live data records"
+            description="Live database records"
           />
         </div>
 
@@ -284,7 +308,7 @@ const Index = () => {
       <footer className="border-t border-border mt-16 py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>© 2025 Welile Tenants Hub - Performance Monitoring Platform</p>
-          <p className="text-sm mt-2">Scalable to 40M+ tenants across Africa</p>
+          <p className="text-sm mt-2">Powered by Lovable Cloud</p>
         </div>
       </footer>
     </div>
