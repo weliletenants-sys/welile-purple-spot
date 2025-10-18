@@ -1,13 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { User, Phone, MapPin, TrendingUp } from "lucide-react";
-import { Tenant } from "@/data/tenants";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
+import { useNavigate } from "react-router-dom";
 
 interface TenantCardProps {
   tenant: Tenant;
 }
 
 export const TenantCard = ({ tenant }: TenantCardProps) => {
+  const navigate = useNavigate();
+  const repaymentDetails = calculateRepaymentDetails(tenant.rentAmount, tenant.repaymentDays);
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20';
@@ -33,7 +37,10 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
   };
 
   return (
-    <Card className="group p-6 hover:shadow-[var(--shadow-purple)] transition-all duration-300 border-border bg-gradient-to-br from-card to-secondary/20 hover:-translate-y-1">
+    <Card 
+      className="group p-6 hover:shadow-[var(--shadow-purple)] transition-all duration-300 border-border bg-gradient-to-br from-card to-secondary/20 hover:-translate-y-1 cursor-pointer"
+      onClick={() => navigate(`/tenant/${tenant.id}`)}
+    >
       <div className="space-y-4">
         {/* Header with Name and Performance */}
         <div className="flex items-start justify-between">
@@ -82,6 +89,30 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
               <p className="text-foreground font-medium">{tenant.landlord}</p>
               <p className="text-muted-foreground text-xs">{tenant.landlordContact}</p>
             </div>
+          </div>
+        </div>
+
+        {/* Repayment Info */}
+        <div className="pt-2 border-t border-border space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Schedule:</span>
+            </div>
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+              {tenant.repaymentDays} days
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-accent" />
+              <span className="text-muted-foreground">Daily:</span>
+            </div>
+            <span className="font-bold text-foreground">UGX {repaymentDetails.dailyInstallment.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Total:</span>
+            <span className="font-bold text-primary">UGX {repaymentDetails.totalAmount.toLocaleString()}</span>
           </div>
         </div>
 
