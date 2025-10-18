@@ -5,7 +5,7 @@ import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { AddTenantForm } from "@/components/AddTenantForm";
 import { useTenants } from "@/hooks/useTenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -14,6 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -104,6 +110,24 @@ const Index = () => {
                 <Users className="w-5 h-5 text-primary-foreground" />
                 <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-card">
+                  <DropdownMenuItem className="cursor-pointer">
+                    EXECUTIVE DASHBOARD
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer">
+                    ADMIN DASHBOARD
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer">
+                    AGENT DASHBOARD
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <AddTenantForm />
             </div>
           </div>
