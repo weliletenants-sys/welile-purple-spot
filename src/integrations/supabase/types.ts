@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_earnings: {
+        Row: {
+          agent_name: string
+          agent_phone: string
+          amount: number
+          created_at: string
+          earning_type: string
+          id: string
+          payment_id: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          agent_name: string
+          agent_phone: string
+          amount: number
+          created_at?: string
+          earning_type: string
+          id?: string
+          payment_id?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          agent_name?: string
+          agent_phone?: string
+          amount?: number
+          created_at?: string
+          earning_type?: string
+          id?: string
+          payment_id?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_earnings_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "daily_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_earnings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_payments: {
         Row: {
           amount: number
@@ -70,6 +118,8 @@ export type Database = {
       tenants: {
         Row: {
           address: string
+          agent_name: string
+          agent_phone: string
           contact: string
           created_at: string
           guarantor1_contact: string | null
@@ -94,6 +144,8 @@ export type Database = {
         }
         Insert: {
           address: string
+          agent_name?: string
+          agent_phone?: string
           contact: string
           created_at?: string
           guarantor1_contact?: string | null
@@ -118,6 +170,8 @@ export type Database = {
         }
         Update: {
           address?: string
+          agent_name?: string
+          agent_phone?: string
           contact?: string
           created_at?: string
           guarantor1_contact?: string | null

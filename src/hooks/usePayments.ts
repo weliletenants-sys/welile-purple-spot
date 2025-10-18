@@ -57,6 +57,35 @@ export const usePayments = (tenantId: string) => {
         .single();
 
       if (error) throw error;
+
+      // If payment is marked as paid, create agent commission (5% of paid amount)
+      if (updates.paid === true && updates.paidAmount) {
+        const { data: tenant, error: tenantError } = await supabase
+          .from("tenants")
+          .select("agent_name, agent_phone")
+          .eq("id", tenantId)
+          .single();
+
+        if (!tenantError && tenant?.agent_name && tenant?.agent_phone) {
+          const commission = Math.round(updates.paidAmount * 0.05); // 5% commission
+          
+          const { error: earningsError } = await supabase
+            .from("agent_earnings")
+            .insert({
+              agent_phone: tenant.agent_phone,
+              agent_name: tenant.agent_name,
+              tenant_id: tenantId,
+              payment_id: paymentId,
+              amount: commission,
+              earning_type: "commission",
+            });
+
+          if (earningsError) {
+            console.error("Error creating agent commission:", earningsError);
+          }
+        }
+      }
+
       return data;
     },
     onSuccess: () => {

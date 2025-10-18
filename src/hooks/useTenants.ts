@@ -50,6 +50,8 @@ export const useTenants = () => {
           subcountyOrWard: tenant.location_subcounty_or_ward || "",
           cellOrVillage: tenant.location_cell_or_village || "",
         },
+        agentName: tenant.agent_name || "",
+        agentPhone: tenant.agent_phone || "",
       })) as Tenant[];
     },
   });
@@ -78,6 +80,8 @@ export const useTenants = () => {
           location_district: tenant.location?.district,
           location_subcounty_or_ward: tenant.location?.subcountyOrWard,
           location_cell_or_village: tenant.location?.cellOrVillage,
+          agent_name: tenant.agentName,
+          agent_phone: tenant.agentPhone,
         })
         .select()
         .single();
@@ -108,6 +112,21 @@ export const useTenants = () => {
         .insert(dailyPayments);
 
       if (paymentsError) throw paymentsError;
+
+      // Create agent signup bonus earning (UGX 5000)
+      if (tenant.agentName && tenant.agentPhone) {
+        const { error: earningsError } = await supabase
+          .from("agent_earnings")
+          .insert({
+            agent_phone: tenant.agentPhone,
+            agent_name: tenant.agentName,
+            tenant_id: data.id,
+            amount: 5000,
+            earning_type: "signup_bonus",
+          });
+
+        if (earningsError) throw earningsError;
+      }
 
       return data;
     },

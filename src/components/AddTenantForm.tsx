@@ -27,6 +27,8 @@ interface TenantFormData {
   district: string;
   subcountyOrWard: string;
   cellOrVillage: string;
+  agentName: string;
+  agentPhone: string;
 }
 
 export const AddTenantForm = () => {
@@ -52,6 +54,8 @@ export const AddTenantForm = () => {
     district: "",
     subcountyOrWard: "",
     cellOrVillage: "",
+    agentName: "",
+    agentPhone: "",
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
@@ -116,6 +120,16 @@ export const AddTenantForm = () => {
       }
     }
 
+    if (!formData.agentName.trim()) {
+      newErrors.agentName = "Agent name is required";
+    }
+
+    if (!formData.agentPhone.trim()) {
+      newErrors.agentPhone = "Agent phone is required";
+    } else if (!/^[0-9+\s-()]+$/.test(formData.agentPhone)) {
+      newErrors.agentPhone = "Invalid phone format";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -159,6 +173,8 @@ export const AddTenantForm = () => {
           subcountyOrWard: formData.subcountyOrWard.trim(),
           cellOrVillage: formData.cellOrVillage.trim(),
         },
+        agentName: formData.agentName.trim(),
+        agentPhone: formData.agentPhone.trim(),
       });
 
       toast({
@@ -186,6 +202,8 @@ export const AddTenantForm = () => {
         district: "",
         subcountyOrWard: "",
         cellOrVillage: "",
+        agentName: "",
+        agentPhone: "",
       });
       setErrors({});
       setOpen(false);
@@ -462,6 +480,39 @@ export const AddTenantForm = () => {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Agent Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground border-b pb-2">Agent Information</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="agentName">Agent Name *</Label>
+                <Input
+                  id="agentName"
+                  value={formData.agentName}
+                  onChange={(e) => handleChange("agentName", e.target.value)}
+                  placeholder="Enter agent's name"
+                  className={errors.agentName ? "border-destructive" : ""}
+                />
+                {errors.agentName && <p className="text-sm text-destructive">{errors.agentName}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="agentPhone">Agent Phone *</Label>
+                <Input
+                  id="agentPhone"
+                  value={formData.agentPhone}
+                  onChange={(e) => handleChange("agentPhone", e.target.value)}
+                  placeholder="e.g., 0700000000"
+                  className={errors.agentPhone ? "border-destructive" : ""}
+                />
+                {errors.agentPhone && <p className="text-sm text-destructive">{errors.agentPhone}</p>}
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Agents earn UGX 5,000 for each tenant added and 5% commission on every rent payment received.
+            </p>
           </div>
 
           {/* Form Actions */}

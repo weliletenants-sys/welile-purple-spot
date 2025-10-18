@@ -54,7 +54,9 @@ const Index = () => {
     return tenants.filter(tenant => {
       const matchesSearch = tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           tenant.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          tenant.landlord.toLowerCase().includes(searchTerm.toLowerCase());
+                          tenant.landlord.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (tenant.agentName && tenant.agentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                          (tenant.agentPhone && tenant.agentPhone.includes(searchTerm));
       const matchesLocation = locationFilter === "all" || tenant.address === locationFilter;
       return matchesSearch && matchesLocation;
     });
@@ -149,7 +151,7 @@ const Index = () => {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Search by name, location, or landlord..."
+              placeholder="Search by name, location, landlord, agent name or agent phone..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);

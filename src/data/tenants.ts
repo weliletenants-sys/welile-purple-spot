@@ -38,6 +38,8 @@ export interface Tenant {
   guarantor1?: Guarantor;
   guarantor2?: Guarantor;
   location?: Location;
+  agentName?: string;
+  agentPhone?: string;
 }
 
 const generateDailyPayments = (days: number): DailyPayment[] => {
