@@ -18,6 +18,15 @@ interface TenantFormData {
   repaymentDays: "30" | "60" | "90";
   status: "active" | "pending" | "review";
   paymentStatus: "paid" | "pending";
+  guarantor1Name: string;
+  guarantor1Contact: string;
+  guarantor2Name: string;
+  guarantor2Contact: string;
+  country: string;
+  county: string;
+  district: string;
+  subcountyOrWard: string;
+  cellOrVillage: string;
 }
 
 const generateDailyPayments = (days: number): DailyPayment[] => {
@@ -48,6 +57,15 @@ export const AddTenantForm = ({ onTenantAdded }: { onTenantAdded: () => void }) 
     repaymentDays: "60",
     status: "active",
     paymentStatus: "pending",
+    guarantor1Name: "",
+    guarantor1Contact: "",
+    guarantor2Name: "",
+    guarantor2Contact: "",
+    country: "Uganda",
+    county: "",
+    district: "",
+    subcountyOrWard: "",
+    cellOrVillage: "",
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
@@ -90,6 +108,28 @@ export const AddTenantForm = ({ onTenantAdded }: { onTenantAdded: () => void }) 
       newErrors.rentAmount = "Rent amount too high";
     }
 
+    if (formData.guarantor1Name.trim() || formData.guarantor1Contact.trim()) {
+      if (!formData.guarantor1Name.trim()) {
+        newErrors.guarantor1Name = "Guarantor 1 name is required";
+      }
+      if (!formData.guarantor1Contact.trim()) {
+        newErrors.guarantor1Contact = "Guarantor 1 contact is required";
+      } else if (!/^[0-9+\s-()]+$/.test(formData.guarantor1Contact)) {
+        newErrors.guarantor1Contact = "Invalid contact format";
+      }
+    }
+
+    if (formData.guarantor2Name.trim() || formData.guarantor2Contact.trim()) {
+      if (!formData.guarantor2Name.trim()) {
+        newErrors.guarantor2Name = "Guarantor 2 name is required";
+      }
+      if (!formData.guarantor2Contact.trim()) {
+        newErrors.guarantor2Contact = "Guarantor 2 contact is required";
+      } else if (!/^[0-9+\s-()]+$/.test(formData.guarantor2Contact)) {
+        newErrors.guarantor2Contact = "Invalid contact format";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -117,8 +157,23 @@ export const AddTenantForm = ({ onTenantAdded }: { onTenantAdded: () => void }) 
       repaymentDays: parseInt(formData.repaymentDays) as 30 | 60 | 90,
       status: formData.status,
       paymentStatus: formData.paymentStatus,
-      performance: 80, // Default performance score for new tenants
+      performance: 80,
       dailyPayments: generateDailyPayments(parseInt(formData.repaymentDays)),
+      guarantor1: formData.guarantor1Name.trim() ? {
+        name: formData.guarantor1Name.trim(),
+        contact: formData.guarantor1Contact.trim(),
+      } : undefined,
+      guarantor2: formData.guarantor2Name.trim() ? {
+        name: formData.guarantor2Name.trim(),
+        contact: formData.guarantor2Contact.trim(),
+      } : undefined,
+      location: {
+        country: formData.country.trim(),
+        county: formData.county.trim(),
+        district: formData.district.trim(),
+        subcountyOrWard: formData.subcountyOrWard.trim(),
+        cellOrVillage: formData.cellOrVillage.trim(),
+      },
     };
 
     tenants.push(newTenant);
@@ -139,6 +194,15 @@ export const AddTenantForm = ({ onTenantAdded }: { onTenantAdded: () => void }) 
       repaymentDays: "60",
       status: "active",
       paymentStatus: "pending",
+      guarantor1Name: "",
+      guarantor1Contact: "",
+      guarantor2Name: "",
+      guarantor2Contact: "",
+      country: "Uganda",
+      county: "",
+      district: "",
+      subcountyOrWard: "",
+      cellOrVillage: "",
     });
     setErrors({});
     setOpen(false);
@@ -293,6 +357,120 @@ export const AddTenantForm = ({ onTenantAdded }: { onTenantAdded: () => void }) 
                     <SelectItem value="pending">Pending</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Guarantor Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground border-b pb-2">Guarantor Information</h3>
+            
+            <div className="space-y-4 p-4 bg-secondary/20 rounded-lg">
+              <h4 className="font-medium text-sm text-muted-foreground">Guarantor 1</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="guarantor1Name">Name</Label>
+                  <Input
+                    id="guarantor1Name"
+                    value={formData.guarantor1Name}
+                    onChange={(e) => handleChange("guarantor1Name", e.target.value)}
+                    placeholder="Enter guarantor's name"
+                    className={errors.guarantor1Name ? "border-destructive" : ""}
+                  />
+                  {errors.guarantor1Name && <p className="text-sm text-destructive">{errors.guarantor1Name}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="guarantor1Contact">Contact</Label>
+                  <Input
+                    id="guarantor1Contact"
+                    value={formData.guarantor1Contact}
+                    onChange={(e) => handleChange("guarantor1Contact", e.target.value)}
+                    placeholder="e.g., 0700000000"
+                    className={errors.guarantor1Contact ? "border-destructive" : ""}
+                  />
+                  {errors.guarantor1Contact && <p className="text-sm text-destructive">{errors.guarantor1Contact}</p>}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 p-4 bg-secondary/20 rounded-lg">
+              <h4 className="font-medium text-sm text-muted-foreground">Guarantor 2</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="guarantor2Name">Name</Label>
+                  <Input
+                    id="guarantor2Name"
+                    value={formData.guarantor2Name}
+                    onChange={(e) => handleChange("guarantor2Name", e.target.value)}
+                    placeholder="Enter guarantor's name"
+                    className={errors.guarantor2Name ? "border-destructive" : ""}
+                  />
+                  {errors.guarantor2Name && <p className="text-sm text-destructive">{errors.guarantor2Name}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="guarantor2Contact">Contact</Label>
+                  <Input
+                    id="guarantor2Contact"
+                    value={formData.guarantor2Contact}
+                    onChange={(e) => handleChange("guarantor2Contact", e.target.value)}
+                    placeholder="e.g., 0700000000"
+                    className={errors.guarantor2Contact ? "border-destructive" : ""}
+                  />
+                  {errors.guarantor2Contact && <p className="text-sm text-destructive">{errors.guarantor2Contact}</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground border-b pb-2">Location Details</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="country">Country</Label>
+                <Input
+                  id="country"
+                  value={formData.country}
+                  onChange={(e) => handleChange("country", e.target.value)}
+                  placeholder="e.g., Uganda"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="county">County</Label>
+                <Input
+                  id="county"
+                  value={formData.county}
+                  onChange={(e) => handleChange("county", e.target.value)}
+                  placeholder="Enter county"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="district">District</Label>
+                <Input
+                  id="district"
+                  value={formData.district}
+                  onChange={(e) => handleChange("district", e.target.value)}
+                  placeholder="Enter district"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subcountyOrWard">Subcounty / Ward</Label>
+                <Input
+                  id="subcountyOrWard"
+                  value={formData.subcountyOrWard}
+                  onChange={(e) => handleChange("subcountyOrWard", e.target.value)}
+                  placeholder="Enter subcounty or ward"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cellOrVillage">Cell / Village</Label>
+                <Input
+                  id="cellOrVillage"
+                  value={formData.cellOrVillage}
+                  onChange={(e) => handleChange("cellOrVillage", e.target.value)}
+                  placeholder="Enter cell or village"
+                />
               </div>
             </div>
           </div>

@@ -9,6 +9,19 @@ export interface DailyPayment {
   modifiedAt?: string;
 }
 
+export interface Guarantor {
+  name: string;
+  contact: string;
+}
+
+export interface Location {
+  country: string;
+  county: string;
+  district: string;
+  subcountyOrWard: string;
+  cellOrVillage: string;
+}
+
 export interface Tenant {
   id: string;
   name: string;
@@ -22,6 +35,9 @@ export interface Tenant {
   rentAmount: number;
   repaymentDays: 30 | 60 | 90;
   dailyPayments: DailyPayment[];
+  guarantor1?: Guarantor;
+  guarantor2?: Guarantor;
+  location?: Location;
 }
 
 const generateDailyPayments = (days: number): DailyPayment[] => {
