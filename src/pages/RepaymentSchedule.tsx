@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X, Trash2 } from "lucide-react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,6 +25,7 @@ export default function RepaymentSchedule() {
   const [editedDays, setEditedDays] = useState<30 | 60 | 90>(30);
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState<number | null>(null);
+  const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (tenant) {
@@ -110,6 +111,62 @@ export default function RepaymentSchedule() {
     toast({
       title: "Payment Recorded",
       description: `UGX ${amount.toLocaleString()} recorded for ${updatedPayments[actualIndex].date}`,
+    });
+  };
+
+  const handleEditPayment = (index: number) => {
+    const actualIndex = startIndex + index;
+    const payment = payments[actualIndex];
+    setPaymentAmount((payment.paidAmount || 0).toString());
+    setEditingPaymentIndex(index);
+  };
+
+  const handleUpdatePayment = (index: number) => {
+    const actualIndex = startIndex + index;
+    const amount = parseFloat(paymentAmount);
+    
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid payment amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedPayments = [...payments];
+    updatedPayments[actualIndex] = {
+      ...updatedPayments[actualIndex],
+      paid: true,
+      paidAmount: amount,
+    };
+    
+    setPayments(updatedPayments);
+    setPaymentAmount("");
+    setEditingPaymentIndex(null);
+    
+    toast({
+      title: "Payment Updated",
+      description: `Updated to UGX ${amount.toLocaleString()} for ${updatedPayments[actualIndex].date}`,
+    });
+  };
+
+  const handleDeletePayment = (index: number) => {
+    const actualIndex = startIndex + index;
+    const updatedPayments = [...payments];
+    updatedPayments[actualIndex] = {
+      ...updatedPayments[actualIndex],
+      paid: false,
+      paidAmount: undefined,
+    };
+    
+    setPayments(updatedPayments);
+    setEditingPaymentIndex(null);
+    setPaymentAmount("");
+    
+    toast({
+      title: "Payment Deleted",
+      description: `Payment record removed for ${updatedPayments[actualIndex].date}`,
     });
   };
 
@@ -292,9 +349,51 @@ export default function RepaymentSchedule() {
 
                 <div className="flex items-center gap-2">
                   {payment.paid ? (
-                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                      Paid: UGX {(payment.paidAmount || 0).toLocaleString()}
-                    </Badge>
+                    editingPaymentIndex === index ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Amount"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          className="w-32"
+                        />
+                        <Button size="sm" onClick={() => handleUpdatePayment(index)}>
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          onClick={() => handleDeletePayment(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => {
+                            setEditingPaymentIndex(null);
+                            setPaymentAmount("");
+                          }}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                          Paid: UGX {(payment.paidAmount || 0).toLocaleString()}
+                        </Badge>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleEditPayment(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )
                   ) : selectedPaymentIndex === index ? (
                     <div className="flex items-center gap-2">
                       <Input
