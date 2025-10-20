@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
 import { calculateRepaymentDetails } from "@/data/tenants";
+import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TenantFormData {
   name: string;
@@ -38,6 +40,7 @@ export const AddTenantForm = () => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { addTenant } = useTenants();
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [formData, setFormData] = useState<TenantFormData>({
     name: "",
     contact: "",
@@ -168,6 +171,32 @@ export const AddTenantForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const checkForDuplicates = async () => {
+    // Check for duplicate by contact
+    const { data: contactMatch } = await supabase
+      .from("tenants")
+      .select("name, contact, address")
+      .eq("contact", formData.contact.trim())
+      .maybeSingle();
+
+    if (contactMatch) {
+      return `A tenant with contact number "${formData.contact}" already exists: ${contactMatch.name} at ${contactMatch.address}`;
+    }
+
+    // Check for duplicate by name (exact match)
+    const { data: nameMatch } = await supabase
+      .from("tenants")
+      .select("name, contact, address")
+      .ilike("name", formData.name.trim())
+      .maybeSingle();
+
+    if (nameMatch) {
+      return `A tenant with name "${formData.name}" already exists with contact: ${nameMatch.contact}`;
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -175,6 +204,18 @@ export const AddTenantForm = () => {
       toast({
         title: "Validation Error",
         description: "Please fix the errors in the form",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for duplicates
+    const duplicateMessage = await checkForDuplicates();
+    if (duplicateMessage) {
+      setDuplicateWarning(duplicateMessage);
+      toast({
+        title: "Duplicate Tenant Detected",
+        description: duplicateMessage,
         variant: "destructive",
       });
       return;
@@ -260,6 +301,10 @@ export const AddTenantForm = () => {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
+    // Clear duplicate warning when user changes contact or name
+    if ((field === "contact" || field === "name") && duplicateWarning) {
+      setDuplicateWarning(null);
+    }
   };
 
   return (
@@ -275,6 +320,14 @@ export const AddTenantForm = () => {
           <DialogTitle className="text-2xl font-bold text-primary">Add New Tenant</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+          {/* Duplicate Warning */}
+          {duplicateWarning && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{duplicateWarning}</AlertDescription>
+            </Alert>
+          )}
+
           {/* Personal Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">Personal Information</h3>
