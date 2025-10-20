@@ -1,17 +1,55 @@
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useExecutiveStats } from "@/hooks/useExecutiveStats";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format } from "date-fns";
 
 const ExecutiveDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const stats = useExecutiveStats();
+  const [period, setPeriod] = useState("all");
+
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    switch (period) {
+      case "today":
+        return {
+          startDate: format(startOfDay(now), "yyyy-MM-dd"),
+          endDate: format(endOfDay(now), "yyyy-MM-dd"),
+        };
+      case "week":
+        return {
+          startDate: format(startOfWeek(now), "yyyy-MM-dd"),
+          endDate: format(endOfWeek(now), "yyyy-MM-dd"),
+        };
+      case "month":
+        return {
+          startDate: format(startOfMonth(now), "yyyy-MM-dd"),
+          endDate: format(endOfMonth(now), "yyyy-MM-dd"),
+        };
+      case "lastMonth":
+        const lastMonth = subMonths(now, 1);
+        return {
+          startDate: format(startOfMonth(lastMonth), "yyyy-MM-dd"),
+          endDate: format(endOfMonth(lastMonth), "yyyy-MM-dd"),
+        };
+      case "year":
+        return {
+          startDate: format(startOfYear(now), "yyyy-MM-dd"),
+          endDate: format(endOfYear(now), "yyyy-MM-dd"),
+        };
+      default:
+        return undefined;
+    }
+  }, [period]);
+
+  const stats = useExecutiveStats(dateRange);
 
   // Auto-refresh data every minute
   useEffect(() => {
@@ -41,7 +79,7 @@ const ExecutiveDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
@@ -58,6 +96,22 @@ const ExecutiveDashboard = () => {
               </div>
             </div>
           </div>
+          
+          {/* Period Filter */}
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className={`w-full sm:w-[200px] bg-card border-border transition-all ${period !== "all" ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:border-primary/50"}`}>
+              <Calendar className={`w-4 h-4 mr-2 ${period !== "all" ? "text-primary" : ""}`} />
+              <SelectValue placeholder="All Time" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="lastMonth">Last Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Outstanding Balance - Prominent Card */}

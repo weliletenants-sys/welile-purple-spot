@@ -2,9 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 
-export const useExecutiveStats = () => {
+interface DateRange {
+  startDate?: string;
+  endDate?: string;
+}
+
+export const useExecutiveStats = (dateRange?: DateRange) => {
   const { data: stats, refetch } = useQuery({
-    queryKey: ["executiveStats"],
+    queryKey: ["executiveStats", dateRange],
     queryFn: async () => {
       // Fetch tenants
       const { data: tenants, error: tenantsError } = await supabase
@@ -13,10 +18,19 @@ export const useExecutiveStats = () => {
 
       if (tenantsError) throw tenantsError;
 
-      // Fetch all payments
-      const { data: payments, error: paymentsError } = await supabase
+      // Fetch all payments with date filtering
+      let paymentsQuery = supabase
         .from("daily_payments")
         .select("amount, paid, paid_amount, date");
+
+      if (dateRange?.startDate) {
+        paymentsQuery = paymentsQuery.gte("date", dateRange.startDate);
+      }
+      if (dateRange?.endDate) {
+        paymentsQuery = paymentsQuery.lte("date", dateRange.endDate);
+      }
+
+      const { data: payments, error: paymentsError } = await paymentsQuery;
 
       if (paymentsError) throw paymentsError;
 
