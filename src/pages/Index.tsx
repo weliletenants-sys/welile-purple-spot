@@ -22,31 +22,60 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const Index = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { tenants, isLoading } = useTenants();
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
+
+  // Debounce search term to avoid too many queries
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to first page when location filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [locationFilter]);
+
+  const { tenants, totalCount, locations, isLoading } = useTenants({
+    page: currentPage,
+    pageSize,
+    searchTerm: debouncedSearchTerm,
+    locationFilter,
+  });
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   // Auto-refresh data every minute
   useEffect(() => {
     const intervalId = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["tenant-locations"] });
       queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
     }, 60000); // 60000ms = 1 minute
 
     return () => clearInterval(intervalId);
   }, [queryClient]);
 
-  // Get unique locations
-  const locations = useMemo(() => {
-    const uniqueLocations = Array.from(new Set(tenants.map(t => t.address)));
-    return uniqueLocations.sort();
-  }, [tenants]);
-
-  // Calculate statistics
+  // Calculate statistics for current page
   const stats = useMemo(() => {
     const totalTenants = tenants.length;
     const activeTenants = tenants.filter(t => t.status === 'active').length;
@@ -58,42 +87,13 @@ const Index = () => {
     const paymentRate = totalTenants > 0 ? Math.round((paidTenants / tenants.length) * 100) : 0;
 
     return {
-      total: totalTenants,
+      total: totalCount,
       active: activeTenants,
       activePercentage,
       avgPerformance,
       paymentRate,
     };
-  }, [tenants]);
-
-  // Filter tenants - comprehensive search across all fields
-  const filteredTenants = useMemo(() => {
-    return tenants.filter(tenant => {
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = 
-        tenant.name.toLowerCase().includes(searchLower) ||
-        tenant.contact.toLowerCase().includes(searchLower) ||
-        tenant.address.toLowerCase().includes(searchLower) ||
-        tenant.landlord.toLowerCase().includes(searchLower) ||
-        tenant.landlordContact.toLowerCase().includes(searchLower) ||
-        tenant.status.toLowerCase().includes(searchLower) ||
-        tenant.paymentStatus.toLowerCase().includes(searchLower) ||
-        (tenant.agentName && tenant.agentName.toLowerCase().includes(searchLower)) ||
-        (tenant.agentPhone && tenant.agentPhone.includes(searchLower)) ||
-        (tenant.guarantor1?.name && tenant.guarantor1.name.toLowerCase().includes(searchLower)) ||
-        (tenant.guarantor1?.contact && tenant.guarantor1.contact.includes(searchLower)) ||
-        (tenant.guarantor2?.name && tenant.guarantor2.name.toLowerCase().includes(searchLower)) ||
-        (tenant.guarantor2?.contact && tenant.guarantor2.contact.includes(searchLower)) ||
-        (tenant.location?.country && tenant.location.country.toLowerCase().includes(searchLower)) ||
-        (tenant.location?.county && tenant.location.county.toLowerCase().includes(searchLower)) ||
-        (tenant.location?.district && tenant.location.district.toLowerCase().includes(searchLower)) ||
-        (tenant.location?.subcountyOrWard && tenant.location.subcountyOrWard.toLowerCase().includes(searchLower)) ||
-        (tenant.location?.cellOrVillage && tenant.location.cellOrVillage.toLowerCase().includes(searchLower));
-      
-      const matchesLocation = locationFilter === "all" || tenant.address === locationFilter;
-      return matchesSearch && matchesLocation;
-    });
-  }, [searchTerm, locationFilter, tenants]);
+  }, [tenants, totalCount]);
 
   if (isLoading) {
     return (
@@ -206,15 +206,12 @@ const Index = () => {
               <SelectValue placeholder="All Locations" />
             </SelectTrigger>
             <SelectContent className="max-h-[300px] bg-card border-border">
-              <SelectItem value="all">All Locations ({tenants.length} total)</SelectItem>
-              {locations.map(location => {
-                const count = tenants.filter(t => t.address === location).length;
-                return (
-                  <SelectItem key={location} value={location}>
-                    {location} ({count})
-                  </SelectItem>
-                );
-              })}
+              <SelectItem value="all">All Locations</SelectItem>
+              {locations.map(location => (
+                <SelectItem key={location} value={location}>
+                  {location}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -222,23 +219,112 @@ const Index = () => {
         {/* Results Count */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <p className="text-sm text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{filteredTenants.length}</span> tenant{filteredTenants.length !== 1 ? 's' : ''}
-            {filteredTenants.length < tenants.length && " (filtered)"}
+            Showing <span className="font-semibold text-foreground">{((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalCount)}</span> of <span className="font-semibold text-foreground">{totalCount.toLocaleString()}</span> tenant{totalCount !== 1 ? 's' : ''}
           </p>
+          {totalPages > 1 && (
+            <p className="text-sm text-muted-foreground">
+              Page <span className="font-semibold text-foreground">{currentPage}</span> of <span className="font-semibold text-foreground">{totalPages}</span>
+            </p>
+          )}
         </div>
 
         {/* Tenant Cards Grid - Fully responsive for all devices */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
-          {filteredTenants.map(tenant => (
+          {tenants.map(tenant => (
             <TenantCard key={tenant.id} tenant={tenant} />
           ))}
         </div>
 
-        {filteredTenants.length === 0 && (
+        {tenants.length === 0 && (
           <div className="text-center py-16">
             <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">No tenants found</h3>
             <p className="text-muted-foreground">Try adjusting your search or filters</p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-8">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                
+                {/* First page */}
+                {currentPage > 3 && (
+                  <>
+                    <PaginationItem>
+                      <PaginationLink onClick={() => setCurrentPage(1)} className="cursor-pointer">
+                        1
+                      </PaginationLink>
+                    </PaginationItem>
+                    {currentPage > 4 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                  </>
+                )}
+
+                {/* Pages around current */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  if (pageNum < 1 || pageNum > totalPages) return null;
+                  if (currentPage > 3 && pageNum === 1) return null;
+                  if (currentPage < totalPages - 2 && pageNum === totalPages) return null;
+                  
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(pageNum)}
+                        isActive={currentPage === pageNum}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+
+                {/* Last page */}
+                {currentPage < totalPages - 2 && (
+                  <>
+                    {currentPage < totalPages - 3 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    <PaginationItem>
+                      <PaginationLink onClick={() => setCurrentPage(totalPages)} className="cursor-pointer">
+                        {totalPages}
+                      </PaginationLink>
+                    </PaginationItem>
+                  </>
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </main>

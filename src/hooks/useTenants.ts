@@ -2,23 +2,52 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tenant } from "@/data/tenants";
 
-export const useTenants = () => {
-  const queryClient = useQueryClient();
+interface UseTenantsPaginationOptions {
+  page?: number;
+  pageSize?: number;
+  searchTerm?: string;
+  locationFilter?: string;
+}
 
-  const { data: tenants = [], isLoading } = useQuery({
-    queryKey: ["tenants"],
+export const useTenants = (options?: UseTenantsPaginationOptions) => {
+  const queryClient = useQueryClient();
+  const page = options?.page ?? 1;
+  const pageSize = options?.pageSize ?? 50;
+  const searchTerm = options?.searchTerm ?? "";
+  const locationFilter = options?.locationFilter ?? "all";
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["tenants", page, pageSize, searchTerm, locationFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
         .from("tenants")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      // Apply search filter if provided
+      if (searchTerm) {
+        query = query.or(
+          `name.ilike.%${searchTerm}%,contact.ilike.%${searchTerm}%,address.ilike.%${searchTerm}%,landlord.ilike.%${searchTerm}%,landlord_contact.ilike.%${searchTerm}%,status.ilike.%${searchTerm}%,payment_status.ilike.%${searchTerm}%,agent_name.ilike.%${searchTerm}%,agent_phone.ilike.%${searchTerm}%,guarantor1_name.ilike.%${searchTerm}%,guarantor1_contact.ilike.%${searchTerm}%,guarantor2_name.ilike.%${searchTerm}%,guarantor2_contact.ilike.%${searchTerm}%,location_country.ilike.%${searchTerm}%,location_county.ilike.%${searchTerm}%,location_district.ilike.%${searchTerm}%,location_subcounty_or_ward.ilike.%${searchTerm}%,location_cell_or_village.ilike.%${searchTerm}%`
+        );
+      }
+
+      // Apply location filter if provided
+      if (locationFilter && locationFilter !== "all") {
+        query = query.eq("address", locationFilter);
+      }
+
+      const { data, error, count } = await query;
 
       if (error) {
         console.error("Error fetching tenants:", error);
-        return [];
+        return { tenants: [], totalCount: 0 };
       }
 
-      return data.map((tenant: any) => ({
+      const tenants = data.map((tenant: any) => ({
         id: tenant.id,
         name: tenant.name,
         contact: tenant.contact,
@@ -55,6 +84,27 @@ export const useTenants = () => {
         agentName: tenant.agent_name || "",
         agentPhone: tenant.agent_phone || "",
       })) as Tenant[];
+
+      return { tenants, totalCount: count || 0 };
+    },
+  });
+
+  // Separate query for unique locations (without pagination)
+  const { data: locationsData = [] } = useQuery({
+    queryKey: ["tenant-locations"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tenants")
+        .select("address")
+        .order("address");
+
+      if (error) {
+        console.error("Error fetching locations:", error);
+        return [];
+      }
+
+      const uniqueLocations = Array.from(new Set(data.map(t => t.address)));
+      return uniqueLocations.sort();
     },
   });
 
@@ -225,7 +275,9 @@ export const useTenants = () => {
   });
 
   return {
-    tenants,
+    tenants: data?.tenants || [],
+    totalCount: data?.totalCount || 0,
+    locations: locationsData,
     isLoading,
     addTenant: addTenant.mutateAsync,
     updateTenant: updateTenant.mutateAsync,
