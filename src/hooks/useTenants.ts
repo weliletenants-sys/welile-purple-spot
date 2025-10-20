@@ -157,6 +157,23 @@ export const useTenants = () => {
           ...(updates.landlordContact && { landlord_contact: updates.landlordContact }),
           ...(updates.rentAmount !== undefined && { rent_amount: updates.rentAmount }),
           ...(updates.repaymentDays && { repayment_days: updates.repaymentDays }),
+          ...(updates.guarantor1 && {
+            guarantor1_name: updates.guarantor1.name,
+            guarantor1_contact: updates.guarantor1.contact,
+          }),
+          ...(updates.guarantor2 && {
+            guarantor2_name: updates.guarantor2.name,
+            guarantor2_contact: updates.guarantor2.contact,
+          }),
+          ...(updates.location && {
+            location_country: updates.location.country,
+            location_county: updates.location.county,
+            location_district: updates.location.district,
+            location_subcounty_or_ward: updates.location.subcountyOrWard,
+            location_cell_or_village: updates.location.cellOrVillage,
+          }),
+          ...(updates.agentName && { agent_name: updates.agentName }),
+          ...(updates.agentPhone && { agent_phone: updates.agentPhone }),
         })
         .eq("id", id)
         .select()
@@ -171,10 +188,43 @@ export const useTenants = () => {
     },
   });
 
+  const deleteTenant = useMutation({
+    mutationFn: async (id: string) => {
+      // Delete associated daily payments
+      const { error: paymentsError } = await supabase
+        .from("daily_payments")
+        .delete()
+        .eq("tenant_id", id);
+
+      if (paymentsError) throw paymentsError;
+
+      // Delete associated agent earnings
+      const { error: earningsError } = await supabase
+        .from("agent_earnings")
+        .delete()
+        .eq("tenant_id", id);
+
+      if (earningsError) throw earningsError;
+
+      // Delete tenant
+      const { error } = await supabase
+        .from("tenants")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
+    },
+  });
+
   return {
     tenants,
     isLoading,
     addTenant: addTenant.mutateAsync,
     updateTenant: updateTenant.mutateAsync,
+    deleteTenant: deleteTenant.mutateAsync,
   };
 };

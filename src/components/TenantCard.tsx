@@ -1,8 +1,23 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2 } from "lucide-react";
 import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import { useNavigate } from "react-router-dom";
+import { EditTenantForm } from "./EditTenantForm";
+import { useTenants } from "@/hooks/useTenants";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface TenantCardProps {
   tenant: Tenant;
@@ -10,7 +25,26 @@ interface TenantCardProps {
 
 export const TenantCard = ({ tenant }: TenantCardProps) => {
   const navigate = useNavigate();
+  const { deleteTenant } = useTenants();
+  const { toast } = useToast();
   const repaymentDetails = calculateRepaymentDetails(tenant.rentAmount, tenant.repaymentDays);
+
+  const handleDelete = async () => {
+    try {
+      await deleteTenant(tenant.id);
+      toast({
+        title: "Success",
+        description: "Tenant deleted successfully!",
+      });
+    } catch (error) {
+      console.error("Error deleting tenant:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete tenant. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -42,28 +76,58 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
       onClick={() => navigate(`/tenant/${tenant.id}`)}
     >
       <div className="space-y-4">
-        {/* Header with Name and Performance */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold text-lg shadow-lg">
+        {/* Header with Name, Performance and Actions */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold text-lg shadow-lg shrink-0">
               {tenant.name.charAt(0)}
             </div>
-            <div>
-              <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors truncate">
                 {tenant.name}
               </h3>
               <div className="flex items-center gap-2 mt-1">
-                <Phone className="w-3 h-3 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">{tenant.contact}</span>
+                <Phone className="w-3 h-3 text-muted-foreground shrink-0" />
+                <span className="text-sm text-muted-foreground truncate">{tenant.contact}</span>
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex flex-col items-end gap-2 shrink-0">
             <div className={`flex items-center gap-1 font-bold text-xl ${getPerformanceColor(tenant.performance)}`}>
               <TrendingUp className="w-5 h-5" />
               {tenant.performance}%
             </div>
-            <span className="text-xs text-muted-foreground">Performance</span>
+            <div className="flex items-center gap-1">
+              <EditTenantForm tenant={tenant} />
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete {tenant.name}'s record and all associated payment data. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
 
