@@ -147,7 +147,7 @@ export const generatePerformanceScore = (status: string, paymentStatus: string):
 
 // Calculate total repayment amount including fees and access charges
 export const calculateRepaymentDetails = (rentAmount: number, repaymentDays: number) => {
-  const registrationFee = rentAmount <= 2000000 ? 10000 : 200000;
+  const registrationFee = rentAmount <= 200000 ? 10000 : 20000;
   const months = repaymentDays / 30;
   const accessFeeRate = 0.33;
   const accessFees = rentAmount * (Math.pow(1 + accessFeeRate, months) - 1);
