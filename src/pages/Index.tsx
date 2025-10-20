@@ -39,7 +39,7 @@ const Index = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 50;
+  const pageSize = 10;
 
   // Debounce search term to avoid too many queries
   useEffect(() => {
