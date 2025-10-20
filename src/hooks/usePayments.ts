@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyPayment } from "@/data/tenants";
+import { useEffect } from "react";
 
 export const usePayments = (tenantId: string) => {
   const queryClient = useQueryClient();
@@ -33,6 +34,32 @@ export const usePayments = (tenantId: string) => {
     },
     enabled: !!tenantId,
   });
+
+  // Subscribe to realtime changes for daily_payments
+  useEffect(() => {
+    if (!tenantId) return;
+
+    const channel = supabase
+      .channel('daily-payments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_payments',
+          filter: `tenant_id=eq.${tenantId}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["payments", tenantId] });
+          queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [tenantId, queryClient]);
 
   const updatePayment = useMutation({
     mutationFn: async ({

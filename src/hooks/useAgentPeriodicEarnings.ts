@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, format } from "date-fns";
+import { useEffect } from "react";
 
 export interface PeriodicEarning {
   period: string;
@@ -10,7 +11,9 @@ export interface PeriodicEarning {
 }
 
 export const useAgentPeriodicEarnings = (agentName: string) => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["agentPeriodicEarnings", agentName],
     queryFn: async () => {
       // Get all tenants for this agent
@@ -60,4 +63,30 @@ export const useAgentPeriodicEarnings = (agentName: string) => {
     },
     enabled: !!agentName,
   });
+
+  // Subscribe to realtime changes for agent earnings
+  useEffect(() => {
+    if (!agentName) return;
+
+    const channel = supabase
+      .channel(`agent-periodic-earnings-${agentName}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agent_earnings'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["agentPeriodicEarnings", agentName] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [agentName, queryClient]);
+
+  return query;
 };

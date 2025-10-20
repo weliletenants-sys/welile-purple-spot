@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 export interface Agent {
   name: string;
@@ -7,7 +8,9 @@ export interface Agent {
 }
 
 export const useAgents = () => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["agents"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -53,4 +56,28 @@ export const useAgents = () => {
       return agents;
     },
   });
+
+  // Subscribe to realtime changes for tenants (to update agent list)
+  useEffect(() => {
+    const channel = supabase
+      .channel('agents-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tenants'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["agents"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  return query;
 };

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tenant } from "@/data/tenants";
+import { useEffect } from "react";
 
 interface UseTenantsPaginationOptions {
   page?: number;
@@ -95,6 +96,29 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
       return { tenants, totalCount: count || 0 };
     },
   });
+
+  // Subscribe to realtime changes for tenants
+  useEffect(() => {
+    const channel = supabase
+      .channel('tenants-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tenants'
+        },
+        () => {
+          // Invalidate all tenant queries when any change occurs
+          queryClient.invalidateQueries({ queryKey: ["tenants"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Separate query for unique locations (without pagination)
   const { data: locationsData = [] } = useQuery({

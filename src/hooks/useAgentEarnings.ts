@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 export interface AgentEarning {
   agentName: string;
@@ -12,7 +13,9 @@ export interface AgentEarning {
 }
 
 export const useAgentEarnings = (period?: string) => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["agentEarnings", period],
     queryFn: async () => {
       // Get all tenants grouped by agent
@@ -118,4 +121,44 @@ export const useAgentEarnings = (period?: string) => {
       return Array.from(agentMap.values()).sort((a, b) => b.earnedCommission - a.earnedCommission);
     },
   });
+
+  // Subscribe to realtime changes for agent_earnings and tenants
+  useEffect(() => {
+    const earningsChannel = supabase
+      .channel('agent-earnings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agent_earnings'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
+        }
+      )
+      .subscribe();
+
+    const tenantsChannel = supabase
+      .channel('agent-tenants-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tenants'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(earningsChannel);
+      supabase.removeChannel(tenantsChannel);
+    };
+  }, [queryClient]);
+
+  return query;
 };
