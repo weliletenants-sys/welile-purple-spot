@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import RepaymentSchedule from "./pages/RepaymentSchedule";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import AgentDashboard from "./pages/AgentDashboard";
 import NotFound from "./pages/NotFound";
 import { AccessCode } from "./components/AccessCode";
 
@@ -31,6 +32,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
             <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+            <Route path="/agent-dashboard" element={<AgentDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
