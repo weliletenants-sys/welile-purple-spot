@@ -1,14 +1,27 @@
+import { useEffect } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useExecutiveStats } from "@/hooks/useExecutiveStats";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ExecutiveDashboard = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const stats = useExecutiveStats();
+
+  // Auto-refresh data every minute
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+    }, 60000); // 60000ms = 1 minute
+
+    return () => clearInterval(intervalId);
+  }, [queryClient]);
 
   if (!stats) {
     return (

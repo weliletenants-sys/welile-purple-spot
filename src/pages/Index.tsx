@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { TenantCard } from "@/components/TenantCard";
 import { StatsCard } from "@/components/StatsCard";
@@ -26,10 +27,21 @@ const ITEMS_PER_PAGE = 20;
 
 const Index = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { tenants, isLoading } = useTenants();
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Auto-refresh data every minute
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
+    }, 60000); // 60000ms = 1 minute
+
+    return () => clearInterval(intervalId);
+  }, [queryClient]);
 
   // Get unique locations
   const locations = useMemo(() => {

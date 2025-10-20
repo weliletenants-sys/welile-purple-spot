@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { calculateRepaymentDetails } from "@/data/tenants";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,6 +18,7 @@ const ITEMS_PER_PAGE = 10;
 export default function RepaymentSchedule() {
   const { tenantId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { tenants } = useTenants();
   const tenant = tenants.find(t => t.id === tenantId);
@@ -27,6 +29,17 @@ export default function RepaymentSchedule() {
   const [recordedByName, setRecordedByName] = useState<string>("");
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
+
+  // Auto-refresh data every minute
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["payments", tenantId] });
+      queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
+    }, 60000); // 60000ms = 1 minute
+
+    return () => clearInterval(intervalId);
+  }, [queryClient, tenantId]);
 
   if (!tenant) {
     return (
