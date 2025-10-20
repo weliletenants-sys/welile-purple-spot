@@ -39,7 +39,17 @@ const Index = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [feeFilter, setFeeFilter] = useState<string>("all");
   const pageSize = 10;
+
+  // Handle URL parameters for filtering
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const filter = params.get("filter");
+    if (filter === "registration") {
+      setFeeFilter("registration");
+    }
+  }, []);
 
   // Debounce search term to avoid too many queries
   useEffect(() => {
@@ -60,6 +70,7 @@ const Index = () => {
     pageSize,
     searchTerm: debouncedSearchTerm,
     locationFilter,
+    feeFilter,
   });
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -212,6 +223,16 @@ const Index = () => {
                   {location}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={feeFilter} onValueChange={setFeeFilter}>
+            <SelectTrigger className={`w-full sm:w-[200px] bg-card border-border transition-all ${feeFilter !== "all" ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:border-primary/50"}`}>
+              <DollarSign className={`w-4 h-4 mr-2 ${feeFilter !== "all" ? "text-primary" : ""}`} />
+              <SelectValue placeholder="All Fees" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all">All Tenants</SelectItem>
+              <SelectItem value="registration">With Registration Fee</SelectItem>
             </SelectContent>
           </Select>
         </div>

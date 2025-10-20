@@ -174,6 +174,7 @@ const ExecutiveDashboard = () => {
             value={`UGX ${stats.totalRegistrationFees.toLocaleString()}`}
             icon={Target}
             description="One-time per tenant"
+            onClick={() => navigate("/?filter=registration")}
           />
 
           <StatsCard

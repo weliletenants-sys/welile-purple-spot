@@ -7,6 +7,7 @@ interface UseTenantsPaginationOptions {
   pageSize?: number;
   searchTerm?: string;
   locationFilter?: string;
+  feeFilter?: string;
 }
 
 export const useTenants = (options?: UseTenantsPaginationOptions) => {
@@ -15,9 +16,10 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
   const pageSize = options?.pageSize ?? 50;
   const searchTerm = options?.searchTerm ?? "";
   const locationFilter = options?.locationFilter ?? "all";
+  const feeFilter = options?.feeFilter ?? "all";
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tenants", page, pageSize, searchTerm, locationFilter],
+    queryKey: ["tenants", page, pageSize, searchTerm, locationFilter, feeFilter],
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -38,6 +40,11 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
       // Apply location filter if provided
       if (locationFilter && locationFilter !== "all") {
         query = query.eq("address", locationFilter);
+      }
+
+      // Apply fee filter if provided
+      if (feeFilter === "registration") {
+        query = query.gt("registration_fee", 0);
       }
 
       const { data, error, count } = await query;
