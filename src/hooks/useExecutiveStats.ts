@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { calculateRepaymentDetails } from "@/data/tenants";
 
 interface DateRange {
   startDate?: string;
@@ -37,8 +38,13 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
       // Calculate statistics
       const numberOfTenants = tenants?.length || 0;
       
+      // Calculate total access fees using the same formula as tenant cards
       const totalAccessFees = tenants?.reduce((sum, tenant) => {
-        return sum + Number(tenant.access_fee || 0);
+        const repaymentDetails = calculateRepaymentDetails(
+          Number(tenant.rent_amount),
+          tenant.repayment_days
+        );
+        return sum + repaymentDetails.accessFees;
       }, 0) || 0;
 
       const totalRegistrationFees = tenants?.reduce((sum, tenant) => {
@@ -59,10 +65,11 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
         .reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
       const totalExpectedRevenue = tenants?.reduce((sum, tenant) => {
-        const rentAmount = Number(tenant.rent_amount);
-        const registrationFee = 5000;
-        const accessFees = Math.ceil(rentAmount * 0.33);
-        return sum + rentAmount + registrationFee + accessFees;
+        const repaymentDetails = calculateRepaymentDetails(
+          Number(tenant.rent_amount),
+          tenant.repayment_days
+        );
+        return sum + repaymentDetails.totalAmount;
       }, 0) || 0;
 
       const collectionRate = totalExpectedRevenue > 0 
