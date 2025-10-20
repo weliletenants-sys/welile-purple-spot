@@ -44,7 +44,7 @@ const Index = () => {
   const locations = useMemo(() => {
     const uniqueLocations = Array.from(new Set(tenants.map(t => t.address)));
     return uniqueLocations.sort();
-  }, []);
+  }, [tenants]);
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -201,15 +201,20 @@ const Index = () => {
             />
           </div>
           <Select value={locationFilter} onValueChange={setLocationFilter}>
-            <SelectTrigger className="w-full sm:w-[200px] bg-card border-border">
-              <MapPin className="w-4 h-4 mr-2" />
+            <SelectTrigger className={`w-full sm:w-[200px] bg-card border-border transition-all ${locationFilter !== "all" ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:border-primary/50"}`}>
+              <MapPin className={`w-4 h-4 mr-2 ${locationFilter !== "all" ? "text-primary" : ""}`} />
               <SelectValue placeholder="All Locations" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Locations</SelectItem>
-              {locations.map(location => (
-                <SelectItem key={location} value={location}>{location}</SelectItem>
-              ))}
+            <SelectContent className="max-h-[300px] bg-card border-border">
+              <SelectItem value="all">All Locations ({tenants.length} total)</SelectItem>
+              {locations.map(location => {
+                const count = tenants.filter(t => t.address === location).length;
+                return (
+                  <SelectItem key={location} value={location}>
+                    {location} ({count})
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
