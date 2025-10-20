@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { EditTenantForm } from "./EditTenantForm";
 import { useTenants } from "@/hooks/useTenants";
 import { useToast } from "@/hooks/use-toast";
+import { ContactButtons } from "./ContactButtons";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -89,6 +90,7 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
               <div className="flex items-center gap-2 mt-1">
                 <Phone className="w-3 h-3 text-muted-foreground shrink-0" />
                 <span className="text-sm text-muted-foreground truncate">{tenant.contact}</span>
+                <ContactButtons phoneNumber={tenant.contact} iconOnly />
               </div>
             </div>
           </div>
@@ -149,9 +151,12 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
           </div>
           <div className="flex items-start gap-2 text-sm">
             <User className="w-4 h-4 text-accent mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="text-foreground font-medium">{tenant.landlord}</p>
-              <p className="text-muted-foreground text-xs">{tenant.landlordContact}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-muted-foreground text-xs">{tenant.landlordContact}</p>
+                <ContactButtons phoneNumber={tenant.landlordContact} iconOnly />
+              </div>
             </div>
           </div>
         </div>

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { EditTenantForm } from "@/components/EditTenantForm";
+import { ContactButtons } from "@/components/ContactButtons";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -238,16 +239,22 @@ export default function RepaymentSchedule() {
         <Card className="p-6 bg-gradient-to-br from-card to-secondary/20">
           <div className="space-y-4">
             <div className="flex items-start justify-between">
-              <div>
+              <div className="space-y-2">
                 <h1 className="text-3xl font-bold text-foreground">{tenant.name}</h1>
-                <p className="text-muted-foreground">{tenant.contact}</p>
-                <p className="text-sm text-muted-foreground mt-1">{tenant.address}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-muted-foreground">{tenant.contact}</p>
+                  <ContactButtons phoneNumber={tenant.contact} iconOnly />
+                </div>
+                <p className="text-sm text-muted-foreground">{tenant.address}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
                 <Badge variant="outline" className="mb-2">
                   {tenant.status}
                 </Badge>
-                <p className="text-sm text-muted-foreground">Landlord: {tenant.landlord}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">Landlord: {tenant.landlord}</p>
+                  <ContactButtons phoneNumber={tenant.landlordContact} iconOnly />
+                </div>
                 <EditTenantForm tenant={tenant} />
               </div>
             </div>
