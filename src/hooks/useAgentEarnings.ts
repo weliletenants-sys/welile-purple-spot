@@ -56,18 +56,18 @@ export const useAgentEarnings = (period?: string) => {
         throw earningsError;
       }
 
-      // Group by agent
+      // Group by agent name (to remove duplicates by name)
       const agentMap = new Map<string, AgentEarning>();
       
       // Calculate expected commission from tenants
       tenants?.forEach((tenant: any) => {
-        if (!tenant.agent_phone) return;
+        if (!tenant.agent_name) return;
         
-        const key = tenant.agent_phone;
+        const key = tenant.agent_name.trim().toUpperCase();
         if (!agentMap.has(key)) {
           agentMap.set(key, {
-            agentName: tenant.agent_name || "Unknown",
-            agentPhone: tenant.agent_phone,
+            agentName: tenant.agent_name,
+            agentPhone: tenant.agent_phone || "",
             earnedCommission: 0,
             expectedCommission: 0,
             withdrawnCommission: 0,
@@ -78,17 +78,21 @@ export const useAgentEarnings = (period?: string) => {
         const agent = agentMap.get(key)!;
         agent.expectedCommission += Number(tenant.rent_amount) * 0.05;
         agent.tenantsCount += 1;
+        // Use the first non-empty phone number found
+        if (tenant.agent_phone && !agent.agentPhone) {
+          agent.agentPhone = tenant.agent_phone;
+        }
       });
 
       // Add earned and withdrawn commissions
       earnings?.forEach((earning: any) => {
-        if (!earning.agent_phone) return;
+        if (!earning.agent_name) return;
         
-        const key = earning.agent_phone;
+        const key = earning.agent_name.trim().toUpperCase();
         if (!agentMap.has(key)) {
           agentMap.set(key, {
-            agentName: earning.agent_name || "Unknown",
-            agentPhone: earning.agent_phone,
+            agentName: earning.agent_name,
+            agentPhone: earning.agent_phone || "",
             earnedCommission: 0,
             expectedCommission: 0,
             withdrawnCommission: 0,
@@ -98,6 +102,10 @@ export const useAgentEarnings = (period?: string) => {
         }
         
         const agent = agentMap.get(key)!;
+        // Use the first non-empty phone number found
+        if (earning.agent_phone && !agent.agentPhone) {
+          agent.agentPhone = earning.agent_phone;
+        }
         
         if (earning.earning_type === "commission") {
           agent.earnedCommission += Number(earning.amount);
