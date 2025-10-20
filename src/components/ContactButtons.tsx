@@ -15,7 +15,17 @@ export const ContactButtons = ({ phoneNumber, size = "sm", iconOnly = false }: C
 
   const handleWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open(`https://wa.me/${phoneNumber.replace(/[^0-9]/g, '')}`, '_blank');
+    // Format Ugandan phone number for WhatsApp
+    let formattedNumber = phoneNumber.replace(/[^0-9]/g, '');
+    // If number starts with 0, remove it and add 256
+    if (formattedNumber.startsWith('0')) {
+      formattedNumber = '256' + formattedNumber.substring(1);
+    }
+    // If number doesn't start with 256, add it
+    else if (!formattedNumber.startsWith('256')) {
+      formattedNumber = '256' + formattedNumber;
+    }
+    window.open(`https://wa.me/${formattedNumber}`, '_blank');
   };
 
   if (iconOnly) {
