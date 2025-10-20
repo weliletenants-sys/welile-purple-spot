@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import RepaymentSchedule from "./pages/RepaymentSchedule";
+import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import NotFound from "./pages/NotFound";
 import { AccessCode } from "./components/AccessCode";
 
@@ -29,6 +30,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
+            <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

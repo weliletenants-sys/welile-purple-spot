@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { TenantCard } from "@/components/TenantCard";
 import { StatsCard } from "@/components/StatsCard";
@@ -24,6 +25,7 @@ import {
 const ITEMS_PER_PAGE = 20;
 
 const Index = () => {
+  const navigate = useNavigate();
   const { tenants, isLoading } = useTenants();
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -117,7 +119,10 @@ const Index = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-card">
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => navigate("/executive-dashboard")}
+                  >
                     EXECUTIVE DASHBOARD
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer">
