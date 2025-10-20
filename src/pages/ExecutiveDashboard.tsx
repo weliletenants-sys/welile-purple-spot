@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useExecutiveStats } from "@/hooks/useExecutiveStats";
@@ -99,6 +99,13 @@ const ExecutiveDashboard = () => {
             value={stats.numberOfTenants}
             icon={Users}
             description="Active tenant accounts"
+          />
+
+          <StatsCard
+            title="Total Rent Amounts"
+            value={`UGX ${stats.totalRentAmounts.toLocaleString()}`}
+            icon={Home}
+            description="Sum of all tenant rents"
           />
           
           <StatsCard

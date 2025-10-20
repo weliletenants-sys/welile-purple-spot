@@ -31,6 +31,10 @@ export const useExecutiveStats = () => {
         return sum + Number(tenant.registration_fee || 0);
       }, 0) || 0;
 
+      const totalRentAmounts = tenants?.reduce((sum, tenant) => {
+        return sum + Number(tenant.rent_amount || 0);
+      }, 0) || 0;
+
       const totalRentPaid = payments
         ?.filter(p => p.paid)
         .reduce((sum, p) => sum + Number(p.paid_amount || p.amount), 0) || 0;
@@ -57,6 +61,7 @@ export const useExecutiveStats = () => {
         numberOfTenants,
         totalAccessFees,
         totalRegistrationFees,
+        totalRentAmounts,
         totalRentPaid,
         overduePayments,
         totalExpectedRevenue,
