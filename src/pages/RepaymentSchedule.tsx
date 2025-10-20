@@ -1,15 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { tenants, calculateRepaymentDetails, DailyPayment } from "@/data/tenants";
+import { calculateRepaymentDetails } from "@/data/tenants";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X, Trash2 } from "lucide-react";
 import { WelileLogo } from "@/components/WelileLogo";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useTenants } from "@/hooks/useTenants";
+import { usePayments } from "@/hooks/usePayments";
+import { EditTenantForm } from "@/components/EditTenantForm";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -17,31 +18,15 @@ export default function RepaymentSchedule() {
   const { tenantId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tenants } = useTenants();
   const tenant = tenants.find(t => t.id === tenantId);
+  const { payments, updatePayment } = usePayments(tenantId || "");
   
   const [currentPage, setCurrentPage] = useState(1);
-  const [payments, setPayments] = useState<DailyPayment[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedDays, setEditedDays] = useState<30 | 60 | 90>(30);
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [recordedByName, setRecordedByName] = useState<string>("");
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
-  const [editingRentAmount, setEditingRentAmount] = useState(false);
-  const [editedRentAmount, setEditedRentAmount] = useState<string>("");
-  const [rentEditorName, setRentEditorName] = useState<string>("");
-
-  useEffect(() => {
-    if (tenant) {
-      const details = calculateRepaymentDetails(tenant.rentAmount, tenant.repaymentDays);
-      const updatedPayments = tenant.dailyPayments.map(p => ({
-        ...p,
-        amount: details.dailyInstallment
-      }));
-      setPayments(updatedPayments);
-      setEditedDays(tenant.repaymentDays);
-    }
-  }, [tenant]);
 
   if (!tenant) {
     return (
@@ -54,7 +39,10 @@ export default function RepaymentSchedule() {
     );
   }
 
-  const repaymentDetails = calculateRepaymentDetails(tenant.rentAmount, isEditing ? editedDays : tenant.repaymentDays);
+  const repaymentDetails = calculateRepaymentDetails(
+    tenant?.rentAmount || 0, 
+    tenant?.repaymentDays || 30
+  );
   const totalPages = Math.ceil(payments.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -64,33 +52,10 @@ export default function RepaymentSchedule() {
   const totalPaid = payments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
   const progressPercentage = (totalPaid / repaymentDetails.totalAmount) * 100;
 
-  const handleSaveSchedule = () => {
-    const newDetails = calculateRepaymentDetails(tenant.rentAmount, editedDays);
-    const newPayments: DailyPayment[] = [];
-    const today = new Date();
-    
-    for (let i = 0; i < editedDays; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      newPayments.push({
-        date: date.toISOString().split('T')[0],
-        amount: newDetails.dailyInstallment,
-        paid: false,
-      });
-    }
-    
-    setPayments(newPayments);
-    setIsEditing(false);
-    setCurrentPage(1);
-    toast({
-      title: "Schedule Updated",
-      description: `Repayment schedule changed to ${editedDays} days`,
-    });
-  };
-
-  const handleRecordPayment = (index: number) => {
+  const handleRecordPayment = async (index: number) => {
     const actualIndex = startIndex + index;
     const amount = parseFloat(paymentAmount);
+    const payment = payments[actualIndex] as any;
     
     if (isNaN(amount) || amount <= 0) {
       toast({
@@ -110,24 +75,33 @@ export default function RepaymentSchedule() {
       return;
     }
 
-    const updatedPayments = [...payments];
-    updatedPayments[actualIndex] = {
-      ...updatedPayments[actualIndex],
-      paid: true,
-      paidAmount: amount,
-      recordedBy: recordedByName.trim(),
-      recordedAt: new Date().toISOString(),
-    };
-    
-    setPayments(updatedPayments);
-    setPaymentAmount("");
-    setRecordedByName("");
-    setSelectedPaymentIndex(null);
-    
-    toast({
-      title: "Payment Recorded",
-      description: `UGX ${amount.toLocaleString()} recorded by ${recordedByName}`,
-    });
+    try {
+      await updatePayment({
+        paymentId: payment._id,
+        updates: {
+          paid: true,
+          paidAmount: amount,
+          recordedBy: recordedByName.trim(),
+          recordedAt: new Date().toISOString(),
+        },
+      });
+
+      setPaymentAmount("");
+      setRecordedByName("");
+      setSelectedPaymentIndex(null);
+      
+      toast({
+        title: "Payment Recorded",
+        description: `UGX ${amount.toLocaleString()} recorded by ${recordedByName}`,
+      });
+    } catch (error) {
+      console.error("Error recording payment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to record payment",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditPayment = (index: number) => {
@@ -138,9 +112,10 @@ export default function RepaymentSchedule() {
     setEditingPaymentIndex(index);
   };
 
-  const handleUpdatePayment = (index: number) => {
+  const handleUpdatePayment = async (index: number) => {
     const actualIndex = startIndex + index;
     const amount = parseFloat(paymentAmount);
+    const payment = payments[actualIndex] as any;
     
     if (isNaN(amount) || amount <= 0) {
       toast({
@@ -160,28 +135,38 @@ export default function RepaymentSchedule() {
       return;
     }
 
-    const updatedPayments = [...payments];
-    updatedPayments[actualIndex] = {
-      ...updatedPayments[actualIndex],
-      paid: true,
-      paidAmount: amount,
-      modifiedBy: recordedByName.trim(),
-      modifiedAt: new Date().toISOString(),
-    };
-    
-    setPayments(updatedPayments);
-    setPaymentAmount("");
-    setRecordedByName("");
-    setEditingPaymentIndex(null);
-    
-    toast({
-      title: "Payment Updated",
-      description: `Updated by ${recordedByName}`,
-    });
+    try {
+      await updatePayment({
+        paymentId: payment._id,
+        updates: {
+          paid: true,
+          paidAmount: amount,
+          modifiedBy: recordedByName.trim(),
+          modifiedAt: new Date().toISOString(),
+        },
+      });
+
+      setPaymentAmount("");
+      setRecordedByName("");
+      setEditingPaymentIndex(null);
+      
+      toast({
+        title: "Payment Updated",
+        description: `Updated by ${recordedByName}`,
+      });
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update payment",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeletePayment = (index: number) => {
+  const handleDeletePayment = async (index: number) => {
     const actualIndex = startIndex + index;
+    const payment = payments[actualIndex] as any;
     
     if (!recordedByName.trim()) {
       toast({
@@ -192,79 +177,33 @@ export default function RepaymentSchedule() {
       return;
     }
 
-    const updatedPayments = [...payments];
-    const deletedBy = recordedByName.trim();
-    updatedPayments[actualIndex] = {
-      ...updatedPayments[actualIndex],
-      paid: false,
-      paidAmount: undefined,
-      modifiedBy: deletedBy,
-      modifiedAt: new Date().toISOString(),
-      recordedBy: undefined,
-      recordedAt: undefined,
-    };
-    
-    setPayments(updatedPayments);
-    setEditingPaymentIndex(null);
-    setPaymentAmount("");
-    setRecordedByName("");
-    
-    toast({
-      title: "Payment Deleted",
-      description: `Deleted by ${deletedBy}`,
-    });
-  };
+    try {
+      await updatePayment({
+        paymentId: payment._id,
+        updates: {
+          paid: false,
+          paidAmount: 0,
+          modifiedBy: recordedByName.trim(),
+          modifiedAt: new Date().toISOString(),
+        },
+      });
 
-  const handleStartEditRentAmount = () => {
-    setEditedRentAmount(tenant.rentAmount.toString());
-    setRentEditorName("");
-    setEditingRentAmount(true);
-  };
-
-  const handleSaveRentAmount = () => {
-    const amount = parseFloat(editedRentAmount);
-    
-    if (isNaN(amount) || amount <= 0) {
+      setEditingPaymentIndex(null);
+      setPaymentAmount("");
+      setRecordedByName("");
+      
       toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid rent amount",
+        title: "Payment Deleted",
+        description: `Deleted by ${recordedByName.trim()}`,
+      });
+    } catch (error) {
+      console.error("Error deleting payment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete payment",
         variant: "destructive",
       });
-      return;
     }
-
-    if (!rentEditorName.trim()) {
-      toast({
-        title: "Name Required",
-        description: "Please enter your name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    tenant.rentAmount = amount;
-    
-    const newDetails = calculateRepaymentDetails(amount, tenant.repaymentDays);
-    const updatedPayments = payments.map(p => ({
-      ...p,
-      amount: newDetails.dailyInstallment
-    }));
-    setPayments(updatedPayments);
-    
-    setEditingRentAmount(false);
-    setEditedRentAmount("");
-    setRentEditorName("");
-    
-    toast({
-      title: "Rent Amount Updated",
-      description: `Updated to UGX ${amount.toLocaleString()} by ${rentEditorName}`,
-    });
-  };
-
-  const handleCancelEditRentAmount = () => {
-    setEditingRentAmount(false);
-    setEditedRentAmount("");
-    setRentEditorName("");
   };
 
   return (
@@ -291,11 +230,12 @@ export default function RepaymentSchedule() {
                 <p className="text-muted-foreground">{tenant.contact}</p>
                 <p className="text-sm text-muted-foreground mt-1">{tenant.address}</p>
               </div>
-              <div className="text-right">
+              <div className="flex flex-col items-end gap-2">
                 <Badge variant="outline" className="mb-2">
                   {tenant.status}
                 </Badge>
                 <p className="text-sm text-muted-foreground">Landlord: {tenant.landlord}</p>
+                <EditTenantForm tenant={tenant} />
               </div>
             </div>
           </div>
@@ -304,50 +244,15 @@ export default function RepaymentSchedule() {
         {/* Repayment Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
-            {editingRentAmount ? (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground font-medium">Edit Rent Amount</p>
-                <Input
-                  type="number"
-                  placeholder="Rent amount"
-                  value={editedRentAmount}
-                  onChange={(e) => setEditedRentAmount(e.target.value)}
-                  className="w-full"
-                />
-                <Input
-                  type="text"
-                  placeholder="Your name"
-                  value={rentEditorName}
-                  onChange={(e) => setRentEditorName(e.target.value)}
-                  className="w-full"
-                />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSaveRentAmount} className="flex-1">
-                    <Check className="w-4 h-4 mr-1" />
-                    Save
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleCancelEditRentAmount} className="flex-1">
-                    <X className="w-4 h-4 mr-1" />
-                    Cancel
-                  </Button>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-primary" />
               </div>
-            ) : (
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Rent Amount</p>
-                    <p className="text-xl font-bold">UGX {tenant.rentAmount.toLocaleString()}</p>
-                  </div>
-                </div>
-                <Button size="sm" variant="ghost" onClick={handleStartEditRentAmount}>
-                  <Edit2 className="w-4 h-4" />
-                </Button>
+              <div>
+                <p className="text-sm text-muted-foreground">Rent Amount</p>
+                <p className="text-xl font-bold">UGX {tenant.rentAmount.toLocaleString()}</p>
               </div>
-            )}
+            </div>
           </Card>
 
           <Card className="p-4">
@@ -393,45 +298,10 @@ export default function RepaymentSchedule() {
             <div>
               <h2 className="text-2xl font-bold text-foreground">Repayment Schedule</h2>
               <p className="text-sm text-muted-foreground">
-                {isEditing ? "Edit schedule settings" : `${repaymentDetails.repaymentDays} days - UGX ${repaymentDetails.dailyInstallment.toLocaleString()} per day`}
+                {`${repaymentDetails.repaymentDays} days - UGX ${repaymentDetails.dailyInstallment.toLocaleString()} per day`}
               </p>
             </div>
-            {!isEditing && (
-              <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
-                <Edit2 className="w-4 h-4" />
-                Edit Schedule
-              </Button>
-            )}
           </div>
-
-          {isEditing && (
-            <div className="space-y-4 p-4 bg-secondary/20 rounded-lg">
-              <div className="space-y-2">
-                <Label>Repayment Period</Label>
-                <Select value={editedDays.toString()} onValueChange={(v) => setEditedDays(parseInt(v) as 30 | 60 | 90)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">30 Days</SelectItem>
-                    <SelectItem value="60">60 Days</SelectItem>
-                    <SelectItem value="90">90 Days</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={handleSaveSchedule} className="gap-2">
-                  <Check className="w-4 h-4" />
-                  Save Schedule
-                </Button>
-                <Button onClick={() => setIsEditing(false)} variant="outline" className="gap-2">
-                  <X className="w-4 h-4" />
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Progress Bar */}
           <div className="mt-6 space-y-2">
