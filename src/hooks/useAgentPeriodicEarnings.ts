@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useEffect } from "react";
+import { calculateRepaymentDetails } from "@/data/tenants";
 
 export interface PeriodicEarning {
   period: string;
@@ -19,12 +20,19 @@ export const useAgentPeriodicEarnings = (agentName: string) => {
       // Get all tenants for this agent
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
-        .select("rent_amount")
+        .select("rent_amount, repayment_days")
         .ilike("agent_name", agentName);
 
       if (tenantsError) throw tenantsError;
 
-      const expectedPerTenant = tenants?.reduce((sum, t) => sum + Number(t.rent_amount) * 0.05, 0) || 0;
+      // Calculate expected commission as 5% of total repayment (including fees and compound interest)
+      const expectedPerTenant = tenants?.reduce((sum, t) => {
+        const repaymentDetails = calculateRepaymentDetails(
+          Number(t.rent_amount),
+          t.repayment_days
+        );
+        return sum + repaymentDetails.totalAmount * 0.05;
+      }, 0) || 0;
 
       // Get all earnings for this agent
       const { data: earnings, error: earningsError } = await supabase

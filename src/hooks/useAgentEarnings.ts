@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { calculateRepaymentDetails } from "@/data/tenants";
 
 export interface AgentEarning {
   agentName: string;
@@ -21,7 +22,7 @@ export const useAgentEarnings = (period?: string) => {
       // Get all tenants grouped by agent
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
-        .select("agent_name, agent_phone, rent_amount");
+        .select("agent_name, agent_phone, rent_amount, repayment_days");
 
       if (tenantsError) {
         console.error("Error fetching tenants:", tenantsError);
@@ -62,7 +63,7 @@ export const useAgentEarnings = (period?: string) => {
       // Group by agent name (to remove duplicates by name)
       const agentMap = new Map<string, AgentEarning>();
       
-      // Calculate expected commission from tenants
+      // Calculate expected commission from tenants (5% of total repayment including fees)
       tenants?.forEach((tenant: any) => {
         if (!tenant.agent_name) return;
         
@@ -79,7 +80,13 @@ export const useAgentEarnings = (period?: string) => {
           });
         }
         const agent = agentMap.get(key)!;
-        agent.expectedCommission += Number(tenant.rent_amount) * 0.05;
+        
+        // Calculate total repayment including registration fee and compound interest access fees
+        const repaymentDetails = calculateRepaymentDetails(
+          Number(tenant.rent_amount),
+          tenant.repayment_days
+        );
+        agent.expectedCommission += repaymentDetails.totalAmount * 0.05; // 5% of total
         agent.tenantsCount += 1;
         // Use the first non-empty phone number found
         if (tenant.agent_phone && !agent.agentPhone) {
