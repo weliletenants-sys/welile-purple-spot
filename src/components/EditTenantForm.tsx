@@ -12,7 +12,7 @@ import {
 import { Pencil, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
-import { Tenant } from "@/data/tenants";
+import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import {
   Select,
   SelectContent,
@@ -90,6 +90,24 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
+
+  // Calculate repayment details whenever rent amount or repayment days change
+  useMemo(() => {
+    const rentAmount = parseFloat(formData.rentAmount);
+    const repaymentDays = parseInt(formData.repaymentDays);
+    
+    if (!isNaN(rentAmount) && rentAmount > 0 && repaymentDays) {
+      const details = calculateRepaymentDetails(rentAmount, repaymentDays);
+      // Always auto-update registration and access fees to match calculation
+      setFormData(prev => ({ 
+        ...prev, 
+        registrationFee: details.registrationFee.toString(),
+        accessFee: details.accessFees.toString()
+      }));
+      return details;
+    }
+    return null;
+  }, [formData.rentAmount, formData.repaymentDays]);
 
   const validateForm = () => {
     const newErrors: Partial<Record<keyof TenantFormData, string>> = {};
@@ -391,8 +409,10 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
                   id="registrationFee"
                   type="number"
                   value={formData.registrationFee}
-                  onChange={(e) => handleChange("registrationFee", e.target.value)}
+                  className="bg-muted"
+                  readOnly
                 />
+                <p className="text-xs text-muted-foreground mt-1">Auto-calculated based on rent amount</p>
               </div>
               <div>
                 <Label htmlFor="accessFee">Access Fee (UGX)</Label>
@@ -400,8 +420,10 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
                   id="accessFee"
                   type="number"
                   value={formData.accessFee}
-                  onChange={(e) => handleChange("accessFee", e.target.value)}
+                  className="bg-muted"
+                  readOnly
                 />
+                <p className="text-xs text-muted-foreground mt-1">Auto-calculated with compound interest</p>
               </div>
             </div>
           </div>

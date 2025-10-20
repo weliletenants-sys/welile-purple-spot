@@ -77,13 +77,12 @@ export const AddTenantForm = () => {
     
     if (!isNaN(rentAmount) && rentAmount > 0 && repaymentDays) {
       const details = calculateRepaymentDetails(rentAmount, repaymentDays);
-      // Auto-populate registration and access fees if not manually set
-      if (!formData.registrationFee) {
-        setFormData(prev => ({ ...prev, registrationFee: details.registrationFee.toString() }));
-      }
-      if (!formData.accessFee) {
-        setFormData(prev => ({ ...prev, accessFee: details.accessFees.toString() }));
-      }
+      // Always auto-update registration and access fees to match calculation
+      setFormData(prev => ({ 
+        ...prev, 
+        registrationFee: details.registrationFee.toString(),
+        accessFee: details.accessFees.toString()
+      }));
       return details;
     }
     return null;
@@ -453,11 +452,11 @@ export const AddTenantForm = () => {
                   id="registrationFee"
                   type="number"
                   value={formData.registrationFee}
-                  onChange={(e) => handleChange("registrationFee", e.target.value)}
                   placeholder="Auto-calculated"
-                  className={errors.registrationFee ? "border-destructive" : ""}
+                  className="bg-muted"
+                  readOnly
                 />
-                {errors.registrationFee && <p className="text-sm text-destructive">{errors.registrationFee}</p>}
+                <p className="text-xs text-muted-foreground">Automatically calculated based on rent amount</p>
               </div>
 
               <div className="space-y-2">
@@ -466,11 +465,11 @@ export const AddTenantForm = () => {
                   id="accessFee"
                   type="number"
                   value={formData.accessFee}
-                  onChange={(e) => handleChange("accessFee", e.target.value)}
                   placeholder="Auto-calculated"
-                  className={errors.accessFee ? "border-destructive" : ""}
+                  className="bg-muted"
+                  readOnly
                 />
-                {errors.accessFee && <p className="text-sm text-destructive">{errors.accessFee}</p>}
+                <p className="text-xs text-muted-foreground">Automatically calculated with compound interest</p>
               </div>
             </div>
 
