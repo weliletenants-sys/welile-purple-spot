@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,19 +8,10 @@ import RepaymentSchedule from "./pages/RepaymentSchedule";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import NotFound from "./pages/NotFound";
-import { AccessCode } from "./components/AccessCode";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [hasAccess, setHasAccess] = useState(() => {
-    return localStorage.getItem("welile_access") === "granted";
-  });
-
-  if (!hasAccess) {
-    return <AccessCode onAccessGranted={() => setHasAccess(true)} />;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
