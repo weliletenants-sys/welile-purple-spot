@@ -51,6 +51,8 @@ export const useExecutiveStats = () => {
         ? ((totalRentPaid / totalExpectedRevenue) * 100).toFixed(1)
         : "0";
 
+      const outstandingBalance = totalExpectedRevenue - totalRentPaid;
+
       return {
         numberOfTenants,
         totalAccessFees,
@@ -59,6 +61,7 @@ export const useExecutiveStats = () => {
         overduePayments,
         totalExpectedRevenue,
         collectionRate,
+        outstandingBalance,
       };
     },
   });

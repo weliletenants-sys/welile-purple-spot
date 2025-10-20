@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useExecutiveStats } from "@/hooks/useExecutiveStats";
@@ -60,6 +60,38 @@ const ExecutiveDashboard = () => {
           </div>
         </div>
 
+        {/* Outstanding Balance - Prominent Card */}
+        <div className="mb-6">
+          <div className="relative overflow-hidden rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 p-8 shadow-[0_8px_30px_rgb(126,58,242,0.15)] backdrop-blur-sm transition-all duration-300 hover:shadow-[0_12px_40px_rgb(126,58,242,0.25)]">
+            <div className="flex items-center justify-between">
+              <div className="space-y-3">
+                <p className="text-sm font-semibold uppercase tracking-wider text-primary">Outstanding Balance</p>
+                <p className="text-5xl font-bold text-foreground">UGX {stats.outstandingBalance.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">
+                  Total remaining from {stats.numberOfTenants} tenant{stats.numberOfTenants !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-gradient-to-br from-primary to-accent p-6 shadow-lg">
+                <Wallet className="h-12 w-12 text-primary-foreground" />
+              </div>
+            </div>
+            <div className="mt-6 flex gap-4 border-t border-primary/10 pt-4">
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Expected</p>
+                <p className="text-lg font-semibold text-foreground">UGX {stats.totalExpectedRevenue.toLocaleString()}</p>
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Collected</p>
+                <p className="text-lg font-semibold text-primary">UGX {stats.totalRentPaid.toLocaleString()}</p>
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Rate</p>
+                <p className="text-lg font-semibold text-accent">{stats.collectionRate}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <StatsCard
@@ -80,7 +112,7 @@ const ExecutiveDashboard = () => {
             title="Total Registration Fees"
             value={`UGX ${stats.totalRegistrationFees.toLocaleString()}`}
             icon={Target}
-            description="UGX 5,000 per tenant"
+            description="One-time per tenant"
           />
 
           <StatsCard
@@ -101,7 +133,7 @@ const ExecutiveDashboard = () => {
             title="Collection Rate"
             value={`${stats.collectionRate}%`}
             icon={Percent}
-            description={`UGX ${stats.totalExpectedRevenue.toLocaleString()} expected`}
+            description="Payment completion rate"
           />
         </div>
 

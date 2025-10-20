@@ -1,13 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2 } from "lucide-react";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet } from "lucide-react";
 import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import { useNavigate } from "react-router-dom";
 import { EditTenantForm } from "./EditTenantForm";
 import { useTenants } from "@/hooks/useTenants";
 import { useToast } from "@/hooks/use-toast";
 import { ContactButtons } from "./ContactButtons";
+import { usePayments } from "@/hooks/usePayments";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,12 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
   const { deleteTenant } = useTenants();
   const { toast } = useToast();
   const repaymentDetails = calculateRepaymentDetails(tenant.rentAmount, tenant.repaymentDays);
+  const { payments } = usePayments(tenant.id);
+
+  // Calculate balance for this tenant
+  const totalPaid = payments?.filter(p => p.paid).reduce((sum, p) => sum + (p.paidAmount || p.amount), 0) || 0;
+  const totalExpected = tenant.rentAmount + (tenant.registrationFee || 0) + (tenant.accessFee || 0);
+  const balance = totalExpected - totalPaid;
 
   const handleDelete = async () => {
     try {
@@ -161,6 +168,21 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
           </div>
         </div>
 
+        {/* Outstanding Balance - Prominent */}
+        <div className="rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 p-4 border border-primary/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/20">
+                <Wallet className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Outstanding Balance</p>
+                <p className="text-2xl font-bold text-foreground">UGX {balance.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Repayment Info */}
         <div className="pt-2 border-t border-border space-y-2">
           <div className="flex items-center justify-between text-sm">
@@ -180,8 +202,12 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
             <span className="font-bold text-foreground">UGX {repaymentDetails.dailyInstallment.toLocaleString()}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Total:</span>
+            <span className="text-muted-foreground">Total Expected:</span>
             <span className="font-bold text-primary">UGX {repaymentDetails.totalAmount.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Total Paid:</span>
+            <span className="font-bold text-green-600 dark:text-green-400">UGX {totalPaid.toLocaleString()}</span>
           </div>
         </div>
 

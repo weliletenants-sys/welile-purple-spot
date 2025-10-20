@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X, Trash2, Wallet } from "lucide-react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
@@ -65,6 +65,7 @@ export default function RepaymentSchedule() {
   const paidPayments = payments.filter(p => p.paid).length;
   const totalPaid = payments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
   const progressPercentage = (totalPaid / repaymentDetails.totalAmount) * 100;
+  const balance = repaymentDetails.totalAmount - totalPaid;
 
   const handleRecordPayment = async (index: number) => {
     const actualIndex = startIndex + index;
@@ -261,6 +262,26 @@ export default function RepaymentSchedule() {
           </div>
         </Card>
 
+        {/* Outstanding Balance - Prominent */}
+        <Card className="p-6 mb-6 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-2 border-primary/20 shadow-[0_8px_30px_rgb(126,58,242,0.12)]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg">
+                <Wallet className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wider text-primary mb-1">Outstanding Balance</p>
+                <p className="text-4xl font-bold text-foreground">UGX {balance.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground mt-1">Remaining amount to be collected</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Total Paid</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">UGX {totalPaid.toLocaleString()}</p>
+            </div>
+          </div>
+        </Card>
+
         {/* Repayment Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
@@ -289,8 +310,8 @@ export default function RepaymentSchedule() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-destructive" />
+              <div className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-secondary-foreground" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Access Fees (33%)</p>
@@ -299,13 +320,13 @@ export default function RepaymentSchedule() {
             </div>
           </Card>
 
-          <Card className="p-4 bg-gradient-to-br from-primary/10 to-accent/10">
+          <Card className="p-4 bg-gradient-to-br from-primary/5 to-accent/5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Amount</p>
+                <p className="text-sm text-muted-foreground">Total Expected</p>
                 <p className="text-xl font-bold text-primary">UGX {repaymentDetails.totalAmount.toLocaleString()}</p>
               </div>
             </div>
