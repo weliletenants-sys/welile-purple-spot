@@ -7,7 +7,7 @@ import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { AddTenantForm } from "@/components/AddTenantForm";
 import { useTenants } from "@/hooks/useTenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, ChevronLeft, ChevronRight, Menu } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -23,15 +23,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const ITEMS_PER_PAGE = 20;
-
 const Index = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { tenants, isLoading } = useTenants();
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
 
   // Auto-refresh data every minute
   useEffect(() => {
@@ -81,17 +78,6 @@ const Index = () => {
       return matchesSearch && matchesLocation;
     });
   }, [searchTerm, locationFilter]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredTenants.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedTenants = filteredTenants.slice(startIndex, endIndex);
-
-  const goToPage = (page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   if (isLoading) {
     return (
@@ -194,17 +180,11 @@ const Index = () => {
             <Input
               placeholder="Search by name, location, landlord, agent name or agent phone..."
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-card border-border focus:ring-primary"
             />
           </div>
-          <Select value={locationFilter} onValueChange={(value) => {
-            setLocationFilter(value);
-            setCurrentPage(1);
-          }}>
+          <Select value={locationFilter} onValueChange={setLocationFilter}>
             <SelectTrigger className="w-full sm:w-[200px] bg-card border-border">
               <MapPin className="w-4 h-4 mr-2" />
               <SelectValue placeholder="All Locations" />
@@ -218,22 +198,17 @@ const Index = () => {
           </Select>
         </div>
 
-        {/* Results Count & Pagination Info */}
+        {/* Results Count */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <p className="text-sm text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{startIndex + 1}-{Math.min(endIndex, filteredTenants.length)}</span> of{" "}
-            <span className="font-semibold text-foreground">{filteredTenants.length}</span> tenants
+            Showing <span className="font-semibold text-foreground">{filteredTenants.length}</span> tenant{filteredTenants.length !== 1 ? 's' : ''}
             {filteredTenants.length < tenants.length && " (filtered)"}
           </p>
-          <div className="text-sm text-muted-foreground">
-            Page <span className="font-semibold text-foreground">{currentPage}</span> of{" "}
-            <span className="font-semibold text-foreground">{totalPages}</span>
-          </div>
         </div>
 
-        {/* Tenant Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {paginatedTenants.map(tenant => (
+        {/* Tenant Cards Grid - Fully responsive for all devices */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+          {filteredTenants.map(tenant => (
             <TenantCard key={tenant.id} tenant={tenant} />
           ))}
         </div>
@@ -243,92 +218,6 @@ const Index = () => {
             <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">No tenants found</h3>
             <p className="text-muted-foreground">Try adjusting your search or filters</p>
-          </div>
-        )}
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 pt-8">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="border-border"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            
-            {/* Page Numbers */}
-            <div className="flex gap-2">
-              {currentPage > 2 && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => goToPage(1)}
-                    className="border-border"
-                  >
-                    1
-                  </Button>
-                  {currentPage > 3 && <span className="px-2 py-1 text-muted-foreground">...</span>}
-                </>
-              )}
-              
-              {currentPage > 1 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => goToPage(currentPage - 1)}
-                  className="border-border"
-                >
-                  {currentPage - 1}
-                </Button>
-              )}
-              
-              <Button
-                variant="default"
-                size="sm"
-                className="bg-gradient-to-r from-primary to-accent"
-              >
-                {currentPage}
-              </Button>
-              
-              {currentPage < totalPages && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => goToPage(currentPage + 1)}
-                  className="border-border"
-                >
-                  {currentPage + 1}
-                </Button>
-              )}
-              
-              {currentPage < totalPages - 1 && (
-                <>
-                  {currentPage < totalPages - 2 && <span className="px-2 py-1 text-muted-foreground">...</span>}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => goToPage(totalPages)}
-                    className="border-border"
-                  >
-                    {totalPages}
-                  </Button>
-                </>
-              )}
-            </div>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="border-border"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
           </div>
         )}
       </main>
