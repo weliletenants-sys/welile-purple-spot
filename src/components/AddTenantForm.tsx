@@ -10,6 +10,7 @@ import { useTenants } from "@/hooks/useTenants";
 import { calculateRepaymentDetails } from "@/data/tenants";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAgents } from "@/hooks/useAgents";
 
 interface TenantFormData {
   name: string;
@@ -40,6 +41,7 @@ export const AddTenantForm = () => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { addTenant } = useTenants();
+  const { data: agents = [] } = useAgents();
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [formData, setFormData] = useState<TenantFormData>({
     name: "",
@@ -62,7 +64,7 @@ export const AddTenantForm = () => {
     district: "",
     subcountyOrWard: "",
     cellOrVillage: "",
-    agentName: "",
+    agentName: "MUHWEZI MARTIN",
     agentPhone: "",
   });
 
@@ -281,7 +283,7 @@ export const AddTenantForm = () => {
         district: "",
         subcountyOrWard: "",
         cellOrVillage: "",
-        agentName: "",
+        agentName: "MUHWEZI MARTIN",
         agentPhone: "",
       });
       setErrors({});
@@ -304,6 +306,21 @@ export const AddTenantForm = () => {
     // Clear duplicate warning when user changes contact or name
     if ((field === "contact" || field === "name") && duplicateWarning) {
       setDuplicateWarning(null);
+    }
+  };
+
+  const handleAgentChange = (agentName: string) => {
+    const selectedAgent = agents.find(agent => agent.name === agentName);
+    setFormData(prev => ({
+      ...prev,
+      agentName,
+      agentPhone: selectedAgent?.phone || "",
+    }));
+    if (errors.agentName) {
+      setErrors(prev => ({ ...prev, agentName: undefined }));
+    }
+    if (errors.agentPhone) {
+      setErrors(prev => ({ ...prev, agentPhone: undefined }));
     }
   };
 
@@ -631,16 +648,16 @@ export const AddTenantForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="agentName">Agent Name *</Label>
-                <Select value={formData.agentName} onValueChange={(value) => handleChange("agentName", value)}>
+                <Select value={formData.agentName} onValueChange={handleAgentChange}>
                   <SelectTrigger id="agentName" className={errors.agentName ? "border-destructive" : ""}>
                     <SelectValue placeholder="Select an agent" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MUHWEZI MARTIN">MUHWEZI MARTIN</SelectItem>
-                    <SelectItem value="ARNOLD KAWOYA">ARNOLD KAWOYA</SelectItem>
-                    <SelectItem value="YASEEN BUKENYA">YASEEN BUKENYA</SelectItem>
-                    <SelectItem value="WYCLIF AKANDWANAHO">WYCLIF AKANDWANAHO</SelectItem>
-                    <SelectItem value="NAMATOVU PAVIN">NAMATOVU PAVIN</SelectItem>
+                    {agents.map((agent) => (
+                      <SelectItem key={agent.name} value={agent.name}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {errors.agentName && <p className="text-sm text-destructive">{errors.agentName}</p>}

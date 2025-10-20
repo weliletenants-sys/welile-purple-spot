@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAgents } from "@/hooks/useAgents";
 
 interface EditTenantFormProps {
   tenant: Tenant;
@@ -55,8 +56,13 @@ interface TenantFormData {
 export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
   const { toast } = useToast();
   const { updateTenant } = useTenants();
+  const { data: agents = [] } = useAgents();
   const [open, setOpen] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+
+  // Check if tenant's agent is in the approved list, if not default to MUHWEZI MARTIN
+  const isAgentValid = agents.some(agent => agent.name === tenant.agentName);
+  const validAgentName = isAgentValid ? tenant.agentName : "MUHWEZI MARTIN";
 
   const [formData, setFormData] = useState<TenantFormData>({
     name: tenant.name,
@@ -79,7 +85,7 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
     locationDistrict: tenant.location?.district || "",
     locationSubcountyOrWard: tenant.location?.subcountyOrWard || "",
     locationCellOrVillage: tenant.location?.cellOrVillage || "",
-    agentName: tenant.agentName || "",
+    agentName: validAgentName || "",
     agentPhone: tenant.agentPhone || "",
   });
 
@@ -216,6 +222,18 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
     // Clear duplicate warning when user changes contact or name
     if ((field === "contact" || field === "name") && duplicateWarning) {
       setDuplicateWarning(null);
+    }
+  };
+
+  const handleAgentChange = (agentName: string) => {
+    const selectedAgent = agents.find(agent => agent.name === agentName);
+    setFormData(prev => ({
+      ...prev,
+      agentName,
+      agentPhone: selectedAgent?.phone || prev.agentPhone,
+    }));
+    if (errors.agentName) {
+      setErrors(prev => ({ ...prev, agentName: undefined }));
     }
   };
 
@@ -480,16 +498,16 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="agentName">Agent Name</Label>
-                <Select value={formData.agentName} onValueChange={(value) => handleChange("agentName", value)}>
+                <Select value={formData.agentName} onValueChange={handleAgentChange}>
                   <SelectTrigger id="agentName">
                     <SelectValue placeholder="Select an agent" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MUHWEZI MARTIN">MUHWEZI MARTIN</SelectItem>
-                    <SelectItem value="ARNOLD KAWOYA">ARNOLD KAWOYA</SelectItem>
-                    <SelectItem value="YASEEN BUKENYA">YASEEN BUKENYA</SelectItem>
-                    <SelectItem value="WYCLIF AKANDWANAHO">WYCLIF AKANDWANAHO</SelectItem>
-                    <SelectItem value="NAMATOVU PAVIN">NAMATOVU PAVIN</SelectItem>
+                    {agents.map((agent) => (
+                      <SelectItem key={agent.name} value={agent.name}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
