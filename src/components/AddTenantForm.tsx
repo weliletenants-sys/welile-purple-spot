@@ -631,13 +631,18 @@ export const AddTenantForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="agentName">Agent Name *</Label>
-                <Input
-                  id="agentName"
-                  value={formData.agentName}
-                  onChange={(e) => handleChange("agentName", e.target.value)}
-                  placeholder="Enter agent's name"
-                  className={errors.agentName ? "border-destructive" : ""}
-                />
+                <Select value={formData.agentName} onValueChange={(value) => handleChange("agentName", value)}>
+                  <SelectTrigger id="agentName" className={errors.agentName ? "border-destructive" : ""}>
+                    <SelectValue placeholder="Select an agent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MUHWEZI MARTIN">MUHWEZI MARTIN</SelectItem>
+                    <SelectItem value="ARNOLD KAWOYA">ARNOLD KAWOYA</SelectItem>
+                    <SelectItem value="YASEEN BUKENYA">YASEEN BUKENYA</SelectItem>
+                    <SelectItem value="WYCLIF AKANDWANAHO">WYCLIF AKANDWANAHO</SelectItem>
+                    <SelectItem value="NAMATOVU PAVIN">NAMATOVU PAVIN</SelectItem>
+                  </SelectContent>
+                </Select>
                 {errors.agentName && <p className="text-sm text-destructive">{errors.agentName}</p>}
               </div>
               <div className="space-y-2">

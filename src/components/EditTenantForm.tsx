@@ -480,11 +480,18 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="agentName">Agent Name</Label>
-                <Input
-                  id="agentName"
-                  value={formData.agentName}
-                  onChange={(e) => handleChange("agentName", e.target.value)}
-                />
+                <Select value={formData.agentName} onValueChange={(value) => handleChange("agentName", value)}>
+                  <SelectTrigger id="agentName">
+                    <SelectValue placeholder="Select an agent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MUHWEZI MARTIN">MUHWEZI MARTIN</SelectItem>
+                    <SelectItem value="ARNOLD KAWOYA">ARNOLD KAWOYA</SelectItem>
+                    <SelectItem value="YASEEN BUKENYA">YASEEN BUKENYA</SelectItem>
+                    <SelectItem value="WYCLIF AKANDWANAHO">WYCLIF AKANDWANAHO</SelectItem>
+                    <SelectItem value="NAMATOVU PAVIN">NAMATOVU PAVIN</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="agentPhone">Agent Phone</Label>
