@@ -90,6 +90,7 @@ export const usePayments = (tenantId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments", tenantId] });
+      queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
     },
   });
 

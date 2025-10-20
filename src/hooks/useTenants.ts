@@ -132,6 +132,7 @@ export const useTenants = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
     },
   });
 
@@ -166,6 +167,7 @@ export const useTenants = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
     },
   });
 
