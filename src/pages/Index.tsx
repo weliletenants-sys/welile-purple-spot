@@ -6,6 +6,7 @@ import { TenantCard } from "@/components/TenantCard";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { AddTenantForm } from "@/components/AddTenantForm";
+import { ShareButton } from "@/components/ShareButton";
 import { useTenants } from "@/hooks/useTenants";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -137,6 +138,7 @@ const Index = () => {
                 <Users className="w-5 h-5 text-primary-foreground" />
                 <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
               </div>
+              <ShareButton />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon">
