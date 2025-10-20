@@ -16,6 +16,8 @@ interface TenantFormData {
   landlord: string;
   landlordContact: string;
   rentAmount: string;
+  registrationFee: string;
+  accessFee: string;
   repaymentDays: "30" | "60" | "90";
   status: "active" | "pending" | "review";
   paymentStatus: "paid" | "pending";
@@ -43,6 +45,8 @@ export const AddTenantForm = () => {
     landlord: "",
     landlordContact: "",
     rentAmount: "",
+    registrationFee: "",
+    accessFee: "",
     repaymentDays: "60",
     status: "active",
     paymentStatus: "pending",
@@ -67,7 +71,15 @@ export const AddTenantForm = () => {
     const repaymentDays = parseInt(formData.repaymentDays);
     
     if (!isNaN(rentAmount) && rentAmount > 0 && repaymentDays) {
-      return calculateRepaymentDetails(rentAmount, repaymentDays);
+      const details = calculateRepaymentDetails(rentAmount, repaymentDays);
+      // Auto-populate registration and access fees if not manually set
+      if (!formData.registrationFee) {
+        setFormData(prev => ({ ...prev, registrationFee: details.registrationFee.toString() }));
+      }
+      if (!formData.accessFee) {
+        setFormData(prev => ({ ...prev, accessFee: details.accessFees.toString() }));
+      }
+      return details;
     }
     return null;
   }, [formData.rentAmount, formData.repaymentDays]);
@@ -108,6 +120,16 @@ export const AddTenantForm = () => {
       newErrors.rentAmount = "Valid rent amount is required";
     } else if (rentAmount > 100000000) {
       newErrors.rentAmount = "Rent amount too high";
+    }
+
+    const registrationFee = parseFloat(formData.registrationFee);
+    if (!formData.registrationFee || isNaN(registrationFee) || registrationFee < 0) {
+      newErrors.registrationFee = "Valid registration fee is required";
+    }
+
+    const accessFee = parseFloat(formData.accessFee);
+    if (!formData.accessFee || isNaN(accessFee) || accessFee < 0) {
+      newErrors.accessFee = "Valid access fee is required";
     }
 
     if (formData.guarantor1Name.trim() || formData.guarantor1Contact.trim()) {
@@ -166,6 +188,8 @@ export const AddTenantForm = () => {
         landlord: formData.landlord.trim(),
         landlordContact: formData.landlordContact.trim(),
         rentAmount: parseFloat(formData.rentAmount),
+        registrationFee: parseFloat(formData.registrationFee),
+        accessFee: parseFloat(formData.accessFee),
         repaymentDays: parseInt(formData.repaymentDays) as 30 | 60 | 90,
         status: formData.status,
         paymentStatus: formData.paymentStatus,
@@ -202,6 +226,8 @@ export const AddTenantForm = () => {
         landlord: "",
         landlordContact: "",
         rentAmount: "",
+        registrationFee: "",
+        accessFee: "",
         repaymentDays: "60",
         status: "active",
         paymentStatus: "pending",
@@ -348,6 +374,34 @@ export const AddTenantForm = () => {
                   <SelectItem value="90">90 Days</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="registrationFee">Registration Fee (UGX) *</Label>
+                <Input
+                  id="registrationFee"
+                  type="number"
+                  value={formData.registrationFee}
+                  onChange={(e) => handleChange("registrationFee", e.target.value)}
+                  placeholder="Auto-calculated"
+                  className={errors.registrationFee ? "border-destructive" : ""}
+                />
+                {errors.registrationFee && <p className="text-sm text-destructive">{errors.registrationFee}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="accessFee">Access Fee (UGX) *</Label>
+                <Input
+                  id="accessFee"
+                  type="number"
+                  value={formData.accessFee}
+                  onChange={(e) => handleChange("accessFee", e.target.value)}
+                  placeholder="Auto-calculated"
+                  className={errors.accessFee ? "border-destructive" : ""}
+                />
+                {errors.accessFee && <p className="text-sm text-destructive">{errors.accessFee}</p>}
+              </div>
             </div>
 
             {/* Repayment Details Display */}

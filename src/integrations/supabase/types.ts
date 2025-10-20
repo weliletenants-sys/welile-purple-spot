@@ -117,6 +117,7 @@ export type Database = {
       }
       tenants: {
         Row: {
+          access_fee: number
           address: string
           agent_name: string
           agent_phone: string
@@ -137,12 +138,14 @@ export type Database = {
           name: string
           payment_status: string
           performance: number
+          registration_fee: number
           rent_amount: number
           repayment_days: number
           status: string
           updated_at: string
         }
         Insert: {
+          access_fee?: number
           address: string
           agent_name?: string
           agent_phone?: string
@@ -163,12 +166,14 @@ export type Database = {
           name: string
           payment_status: string
           performance?: number
+          registration_fee?: number
           rent_amount: number
           repayment_days: number
           status: string
           updated_at?: string
         }
         Update: {
+          access_fee?: number
           address?: string
           agent_name?: string
           agent_phone?: string
@@ -189,6 +194,7 @@ export type Database = {
           name?: string
           payment_status?: string
           performance?: number
+          registration_fee?: number
           rent_amount?: number
           repayment_days?: number
           status?: string

@@ -34,6 +34,8 @@ interface TenantFormData {
   landlord: string;
   landlordContact: string;
   rentAmount: string;
+  registrationFee: string;
+  accessFee: string;
   repaymentDays: string;
   guarantor1Name: string;
   guarantor1Contact: string;
@@ -62,6 +64,8 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
     landlord: tenant.landlord,
     landlordContact: tenant.landlordContact,
     rentAmount: tenant.rentAmount.toString(),
+    registrationFee: tenant.registrationFee.toString(),
+    accessFee: tenant.accessFee.toString(),
     repaymentDays: tenant.repaymentDays.toString(),
     guarantor1Name: tenant.guarantor1?.name || "",
     guarantor1Contact: tenant.guarantor1?.contact || "",
@@ -118,6 +122,8 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
           landlord: formData.landlord,
           landlordContact: formData.landlordContact,
           rentAmount: Number(formData.rentAmount),
+          registrationFee: Number(formData.registrationFee),
+          accessFee: Number(formData.accessFee),
           repaymentDays: Number(formData.repaymentDays) as 30 | 60 | 90,
           guarantor1: formData.guarantor1Name
             ? {
@@ -305,6 +311,24 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
                     <SelectItem value="90">90 Days</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label htmlFor="registrationFee">Registration Fee (UGX)</Label>
+                <Input
+                  id="registrationFee"
+                  type="number"
+                  value={formData.registrationFee}
+                  onChange={(e) => handleChange("registrationFee", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="accessFee">Access Fee (UGX)</Label>
+                <Input
+                  id="accessFee"
+                  type="number"
+                  value={formData.accessFee}
+                  onChange={(e) => handleChange("accessFee", e.target.value)}
+                />
               </div>
             </div>
           </div>

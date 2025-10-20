@@ -9,7 +9,7 @@ export const useExecutiveStats = () => {
       // Fetch tenants
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
-        .select("rent_amount, repayment_days");
+        .select("rent_amount, repayment_days, registration_fee, access_fee");
 
       if (tenantsError) throw tenantsError;
 
@@ -24,10 +24,12 @@ export const useExecutiveStats = () => {
       const numberOfTenants = tenants?.length || 0;
       
       const totalAccessFees = tenants?.reduce((sum, tenant) => {
-        return sum + Math.ceil(Number(tenant.rent_amount) * 0.33);
+        return sum + Number(tenant.access_fee || 0);
       }, 0) || 0;
 
-      const totalRegistrationFees = numberOfTenants * 5000;
+      const totalRegistrationFees = tenants?.reduce((sum, tenant) => {
+        return sum + Number(tenant.registration_fee || 0);
+      }, 0) || 0;
 
       const totalRentPaid = payments
         ?.filter(p => p.paid)

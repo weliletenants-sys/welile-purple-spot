@@ -29,6 +29,8 @@ export const useTenants = () => {
         landlord: tenant.landlord,
         landlordContact: tenant.landlord_contact,
         rentAmount: Number(tenant.rent_amount),
+        registrationFee: Number(tenant.registration_fee || 0),
+        accessFee: Number(tenant.access_fee || 0),
         repaymentDays: tenant.repayment_days,
         dailyPayments: [],
         guarantor1: tenant.guarantor1_name
@@ -70,6 +72,8 @@ export const useTenants = () => {
           landlord: tenant.landlord,
           landlord_contact: tenant.landlordContact,
           rent_amount: tenant.rentAmount,
+          registration_fee: tenant.registrationFee,
+          access_fee: tenant.accessFee,
           repayment_days: tenant.repaymentDays,
           guarantor1_name: tenant.guarantor1?.name,
           guarantor1_contact: tenant.guarantor1?.contact,
@@ -91,9 +95,7 @@ export const useTenants = () => {
       // Create daily payments
       const dailyPayments = [];
       const today = new Date();
-      const registrationFee = 5000;
-      const accessFees = Math.ceil(tenant.rentAmount * 0.33);
-      const totalAmount = tenant.rentAmount + registrationFee + accessFees;
+      const totalAmount = tenant.rentAmount + tenant.registrationFee + tenant.accessFee;
       const dailyInstallment = Math.ceil(totalAmount / tenant.repaymentDays);
 
       for (let i = 0; i < tenant.repaymentDays; i++) {
@@ -156,6 +158,8 @@ export const useTenants = () => {
           ...(updates.landlord && { landlord: updates.landlord }),
           ...(updates.landlordContact && { landlord_contact: updates.landlordContact }),
           ...(updates.rentAmount !== undefined && { rent_amount: updates.rentAmount }),
+          ...(updates.registrationFee !== undefined && { registration_fee: updates.registrationFee }),
+          ...(updates.accessFee !== undefined && { access_fee: updates.accessFee }),
           ...(updates.repaymentDays && { repayment_days: updates.repaymentDays }),
           ...(updates.guarantor1 && {
             guarantor1_name: updates.guarantor1.name,
