@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet } from "lucide-react";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck } from "lucide-react";
 import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import { useNavigate } from "react-router-dom";
 import { EditTenantForm } from "./EditTenantForm";
@@ -166,6 +166,21 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
               </div>
             </div>
           </div>
+          {tenant.agentName && (
+            <div className="flex items-start gap-2 text-sm">
+              <UserCheck className="w-4 h-4 text-primary mt-0.5" />
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Agent</p>
+                <p className="text-foreground font-medium">{tenant.agentName}</p>
+                {tenant.agentPhone && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-muted-foreground text-xs">{tenant.agentPhone}</p>
+                    <ContactButtons phoneNumber={tenant.agentPhone} iconOnly />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Outstanding Balance - Prominent */}
