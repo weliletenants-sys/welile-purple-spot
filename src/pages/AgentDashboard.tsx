@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -11,12 +11,16 @@ import { ContactButtons } from "@/components/ContactButtons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState<string>("all");
   const [withdrawingAgent, setWithdrawingAgent] = useState<string | null>(null);
+  const [editingAgent, setEditingAgent] = useState<string | null>(null);
+  const [editedName, setEditedName] = useState<string>("");
+  const [editedPhone, setEditedPhone] = useState<string>("");
   const { data: agents, isLoading } = useAgentEarnings(period);
 
   // Auto-refresh data every minute
@@ -27,6 +31,66 @@ const AgentDashboard = () => {
 
     return () => clearInterval(intervalId);
   }, [queryClient]);
+
+  const handleEdit = (agentPhone: string, agentName: string) => {
+    setEditingAgent(agentPhone);
+    setEditedName(agentName);
+    setEditedPhone(agentPhone);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingAgent(null);
+    setEditedName("");
+    setEditedPhone("");
+  };
+
+  const handleSaveEdit = async (oldPhone: string) => {
+    if (!editedName.trim()) {
+      toast.error("Agent name is required");
+      return;
+    }
+
+    if (!editedPhone.trim()) {
+      toast.error("Agent phone is required");
+      return;
+    }
+
+    if (!/^[0-9+\s-()]+$/.test(editedPhone)) {
+      toast.error("Invalid phone format");
+      return;
+    }
+
+    try {
+      // Update tenants table
+      const { error: tenantsError } = await supabase
+        .from("tenants")
+        .update({
+          agent_name: editedName,
+          agent_phone: editedPhone,
+        })
+        .eq("agent_phone", oldPhone);
+
+      if (tenantsError) throw tenantsError;
+
+      // Update agent_earnings table
+      const { error: earningsError } = await supabase
+        .from("agent_earnings")
+        .update({
+          agent_name: editedName,
+          agent_phone: editedPhone,
+        })
+        .eq("agent_phone", oldPhone);
+
+      if (earningsError) throw earningsError;
+
+      toast.success("Agent information updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
+      handleCancelEdit();
+    } catch (error) {
+      console.error("Error updating agent:", error);
+      toast.error("Failed to update agent information");
+    }
+  };
 
   const handleWithdraw = async (agentPhone: string, agentName: string, amount: number) => {
     if (amount <= 0) {
@@ -172,11 +236,60 @@ const AgentDashboard = () => {
                       <UserCheck className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-foreground truncate">{agent.agentName}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="text-sm text-muted-foreground">{agent.agentPhone}</p>
-                        <ContactButtons phoneNumber={agent.agentPhone} iconOnly />
-                      </div>
+                      {editingAgent === agent.agentPhone ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                            placeholder="Agent name"
+                            className="h-8"
+                          />
+                          <Input
+                            value={editedPhone}
+                            onChange={(e) => setEditedPhone(e.target.value)}
+                            placeholder="Phone number"
+                            className="h-8"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleSaveEdit(agent.agentPhone)}
+                              className="flex-1"
+                            >
+                              <Check className="w-4 h-4 mr-1" />
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCancelEdit}
+                              className="flex-1"
+                            >
+                              <X className="w-4 h-4 mr-1" />
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-foreground truncate">{agent.agentName}</h3>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleEdit(agent.agentPhone, agent.agentName)}
+                              className="h-8 w-8"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-sm text-muted-foreground">{agent.agentPhone}</p>
+                            <ContactButtons phoneNumber={agent.agentPhone} iconOnly />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
