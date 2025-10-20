@@ -3,7 +3,7 @@ import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,12 +17,18 @@ import { AgentPeriodicEarnings } from "@/components/AgentPeriodicEarnings";
 const AgentDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { agentName: routeAgentName } = useParams();
   const [period, setPeriod] = useState<string>("all");
   const [withdrawingAgent, setWithdrawingAgent] = useState<string | null>(null);
   const [editingAgent, setEditingAgent] = useState<string | null>(null);
   const [editedName, setEditedName] = useState<string>("");
   const [editedPhone, setEditedPhone] = useState<string>("");
-  const { data: agents, isLoading } = useAgentEarnings(period);
+  const { data: allAgents, isLoading } = useAgentEarnings(period);
+  
+  // Filter agents if viewing a specific agent
+  const agents = routeAgentName 
+    ? allAgents?.filter(agent => agent.agentName === decodeURIComponent(routeAgentName))
+    : allAgents;
 
   // Auto-refresh data every minute
   useEffect(() => {
@@ -144,7 +150,9 @@ const AgentDashboard = () => {
             <div className="flex items-center gap-3">
               <WelileLogo />
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Agent Dashboard</h1>
+                <h1 className="text-3xl font-bold text-foreground">
+                  {routeAgentName ? decodeURIComponent(routeAgentName) : "Agent Dashboard"}
+                </h1>
                 <p className="text-sm text-muted-foreground">Commission tracking and earnings</p>
               </div>
             </div>

@@ -3,8 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
 import { Users, ChevronLeft, ChevronRight, Trophy, Award, Medal } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const AgentLeaderboard = () => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 4;
   const { data: agents, isLoading } = useAgentEarnings("all");
@@ -68,7 +70,8 @@ export const AgentLeaderboard = () => {
         {paginatedAgents.map((agent, index) => (
           <Card 
             key={agent.agentName}
-            className="p-6 bg-gradient-to-br from-card to-primary/5 border-border hover:shadow-[var(--shadow-card)] transition-all duration-300"
+            className="p-6 bg-gradient-to-br from-card to-primary/5 border-border hover:shadow-[var(--shadow-card)] transition-all duration-300 cursor-pointer"
+            onClick={() => navigate(`/agent/${encodeURIComponent(agent.agentName)}`)}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
