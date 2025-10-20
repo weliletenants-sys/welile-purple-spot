@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { TenantCard } from "@/components/TenantCard";
-import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
+import { AgentLeaderboard } from "@/components/AgentLeaderboard";
 import { AddTenantForm } from "@/components/AddTenantForm";
 import { ShareButton } from "@/components/ShareButton";
 import { useTenants } from "@/hooks/useTenants";
@@ -167,40 +167,8 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          <StatsCard
-            title="Total Tenants"
-            value={stats.total.toLocaleString()}
-            icon={Users}
-            description="Across Africa"
-          />
-          <StatsCard
-            title="Active Tenants"
-            value={stats.active}
-            icon={TrendingUp}
-            trend={`${stats.activePercentage}% of sample`}
-            description="Currently active"
-          />
-          <StatsCard
-            title="Avg Performance"
-            value={`${stats.avgPerformance}%`}
-            icon={TrendingUp}
-            description="Overall tenant rating"
-          />
-          <StatsCard
-            title="Payment Rate"
-            value={`${stats.paymentRate}%`}
-            icon={DollarSign}
-            description="On-time payments"
-          />
-          <StatsCard
-            title="Sample Size"
-            value={tenants.length}
-            icon={Users}
-            description="Live database records"
-          />
-        </div>
+        {/* Agent Leaderboard */}
+        <AgentLeaderboard />
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
