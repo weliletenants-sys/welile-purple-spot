@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { AgentPeriodicEarnings } from "@/components/AgentPeriodicEarnings";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -326,6 +327,9 @@ const AgentDashboard = () => {
                       </span>
                     </div>
                   </div>
+
+                  {/* Periodic Earnings */}
+                  <AgentPeriodicEarnings agentName={agent.agentName} />
 
                   {/* Withdraw Button */}
                   <div className="pt-3 border-t border-border">
