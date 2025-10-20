@@ -1,18 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ContactButtons } from "@/components/ContactButtons";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: agents, isLoading } = useAgentEarnings();
+  const [period, setPeriod] = useState<string>("all");
+  const [withdrawingAgent, setWithdrawingAgent] = useState<string | null>(null);
+  const { data: agents, isLoading } = useAgentEarnings(period);
 
   // Auto-refresh data every minute
   useEffect(() => {
@@ -23,8 +28,40 @@ const AgentDashboard = () => {
     return () => clearInterval(intervalId);
   }, [queryClient]);
 
-  const totalCommissions = agents?.reduce((sum, agent) => sum + agent.totalCommission, 0) || 0;
-  const totalEarnings = agents?.reduce((sum, agent) => sum + agent.earningsCount, 0) || 0;
+  const handleWithdraw = async (agentPhone: string, agentName: string, amount: number) => {
+    if (amount <= 0) {
+      toast.error("No commission available to withdraw");
+      return;
+    }
+
+    setWithdrawingAgent(agentPhone);
+    
+    try {
+      const { error } = await supabase
+        .from("agent_earnings")
+        .insert({
+          agent_phone: agentPhone,
+          agent_name: agentName,
+          amount: amount,
+          earning_type: "withdrawal",
+        });
+
+      if (error) throw error;
+
+      toast.success(`Withdrawal of UGX ${amount.toLocaleString()} recorded for ${agentName}`);
+      queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
+    } catch (error) {
+      console.error("Error recording withdrawal:", error);
+      toast.error("Failed to record withdrawal");
+    } finally {
+      setWithdrawingAgent(null);
+    }
+  };
+
+  const totalEarnedCommissions = agents?.reduce((sum, agent) => sum + agent.earnedCommission, 0) || 0;
+  const totalExpectedCommissions = agents?.reduce((sum, agent) => sum + agent.expectedCommission, 0) || 0;
+  const totalWithdrawnCommissions = agents?.reduce((sum, agent) => sum + agent.withdrawnCommission, 0) || 0;
+  const totalAvailableCommissions = totalEarnedCommissions - totalWithdrawnCommissions;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -47,18 +84,29 @@ const AgentDashboard = () => {
               </div>
             </div>
           </div>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="daily">Today</SelectItem>
+              <SelectItem value="weekly">Last 7 Days</SelectItem>
+              <SelectItem value="monthly">Last 30 Days</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <div className="grid gap-6 md:grid-cols-4 mb-8">
           <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Total Agents</p>
-                <p className="text-3xl font-bold text-foreground">{agents?.length || 0}</p>
+                <p className="text-sm font-medium text-muted-foreground">Expected Commission</p>
+                <p className="text-3xl font-bold text-foreground">UGX {totalExpectedCommissions.toLocaleString()}</p>
               </div>
               <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
-                <UserCheck className="w-6 h-6 text-primary-foreground" />
+                <TrendingUp className="w-6 h-6 text-primary-foreground" />
               </div>
             </div>
           </Card>
@@ -66,8 +114,8 @@ const AgentDashboard = () => {
           <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Total Commissions</p>
-                <p className="text-3xl font-bold text-foreground">UGX {totalCommissions.toLocaleString()}</p>
+                <p className="text-sm font-medium text-muted-foreground">Earned Commission</p>
+                <p className="text-3xl font-bold text-foreground">UGX {totalEarnedCommissions.toLocaleString()}</p>
               </div>
               <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
                 <DollarSign className="w-6 h-6 text-primary-foreground" />
@@ -78,11 +126,23 @@ const AgentDashboard = () => {
           <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Total Transactions</p>
-                <p className="text-3xl font-bold text-foreground">{totalEarnings.toLocaleString()}</p>
+                <p className="text-sm font-medium text-muted-foreground">Withdrawn</p>
+                <p className="text-3xl font-bold text-foreground">UGX {totalWithdrawnCommissions.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-gradient-to-br from-destructive/20 to-destructive/10">
+                <TrendingDown className="w-6 h-6 text-destructive" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Available</p>
+                <p className="text-3xl font-bold text-foreground">UGX {totalAvailableCommissions.toLocaleString()}</p>
               </div>
               <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
-                <TrendingUp className="w-6 h-6 text-primary-foreground" />
+                <UserCheck className="w-6 h-6 text-primary-foreground" />
               </div>
             </div>
           </Card>
@@ -123,31 +183,46 @@ const AgentDashboard = () => {
                   {/* Commission Stats */}
                   <div className="pt-4 border-t border-border space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Total Commission</span>
+                      <span className="text-sm text-muted-foreground">Expected</span>
+                      <span className="text-lg font-bold text-muted-foreground">
+                        UGX {agent.expectedCommission.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Earned</span>
                       <span className="text-xl font-bold text-primary">
-                        UGX {agent.totalCommission.toLocaleString()}
+                        UGX {agent.earnedCommission.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Transactions</span>
-                      <span className="text-lg font-semibold text-foreground">
-                        {agent.earningsCount}
+                      <span className="text-sm text-muted-foreground">Withdrawn</span>
+                      <span className="text-lg font-semibold text-destructive">
+                        UGX {agent.withdrawnCommission.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                      <span className="text-sm font-medium text-muted-foreground">Available</span>
+                      <span className="text-xl font-bold text-accent">
+                        UGX {(agent.earnedCommission - agent.withdrawnCommission).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Avg. per Transaction</span>
-                      <span className="text-sm font-medium text-accent">
-                        UGX {Math.round(agent.totalCommission / agent.earningsCount).toLocaleString()}
+                      <span className="text-sm text-muted-foreground">Tenants</span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {agent.tenantsCount}
                       </span>
                     </div>
                   </div>
 
-                  {/* Commission Badge */}
+                  {/* Withdraw Button */}
                   <div className="pt-3 border-t border-border">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-                      <DollarSign className="w-4 h-4 text-primary" />
-                      <span className="text-xs font-semibold text-primary">5% Commission Rate</span>
-                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={() => handleWithdraw(agent.agentPhone, agent.agentName, agent.earnedCommission - agent.withdrawnCommission)}
+                      disabled={withdrawingAgent === agent.agentPhone || (agent.earnedCommission - agent.withdrawnCommission) <= 0}
+                    >
+                      {withdrawingAgent === agent.agentPhone ? "Processing..." : "Withdraw Commission"}
+                    </Button>
                   </div>
                 </div>
               </Card>

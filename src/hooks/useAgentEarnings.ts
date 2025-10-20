@@ -4,43 +4,110 @@ import { supabase } from "@/integrations/supabase/client";
 export interface AgentEarning {
   agentName: string;
   agentPhone: string;
-  totalCommission: number;
+  earnedCommission: number;
+  expectedCommission: number;
+  withdrawnCommission: number;
   earningsCount: number;
+  tenantsCount: number;
 }
 
-export const useAgentEarnings = () => {
+export const useAgentEarnings = (period?: string) => {
   return useQuery({
-    queryKey: ["agentEarnings"],
+    queryKey: ["agentEarnings", period],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("agent_earnings")
-        .select("*")
-        .eq("earning_type", "commission");
+      // Get all tenants grouped by agent
+      const { data: tenants, error: tenantsError } = await supabase
+        .from("tenants")
+        .select("agent_name, agent_phone, rent_amount");
 
-      if (error) {
-        console.error("Error fetching agent earnings:", error);
-        throw error;
+      if (tenantsError) {
+        console.error("Error fetching tenants:", tenantsError);
+        throw tenantsError;
       }
 
-      // Group earnings by agent
+      // Get earnings filtered by period
+      let earningsQuery = supabase
+        .from("agent_earnings")
+        .select("*");
+
+      if (period && period !== "all") {
+        const now = new Date();
+        let startDate = new Date();
+        
+        switch (period) {
+          case "daily":
+            startDate.setHours(0, 0, 0, 0);
+            break;
+          case "weekly":
+            startDate.setDate(now.getDate() - 7);
+            break;
+          case "monthly":
+            startDate.setMonth(now.getMonth() - 1);
+            break;
+        }
+        
+        earningsQuery = earningsQuery.gte("created_at", startDate.toISOString());
+      }
+
+      const { data: earnings, error: earningsError } = await earningsQuery;
+
+      if (earningsError) {
+        console.error("Error fetching agent earnings:", earningsError);
+        throw earningsError;
+      }
+
+      // Group by agent
       const agentMap = new Map<string, AgentEarning>();
       
-      data.forEach((earning: any) => {
-        const key = earning.agent_phone;
+      // Calculate expected commission from tenants
+      tenants?.forEach((tenant: any) => {
+        if (!tenant.agent_phone) return;
+        
+        const key = tenant.agent_phone;
         if (!agentMap.has(key)) {
           agentMap.set(key, {
-            agentName: earning.agent_name,
-            agentPhone: earning.agent_phone,
-            totalCommission: 0,
+            agentName: tenant.agent_name || "Unknown",
+            agentPhone: tenant.agent_phone,
+            earnedCommission: 0,
+            expectedCommission: 0,
+            withdrawnCommission: 0,
             earningsCount: 0,
+            tenantsCount: 0,
           });
         }
         const agent = agentMap.get(key)!;
-        agent.totalCommission += Number(earning.amount);
-        agent.earningsCount += 1;
+        agent.expectedCommission += Number(tenant.rent_amount) * 0.05;
+        agent.tenantsCount += 1;
       });
 
-      return Array.from(agentMap.values()).sort((a, b) => b.totalCommission - a.totalCommission);
+      // Add earned and withdrawn commissions
+      earnings?.forEach((earning: any) => {
+        if (!earning.agent_phone) return;
+        
+        const key = earning.agent_phone;
+        if (!agentMap.has(key)) {
+          agentMap.set(key, {
+            agentName: earning.agent_name || "Unknown",
+            agentPhone: earning.agent_phone,
+            earnedCommission: 0,
+            expectedCommission: 0,
+            withdrawnCommission: 0,
+            earningsCount: 0,
+            tenantsCount: 0,
+          });
+        }
+        
+        const agent = agentMap.get(key)!;
+        
+        if (earning.earning_type === "commission") {
+          agent.earnedCommission += Number(earning.amount);
+          agent.earningsCount += 1;
+        } else if (earning.earning_type === "withdrawal") {
+          agent.withdrawnCommission += Number(earning.amount);
+        }
+      });
+
+      return Array.from(agentMap.values()).sort((a, b) => b.earnedCommission - a.earnedCommission);
     },
   });
 };
