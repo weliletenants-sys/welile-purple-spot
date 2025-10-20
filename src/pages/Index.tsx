@@ -66,18 +66,34 @@ const Index = () => {
     };
   }, [tenants]);
 
-  // Filter tenants
+  // Filter tenants - comprehensive search across all fields
   const filteredTenants = useMemo(() => {
     return tenants.filter(tenant => {
-      const matchesSearch = tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          tenant.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          tenant.landlord.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (tenant.agentName && tenant.agentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                          (tenant.agentPhone && tenant.agentPhone.includes(searchTerm));
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        tenant.name.toLowerCase().includes(searchLower) ||
+        tenant.contact.toLowerCase().includes(searchLower) ||
+        tenant.address.toLowerCase().includes(searchLower) ||
+        tenant.landlord.toLowerCase().includes(searchLower) ||
+        tenant.landlordContact.toLowerCase().includes(searchLower) ||
+        tenant.status.toLowerCase().includes(searchLower) ||
+        tenant.paymentStatus.toLowerCase().includes(searchLower) ||
+        (tenant.agentName && tenant.agentName.toLowerCase().includes(searchLower)) ||
+        (tenant.agentPhone && tenant.agentPhone.includes(searchLower)) ||
+        (tenant.guarantor1?.name && tenant.guarantor1.name.toLowerCase().includes(searchLower)) ||
+        (tenant.guarantor1?.contact && tenant.guarantor1.contact.includes(searchLower)) ||
+        (tenant.guarantor2?.name && tenant.guarantor2.name.toLowerCase().includes(searchLower)) ||
+        (tenant.guarantor2?.contact && tenant.guarantor2.contact.includes(searchLower)) ||
+        (tenant.location?.country && tenant.location.country.toLowerCase().includes(searchLower)) ||
+        (tenant.location?.county && tenant.location.county.toLowerCase().includes(searchLower)) ||
+        (tenant.location?.district && tenant.location.district.toLowerCase().includes(searchLower)) ||
+        (tenant.location?.subcountyOrWard && tenant.location.subcountyOrWard.toLowerCase().includes(searchLower)) ||
+        (tenant.location?.cellOrVillage && tenant.location.cellOrVillage.toLowerCase().includes(searchLower));
+      
       const matchesLocation = locationFilter === "all" || tenant.address === locationFilter;
       return matchesSearch && matchesLocation;
     });
-  }, [searchTerm, locationFilter]);
+  }, [searchTerm, locationFilter, tenants]);
 
   if (isLoading) {
     return (
@@ -178,7 +194,7 @@ const Index = () => {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Search by name, location, landlord, agent name or agent phone..."
+              placeholder="Search by name, contact, location, landlord, agent, guarantor, status..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-card border-border focus:ring-primary"
