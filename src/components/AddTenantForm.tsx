@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
+import { calculateRepaymentDetails } from "@/data/tenants";
 
 interface TenantFormData {
   name: string;
@@ -59,6 +60,17 @@ export const AddTenantForm = () => {
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
+
+  // Calculate repayment details whenever rent amount or repayment days change
+  const repaymentDetails = useMemo(() => {
+    const rentAmount = parseFloat(formData.rentAmount);
+    const repaymentDays = parseInt(formData.repaymentDays);
+    
+    if (!isNaN(rentAmount) && rentAmount > 0 && repaymentDays) {
+      return calculateRepaymentDetails(rentAmount, repaymentDays);
+    }
+    return null;
+  }, [formData.rentAmount, formData.repaymentDays]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof TenantFormData, string>> = {};
@@ -337,6 +349,29 @@ export const AddTenantForm = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Repayment Details Display */}
+            {repaymentDetails && (
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 space-y-2">
+                <h4 className="font-semibold text-sm text-primary mb-3">Repayment Breakdown</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="text-muted-foreground">Rent Amount:</div>
+                  <div className="font-medium text-right">UGX {repaymentDetails.rentAmount.toLocaleString()}</div>
+                  
+                  <div className="text-muted-foreground">Registration Fee:</div>
+                  <div className="font-medium text-right">UGX {repaymentDetails.registrationFee.toLocaleString()}</div>
+                  
+                  <div className="text-muted-foreground">Access Fees:</div>
+                  <div className="font-medium text-right">UGX {repaymentDetails.accessFees.toLocaleString()}</div>
+                  
+                  <div className="text-muted-foreground border-t pt-2 font-semibold">Total Repayment:</div>
+                  <div className="font-bold text-right border-t pt-2 text-primary">UGX {repaymentDetails.totalAmount.toLocaleString()}</div>
+                  
+                  <div className="text-muted-foreground">Daily Installment:</div>
+                  <div className="font-medium text-right">UGX {repaymentDetails.dailyInstallment.toLocaleString()}</div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
