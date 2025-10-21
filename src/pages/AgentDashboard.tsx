@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { AgentPeriodicEarnings } from "@/components/AgentPeriodicEarnings";
+import { useTenants } from "@/hooks/useTenants";
+import { TenantCard } from "@/components/TenantCard";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -29,6 +31,11 @@ const AgentDashboard = () => {
   const agents = routeAgentName 
     ? allAgents?.filter(agent => agent.agentName === decodeURIComponent(routeAgentName))
     : allAgents;
+
+  // Fetch tenants for the specific agent
+  const { tenants: agentTenants, isLoading: tenantsLoading } = useTenants({
+    searchTerm: routeAgentName ? decodeURIComponent(routeAgentName) : "",
+  });
 
   // Auto-refresh data every minute
   useEffect(() => {
@@ -364,6 +371,39 @@ const AgentDashboard = () => {
               Agent commissions will appear here once tenants make rent payments
             </p>
           </Card>
+        )}
+
+        {/* Tenants List - Only show when viewing a specific agent */}
+        {routeAgentName && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              Tenants ({agentTenants.length})
+            </h2>
+            {tenantsLoading ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-[300px]" />
+                ))}
+              </div>
+            ) : agentTenants.length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {agentTenants.map((tenant) => (
+                  <TenantCard
+                    key={tenant.id}
+                    tenant={tenant}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Card className="p-12 text-center bg-gradient-to-br from-card to-primary/5 border-border">
+                <UserCheck className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">No Tenants Yet</h3>
+                <p className="text-muted-foreground">
+                  Tenants assigned to this agent will appear here
+                </p>
+              </Card>
+            )}
+          </div>
         )}
 
         {/* Footer */}
