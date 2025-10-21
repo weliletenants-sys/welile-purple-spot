@@ -170,10 +170,12 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
             <div className="flex items-start gap-2 text-sm">
               <UserCheck className="w-4 h-4 text-primary mt-0.5" />
               <div className="flex-1">
-                <p className="text-xs text-muted-foreground">Agent</p>
-                <p className="text-foreground font-medium">{tenant.agentName}</p>
+                <p className="text-xs text-muted-foreground mb-1">Agent</p>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30">
+                  <p className="text-foreground font-bold text-base">{tenant.agentName}</p>
+                </div>
                 {tenant.agentPhone && (
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-2">
                     <p className="text-muted-foreground text-xs">{tenant.agentPhone}</p>
                     <ContactButtons phoneNumber={tenant.agentPhone} iconOnly />
                   </div>
