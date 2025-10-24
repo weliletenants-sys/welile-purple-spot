@@ -188,22 +188,22 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="max-w-4xl mx-auto space-y-4">
+            <div className="max-w-7xl mx-auto space-y-4">
               {/* Main Search Bar */}
               <div className="relative group">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-7 h-7 text-primary z-10 group-focus-within:scale-110 transition-transform" />
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-primary z-10 group-focus-within:scale-110 transition-transform" />
                 <Input
                   placeholder="🔍 Start typing to search tenants..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-16 pl-16 pr-6 text-lg bg-card/95 backdrop-blur-sm border-4 border-white/40 focus:border-white focus:ring-4 focus:ring-white/30 rounded-xl shadow-2xl font-medium placeholder:text-muted-foreground/70 transition-all"
+                  className="w-full h-20 pl-20 pr-8 text-xl bg-card/95 backdrop-blur-sm border-4 border-white/40 focus:border-white focus:ring-4 focus:ring-white/30 rounded-2xl shadow-2xl font-medium placeholder:text-muted-foreground/70 transition-all"
                 />
               </div>
               
               {/* Filter Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto">
                 <Select value={locationFilter} onValueChange={setLocationFilter}>
-                  <SelectTrigger className={`h-12 bg-card/95 backdrop-blur-sm border-2 border-white/40 hover:border-white transition-all text-base font-medium ${locationFilter !== "all" ? "ring-4 ring-white/30 border-white bg-primary/20 scale-105" : ""}`}>
+                  <SelectTrigger className={`h-14 bg-card/95 backdrop-blur-sm border-2 border-white/40 hover:border-white transition-all text-base font-medium ${locationFilter !== "all" ? "ring-4 ring-white/30 border-white bg-primary/20 scale-105" : ""}`}>
                     <MapPin className={`w-5 h-5 mr-2 ${locationFilter !== "all" ? "text-primary" : ""}`} />
                     <SelectValue placeholder="All Locations" />
                   </SelectTrigger>
@@ -218,7 +218,7 @@ const Index = () => {
                 </Select>
                 
                 <Select value={feeFilter} onValueChange={setFeeFilter}>
-                  <SelectTrigger className={`h-12 bg-card/95 backdrop-blur-sm border-2 border-white/40 hover:border-white transition-all text-base font-medium ${feeFilter !== "all" ? "ring-4 ring-white/30 border-white bg-primary/20 scale-105" : ""}`}>
+                  <SelectTrigger className={`h-14 bg-card/95 backdrop-blur-sm border-2 border-white/40 hover:border-white transition-all text-base font-medium ${feeFilter !== "all" ? "ring-4 ring-white/30 border-white bg-primary/20 scale-105" : ""}`}>
                     <DollarSign className={`w-5 h-5 mr-2 ${feeFilter !== "all" ? "text-primary" : ""}`} />
                     <SelectValue placeholder="All Fees" />
                   </SelectTrigger>
