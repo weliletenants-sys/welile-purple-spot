@@ -170,41 +170,34 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* PROMINENT SEARCH SECTION - FIRST THING USERS SEE */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/95 via-accent/95 to-primary/95 p-6 md:p-10 shadow-2xl border-4 border-primary/30 animate-fade-in">
+        {/* PROMINENT SEARCH SECTION */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-accent to-primary p-8 md:p-16 shadow-2xl border-4 border-primary/30 animate-fade-in">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
           
-          <div className="relative z-10 space-y-6">
-            <div className="text-center space-y-3">
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <Search className="w-10 h-10 text-primary-foreground animate-pulse" />
-                <h2 className="text-3xl md:text-4xl font-extrabold text-primary-foreground">
-                  Find Any Tenant Instantly
-                </h2>
-                <Search className="w-10 h-10 text-primary-foreground animate-pulse" />
-              </div>
-              <p className="text-lg md:text-xl text-primary-foreground/95 font-semibold">
-                Search by name, location, agent, phone number, or any detail
-              </p>
+          <div className="relative z-10 space-y-8">
+            <div className="text-center">
+              <h2 className="text-4xl md:text-6xl font-extrabold text-primary-foreground mb-4 animate-pulse">
+                🔍 Find Your Tenant
+              </h2>
             </div>
             
-            <div className="max-w-7xl mx-auto space-y-4">
+            <div className="max-w-7xl mx-auto space-y-6">
               {/* Main Search Bar */}
               <div className="relative group">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-primary z-10 group-focus-within:scale-110 transition-transform" />
+                <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-10 h-10 text-primary z-10 group-focus-within:scale-125 transition-transform" />
                 <Input
-                  placeholder="🔍 Start typing to search tenants..."
+                  placeholder="Search by name, location, agent, phone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-20 pl-20 pr-8 text-xl bg-card/95 backdrop-blur-sm border-4 border-white/40 focus:border-white focus:ring-4 focus:ring-white/30 rounded-2xl shadow-2xl font-medium placeholder:text-muted-foreground/70 transition-all"
+                  className="w-full h-28 pl-24 pr-10 text-2xl bg-card backdrop-blur-md border-[6px] border-white/50 focus:border-white focus:ring-8 focus:ring-white/40 rounded-3xl shadow-2xl font-semibold placeholder:text-muted-foreground/60 transition-all hover:scale-[1.02]"
                 />
               </div>
               
               {/* Filter Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto">
+              <div className="flex flex-col sm:flex-row gap-4 max-w-3xl mx-auto">
                 <Select value={locationFilter} onValueChange={setLocationFilter}>
-                  <SelectTrigger className={`h-14 bg-card/95 backdrop-blur-sm border-2 border-white/40 hover:border-white transition-all text-base font-medium ${locationFilter !== "all" ? "ring-4 ring-white/30 border-white bg-primary/20 scale-105" : ""}`}>
-                    <MapPin className={`w-5 h-5 mr-2 ${locationFilter !== "all" ? "text-primary" : ""}`} />
+                  <SelectTrigger className={`h-16 bg-card/95 backdrop-blur-sm border-3 border-white/50 hover:border-white transition-all text-lg font-semibold ${locationFilter !== "all" ? "ring-6 ring-white/40 border-white bg-primary/30 scale-105" : ""}`}>
+                    <MapPin className={`w-6 h-6 mr-2 ${locationFilter !== "all" ? "text-primary" : ""}`} />
                     <SelectValue placeholder="All Locations" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px] bg-card border-border">
@@ -218,8 +211,8 @@ const Index = () => {
                 </Select>
                 
                 <Select value={feeFilter} onValueChange={setFeeFilter}>
-                  <SelectTrigger className={`h-14 bg-card/95 backdrop-blur-sm border-2 border-white/40 hover:border-white transition-all text-base font-medium ${feeFilter !== "all" ? "ring-4 ring-white/30 border-white bg-primary/20 scale-105" : ""}`}>
-                    <DollarSign className={`w-5 h-5 mr-2 ${feeFilter !== "all" ? "text-primary" : ""}`} />
+                  <SelectTrigger className={`h-16 bg-card/95 backdrop-blur-sm border-3 border-white/50 hover:border-white transition-all text-lg font-semibold ${feeFilter !== "all" ? "ring-6 ring-white/40 border-white bg-primary/30 scale-105" : ""}`}>
+                    <DollarSign className={`w-6 h-6 mr-2 ${feeFilter !== "all" ? "text-primary" : ""}`} />
                     <SelectValue placeholder="All Fees" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
@@ -229,76 +222,39 @@ const Index = () => {
                 </Select>
               </div>
             </div>
-            
-            {debouncedSearchTerm && (
-              <div className="text-center">
-                <p className="text-primary-foreground/90 font-semibold text-sm">
-                  Searching for: <span className="text-white bg-white/20 px-3 py-1 rounded-full">{debouncedSearchTerm}</span>
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Hero Section - Motivational */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/80 via-accent/80 to-primary/80 p-8 md:p-12 mb-8 shadow-lg">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
+        {/* Stats Section */}
+        <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex items-center gap-3 bg-gradient-to-r from-primary/20 to-accent/20 backdrop-blur-sm rounded-2xl px-8 py-4 border-2 border-primary/30 hover:scale-105 transition-transform">
+            <Zap className="w-8 h-8 text-primary" />
+            <div>
+              <div className="text-3xl font-bold text-foreground">{stats.total}</div>
+              <div className="text-sm text-muted-foreground">Total</div>
+            </div>
+          </div>
           
-          <div className="relative z-10 text-center space-y-6">
-            <div className="flex justify-center items-center gap-3 mb-4">
-              <Target className="w-12 h-12 text-primary-foreground animate-pulse" />
-              <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground">
-                Your Success Starts Here
-              </h2>
-              <Award className="w-12 h-12 text-primary-foreground animate-pulse" />
+          <div className="flex items-center gap-3 bg-gradient-to-r from-primary/20 to-accent/20 backdrop-blur-sm rounded-2xl px-8 py-4 border-2 border-primary/30 hover:scale-105 transition-transform">
+            <TrendingUp className="w-8 h-8 text-primary" />
+            <div>
+              <div className="text-3xl font-bold text-foreground">{stats.active}</div>
+              <div className="text-sm text-muted-foreground">Active</div>
             </div>
-            
-            <p className="text-lg md:text-xl text-primary-foreground/90 max-w-3xl mx-auto font-medium">
-              Every tenant you bring is a step towards financial freedom. Track your earnings, 
-              compete with top performers, and watch your commission grow!
-            </p>
-            
-            <div className="flex flex-wrap justify-center gap-6 mt-8">
-              <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30 hover:scale-105 transition-transform">
-                <Zap className="w-6 h-6 text-yellow-300" />
-                <div className="text-left">
-                  <div className="text-2xl font-bold text-primary-foreground">{stats.total}</div>
-                  <div className="text-xs text-primary-foreground/80">Total Tenants</div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30 hover:scale-105 transition-transform">
-                <TrendingUp className="w-6 h-6 text-green-300" />
-                <div className="text-left">
-                  <div className="text-2xl font-bold text-primary-foreground">{stats.active}</div>
-                  <div className="text-xs text-primary-foreground/80">Active & Earning</div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30 hover:scale-105 transition-transform">
-                <Award className="w-6 h-6 text-amber-300" />
-                <div className="text-left">
-                  <div className="text-2xl font-bold text-primary-foreground">{stats.paymentRate}%</div>
-                  <div className="text-xs text-primary-foreground/80">Payment Rate</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 max-w-2xl mx-auto">
-              <p className="text-primary-foreground/90 font-semibold text-lg italic">
-                "Success is not final, failure is not fatal: it is the courage to continue that counts."
-              </p>
-              <p className="text-primary-foreground/70 text-sm mt-2">— Keep pushing forward, Agent!</p>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-gradient-to-r from-primary/20 to-accent/20 backdrop-blur-sm rounded-2xl px-8 py-4 border-2 border-primary/30 hover:scale-105 transition-transform">
+            <Award className="w-8 h-8 text-primary" />
+            <div>
+              <div className="text-3xl font-bold text-foreground">{stats.paymentRate}%</div>
+              <div className="text-sm text-muted-foreground">Paid</div>
             </div>
           </div>
         </div>
 
         {/* Agent Leaderboard */}
         <div className="space-y-4">
-          <div className="text-center space-y-2 mb-6">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground">🏆 Top Performers</h3>
-            <p className="text-muted-foreground">These agents are leading the way. Will you join them?</p>
-          </div>
+          <h3 className="text-2xl md:text-3xl font-bold text-center text-foreground">🏆 Top Performers</h3>
           <AgentLeaderboard />
         </div>
 
