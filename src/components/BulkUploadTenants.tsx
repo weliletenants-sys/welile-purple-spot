@@ -225,18 +225,9 @@ export const BulkUploadTenants = () => {
             location_cell_or_village: get("location_cell_or_village", "cell_village", "cell", "village") as string | undefined,
           };
 
-          // Validate required fields (only name and contact)
-          if (!tenant.name || !tenant.contact) {
-            const missingFields = [] as string[];
-            if (!tenant.name) missingFields.push("name");
-            if (!tenant.contact) missingFields.push("contact");
-            uploadResult.failed++;
-            uploadResult.errors.push(`Row ${i + 1}: Missing required fields: ${missingFields.join(", ")}`);
-            console.error(`Row ${i + 1} validation failed:`, { tenant, row: normalizedRow, missingFields });
-            continue;
-          }
-
-          // Provide defaults for optional fields to prevent database errors (safety re-check)
+          // Provide defaults for all fields - no validation, import everything
+          if (!tenant.name) tenant.name = "Unknown";
+          if (!tenant.contact) tenant.contact = `temp_${Date.now()}_${i}`;
           if (!tenant.address) tenant.address = "Not provided";
           if (!tenant.rent_amount) tenant.rent_amount = 0;
           if (!tenant.landlord) tenant.landlord = "Not provided";
