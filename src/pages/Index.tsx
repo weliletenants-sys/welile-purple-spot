@@ -6,6 +6,7 @@ import { TenantCard } from "@/components/TenantCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { ShareButton } from "@/components/ShareButton";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { useTenants } from "@/hooks/useTenants";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -155,6 +156,12 @@ const Index = () => {
                     onClick={() => navigate("/agent-dashboard")}
                   >
                     AGENT DASHBOARD
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="p-0"
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <BulkUploadTenants />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
