@@ -66,6 +66,8 @@ export const BulkUploadTenants = () => {
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
+      console.log("Uploaded file data:", jsonData);
+
       if (jsonData.length === 0) {
         toast({
           title: "Empty file",
@@ -74,6 +76,11 @@ export const BulkUploadTenants = () => {
         });
         setUploading(false);
         return;
+      }
+
+      // Show first row column names for debugging
+      if (jsonData.length > 0) {
+        console.log("Available columns:", Object.keys(jsonData[0]));
       }
 
       const uploadResult: UploadResult = {
@@ -115,8 +122,15 @@ export const BulkUploadTenants = () => {
 
           // Validate required fields
           if (!tenant.name || !tenant.contact || !tenant.address || !tenant.rent_amount) {
+            const missingFields = [];
+            if (!tenant.name) missingFields.push("name");
+            if (!tenant.contact) missingFields.push("contact");
+            if (!tenant.address) missingFields.push("address");
+            if (!tenant.rent_amount) missingFields.push("rent_amount");
+            
             uploadResult.failed++;
-            uploadResult.errors.push(`Row ${i + 1}: Missing required fields (name, contact, address, or rent amount)`);
+            uploadResult.errors.push(`Row ${i + 1}: Missing required fields: ${missingFields.join(", ")}`);
+            console.error(`Row ${i + 1} validation failed:`, { tenant, missingFields });
             continue;
           }
 
@@ -187,7 +201,9 @@ export const BulkUploadTenants = () => {
           uploadResult.success++;
         } catch (error: any) {
           uploadResult.failed++;
-          uploadResult.errors.push(`Row ${i + 1}: ${error.message || "Unknown error"}`);
+          const errorMessage = error.message || "Unknown error";
+          uploadResult.errors.push(`Row ${i + 1}: ${errorMessage}`);
+          console.error(`Row ${i + 1} upload failed:`, error);
         }
       }
 
@@ -206,9 +222,10 @@ export const BulkUploadTenants = () => {
         });
       }
     } catch (error: any) {
+      console.error("File processing failed:", error);
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to process file",
+        description: error.message || "Failed to process file. Check console for details.",
         variant: "destructive",
       });
     } finally {
