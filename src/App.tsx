@@ -8,6 +8,7 @@ import RepaymentSchedule from "./pages/RepaymentSchedule";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import NotFound from "./pages/NotFound";
+import BulkAddAdekeAnnet from "./pages/BulkAddAdekeAnnet";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => {
             <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
             <Route path="/agent-dashboard" element={<AgentDashboard />} />
             <Route path="/agent/:agentName" element={<AgentDashboard />} />
+            <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
