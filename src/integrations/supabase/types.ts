@@ -115,6 +115,30 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           access_fee: number
@@ -123,6 +147,8 @@ export type Database = {
           agent_phone: string
           contact: string
           created_at: string
+          edited_at: string | null
+          edited_by: string | null
           guarantor1_contact: string | null
           guarantor1_name: string | null
           guarantor2_contact: string | null
@@ -151,6 +177,8 @@ export type Database = {
           agent_phone?: string
           contact: string
           created_at?: string
+          edited_at?: string | null
+          edited_by?: string | null
           guarantor1_contact?: string | null
           guarantor1_name?: string | null
           guarantor2_contact?: string | null
@@ -179,6 +207,8 @@ export type Database = {
           agent_phone?: string
           contact?: string
           created_at?: string
+          edited_at?: string | null
+          edited_by?: string | null
           guarantor1_contact?: string | null
           guarantor1_name?: string | null
           guarantor2_contact?: string | null

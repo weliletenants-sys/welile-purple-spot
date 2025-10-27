@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthGuard } from "./components/AuthGuard";
 import Index from "./pages/Index";
 import RepaymentSchedule from "./pages/RepaymentSchedule";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
@@ -17,17 +18,19 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
-            <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
-            <Route path="/agent-dashboard" element={<AgentDashboard />} />
-            <Route path="/agent/:agentName" element={<AgentDashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AuthGuard>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
+              <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+              <Route path="/agent-dashboard" element={<AgentDashboard />} />
+              <Route path="/agent/:agentName" element={<AgentDashboard />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthGuard>
       </TooltipProvider>
     </QueryClientProvider>
   );

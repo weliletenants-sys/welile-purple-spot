@@ -178,6 +178,14 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
     }
 
     try {
+      // Get current user info
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user?.id)
+        .maybeSingle();
+
       await updateTenant({
         id: tenant.id,
         updates: {
@@ -213,6 +221,8 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
           },
           agentName: formData.agentName,
           agentPhone: formData.agentPhone,
+          editedBy: profile?.full_name || user?.email || "Unknown",
+          editedAt: new Date().toISOString(),
         },
       });
 

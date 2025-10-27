@@ -171,23 +171,29 @@ export const TenantCard = ({ tenant, isFiltered = false }: TenantCardProps) => {
               </div>
             </div>
           </div>
-          {tenant.agentName && (
-            <div className="flex items-start gap-2 text-sm">
-              <UserCheck className="w-4 h-4 text-primary mt-0.5" />
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground mb-1">Agent</p>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30">
-                  <p className="text-foreground font-bold text-base">{tenant.agentName}</p>
-                </div>
-                {tenant.agentPhone && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <p className="text-muted-foreground text-xs">{tenant.agentPhone}</p>
-                    <ContactButtons phoneNumber={tenant.agentPhone} iconOnly />
+          <div className="flex items-start gap-2 text-sm">
+            <UserCheck className="w-4 h-4 text-primary mt-0.5" />
+            <div className="flex-1">
+              <p className="text-xs text-muted-foreground mb-1">Agent</p>
+              {tenant.agentName ? (
+                <>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30">
+                    <p className="text-foreground font-bold text-base">{tenant.agentName}</p>
                   </div>
-                )}
-              </div>
+                  {tenant.agentPhone && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <p className="text-muted-foreground text-xs">{tenant.agentPhone}</p>
+                      <ContactButtons phoneNumber={tenant.agentPhone} iconOnly />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted border border-dashed border-muted-foreground/30">
+                  <p className="text-muted-foreground text-sm italic">No agent assigned</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Outstanding Balance - Prominent */}
@@ -248,6 +254,18 @@ export const TenantCard = ({ tenant, isFiltered = false }: TenantCardProps) => {
             />
           </div>
         </div>
+
+        {/* Edit History */}
+        {tenant.editedBy && (
+          <div className="pt-2 mt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              Last edited by <span className="font-medium text-foreground">{tenant.editedBy}</span>
+              {tenant.editedAt && (
+                <> on {new Date(tenant.editedAt).toLocaleDateString()} at {new Date(tenant.editedAt).toLocaleTimeString()}</>
+              )}
+            </p>
+          </div>
+        )}
       </div>
     </Card>
   );

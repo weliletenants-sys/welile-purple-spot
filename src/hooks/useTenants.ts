@@ -92,6 +92,8 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
         },
         agentName: tenant.agent_name || "",
         agentPhone: tenant.agent_phone || "",
+        editedBy: tenant.edited_by,
+        editedAt: tenant.edited_at,
       })) as Tenant[];
 
       return { tenants, totalCount: count || 0 };
