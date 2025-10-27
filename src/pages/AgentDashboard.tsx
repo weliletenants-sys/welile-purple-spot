@@ -314,7 +314,7 @@ const AgentDashboard = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-destructive">Total Outstanding Balance</span>
                       <span className="text-2xl font-bold text-destructive">
-                        UGX {agent.totalOutstandingBalance.toLocaleString()}
+                        UGX {(agent.totalOutstandingBalance || 0).toLocaleString()}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">Agent's collection obligation</p>
@@ -326,23 +326,23 @@ const AgentDashboard = () => {
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="p-2 rounded bg-card border border-border">
                         <p className="text-muted-foreground">Daily</p>
-                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionDaily.toLocaleString()}</p>
+                        <p className="font-bold text-foreground">UGX {(agent.expectedCollectionDaily || 0).toLocaleString()}</p>
                       </div>
                       <div className="p-2 rounded bg-card border border-border">
                         <p className="text-muted-foreground">Weekly</p>
-                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionWeekly.toLocaleString()}</p>
+                        <p className="font-bold text-foreground">UGX {(agent.expectedCollectionWeekly || 0).toLocaleString()}</p>
                       </div>
                       <div className="p-2 rounded bg-card border border-border">
                         <p className="text-muted-foreground">Monthly</p>
-                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionMonthly.toLocaleString()}</p>
+                        <p className="font-bold text-foreground">UGX {(agent.expectedCollectionMonthly || 0).toLocaleString()}</p>
                       </div>
                       <div className="p-2 rounded bg-card border border-border">
                         <p className="text-muted-foreground">2 Months</p>
-                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionTwoMonths.toLocaleString()}</p>
+                        <p className="font-bold text-foreground">UGX {(agent.expectedCollectionTwoMonths || 0).toLocaleString()}</p>
                       </div>
                       <div className="p-2 rounded bg-card border border-border col-span-2">
                         <p className="text-muted-foreground">3 Months</p>
-                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionThreeMonths.toLocaleString()}</p>
+                        <p className="font-bold text-foreground">UGX {(agent.expectedCollectionThreeMonths || 0).toLocaleString()}</p>
                       </div>
                     </div>
                   </div>
