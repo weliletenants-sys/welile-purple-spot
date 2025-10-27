@@ -309,6 +309,44 @@ const AgentDashboard = () => {
                     </div>
                   </div>
 
+                  {/* Outstanding Balance - Highlighted */}
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-destructive/10 to-destructive/5 border border-destructive/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-destructive">Total Outstanding Balance</span>
+                      <span className="text-2xl font-bold text-destructive">
+                        UGX {agent.totalOutstandingBalance.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Agent's collection obligation</p>
+                  </div>
+
+                  {/* Expected Collections */}
+                  <div className="pt-4 space-y-2">
+                    <p className="text-sm font-semibold text-foreground mb-2">Expected Collections</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 rounded bg-card border border-border">
+                        <p className="text-muted-foreground">Daily</p>
+                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionDaily.toLocaleString()}</p>
+                      </div>
+                      <div className="p-2 rounded bg-card border border-border">
+                        <p className="text-muted-foreground">Weekly</p>
+                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionWeekly.toLocaleString()}</p>
+                      </div>
+                      <div className="p-2 rounded bg-card border border-border">
+                        <p className="text-muted-foreground">Monthly</p>
+                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionMonthly.toLocaleString()}</p>
+                      </div>
+                      <div className="p-2 rounded bg-card border border-border">
+                        <p className="text-muted-foreground">2 Months</p>
+                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionTwoMonths.toLocaleString()}</p>
+                      </div>
+                      <div className="p-2 rounded bg-card border border-border col-span-2">
+                        <p className="text-muted-foreground">3 Months</p>
+                        <p className="font-bold text-foreground">UGX {agent.expectedCollectionThreeMonths.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Commission Stats */}
                   <div className="pt-4 border-t border-border space-y-3">
                     <div className="flex items-center justify-between">

@@ -11,6 +11,12 @@ export interface AgentEarning {
   withdrawnCommission: number;
   earningsCount: number;
   tenantsCount: number;
+  totalOutstandingBalance: number;
+  expectedCollectionDaily: number;
+  expectedCollectionWeekly: number;
+  expectedCollectionMonthly: number;
+  expectedCollectionTwoMonths: number;
+  expectedCollectionThreeMonths: number;
 }
 
 export const useAgentEarnings = (period?: string) => {
@@ -22,11 +28,21 @@ export const useAgentEarnings = (period?: string) => {
       // Get all tenants grouped by agent
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
-        .select("agent_name, agent_phone, rent_amount, repayment_days");
+        .select("id, agent_name, agent_phone, rent_amount, repayment_days");
 
       if (tenantsError) {
         console.error("Error fetching tenants:", tenantsError);
         throw tenantsError;
+      }
+
+      // Get all daily payments to calculate outstanding balances
+      const { data: payments, error: paymentsError } = await supabase
+        .from("daily_payments")
+        .select("tenant_id, paid, amount, paid_amount");
+
+      if (paymentsError) {
+        console.error("Error fetching payments:", paymentsError);
+        throw paymentsError;
       }
 
       // Get earnings filtered by period
@@ -60,6 +76,21 @@ export const useAgentEarnings = (period?: string) => {
         throw earningsError;
       }
 
+      // Create a map of tenant payments
+      const tenantPaymentsMap = new Map<string, { outstanding: number; totalDue: number }>();
+      payments?.forEach((payment: any) => {
+        if (!tenantPaymentsMap.has(payment.tenant_id)) {
+          tenantPaymentsMap.set(payment.tenant_id, { outstanding: 0, totalDue: 0 });
+        }
+        const tenantPayment = tenantPaymentsMap.get(payment.tenant_id)!;
+        tenantPayment.totalDue += Number(payment.amount);
+        if (!payment.paid) {
+          tenantPayment.outstanding += Number(payment.amount);
+        } else if (payment.paid_amount) {
+          tenantPayment.outstanding += Math.max(0, Number(payment.amount) - Number(payment.paid_amount));
+        }
+      });
+
       // Group by agent name (to remove duplicates by name)
       const agentMap = new Map<string, AgentEarning>();
       
@@ -77,6 +108,12 @@ export const useAgentEarnings = (period?: string) => {
             withdrawnCommission: 0,
             earningsCount: 0,
             tenantsCount: 0,
+            totalOutstandingBalance: 0,
+            expectedCollectionDaily: 0,
+            expectedCollectionWeekly: 0,
+            expectedCollectionMonthly: 0,
+            expectedCollectionTwoMonths: 0,
+            expectedCollectionThreeMonths: 0,
           });
         }
         const agent = agentMap.get(key)!;
@@ -88,6 +125,21 @@ export const useAgentEarnings = (period?: string) => {
         );
         agent.expectedCommission += repaymentDetails.totalAmount * 0.05; // 5% of total
         agent.tenantsCount += 1;
+
+        // Add outstanding balance for this tenant
+        const tenantPayment = tenantPaymentsMap.get(tenant.id);
+        if (tenantPayment) {
+          agent.totalOutstandingBalance += tenantPayment.outstanding;
+        }
+
+        // Calculate expected collections based on repayment schedule
+        const dailyInstallment = repaymentDetails.dailyInstallment;
+        agent.expectedCollectionDaily += dailyInstallment;
+        agent.expectedCollectionWeekly += dailyInstallment * 7;
+        agent.expectedCollectionMonthly += dailyInstallment * 30;
+        agent.expectedCollectionTwoMonths += dailyInstallment * 60;
+        agent.expectedCollectionThreeMonths += dailyInstallment * 90;
+
         // Use the first non-empty phone number found
         if (tenant.agent_phone && !agent.agentPhone) {
           agent.agentPhone = tenant.agent_phone;
@@ -108,6 +160,12 @@ export const useAgentEarnings = (period?: string) => {
             withdrawnCommission: 0,
             earningsCount: 0,
             tenantsCount: 0,
+            totalOutstandingBalance: 0,
+            expectedCollectionDaily: 0,
+            expectedCollectionWeekly: 0,
+            expectedCollectionMonthly: 0,
+            expectedCollectionTwoMonths: 0,
+            expectedCollectionThreeMonths: 0,
           });
         }
         
@@ -129,7 +187,7 @@ export const useAgentEarnings = (period?: string) => {
     },
   });
 
-  // Subscribe to realtime changes for agent_earnings and tenants
+  // Subscribe to realtime changes for agent_earnings, tenants, and daily_payments
   useEffect(() => {
     const earningsChannel = supabase
       .channel('agent-earnings-changes')
@@ -161,9 +219,25 @@ export const useAgentEarnings = (period?: string) => {
       )
       .subscribe();
 
+    const paymentsChannel = supabase
+      .channel('agent-payments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_payments'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(earningsChannel);
       supabase.removeChannel(tenantsChannel);
+      supabase.removeChannel(paymentsChannel);
     };
   }, [queryClient]);
 
