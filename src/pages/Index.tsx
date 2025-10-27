@@ -286,7 +286,7 @@ const Index = () => {
           )}
           <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 transition-opacity duration-200 ${isLoading ? 'opacity-60' : 'opacity-100'}`}>
             {tenants.map(tenant => (
-              <TenantCard key={tenant.id} tenant={tenant} />
+              <TenantCard key={tenant.id} tenant={tenant} isFiltered={debouncedSearchTerm.length > 0} />
             ))}
           </div>
         </div>

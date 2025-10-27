@@ -23,9 +23,10 @@ import {
 
 interface TenantCardProps {
   tenant: Tenant;
+  isFiltered?: boolean;
 }
 
-export const TenantCard = ({ tenant }: TenantCardProps) => {
+export const TenantCard = ({ tenant, isFiltered = false }: TenantCardProps) => {
   const navigate = useNavigate();
   const { deleteTenant } = useTenants();
   const { toast } = useToast();
@@ -80,7 +81,11 @@ export const TenantCard = ({ tenant }: TenantCardProps) => {
 
   return (
     <Card 
-      className="group p-6 hover:shadow-[var(--shadow-purple)] transition-all duration-300 border-border bg-gradient-to-br from-card to-secondary/20 hover:-translate-y-1 cursor-pointer"
+      className={`group p-6 hover:shadow-[var(--shadow-purple)] transition-all duration-300 border-border hover:-translate-y-1 cursor-pointer ${
+        isFiltered 
+          ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border-yellow-400 dark:border-yellow-600 shadow-lg shadow-yellow-200/50 dark:shadow-yellow-900/30' 
+          : 'bg-gradient-to-br from-card to-secondary/20'
+      }`}
       onClick={() => navigate(`/tenant/${tenant.id}`)}
     >
       <div className="space-y-4">
