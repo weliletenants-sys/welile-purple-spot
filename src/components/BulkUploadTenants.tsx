@@ -317,15 +317,23 @@ export const BulkUploadTenants = () => {
 
       setResult(uploadResult);
 
+      console.log("Upload complete:", uploadResult);
+      
       if (uploadResult.success > 0) {
         toast({
-          title: "Upload completed",
-          description: `Successfully added ${uploadResult.success} tenant(s)${uploadResult.duplicates > 0 ? `, ${uploadResult.duplicates} duplicates skipped` : ""}${uploadResult.failed > 0 ? `, ${uploadResult.failed} failed` : ""}`,
+          title: "✅ Upload Successful!",
+          description: `Added ${uploadResult.success} new tenant(s)${uploadResult.duplicates > 0 ? `. Skipped ${uploadResult.duplicates} duplicates` : ""}${uploadResult.failed > 0 ? `. ${uploadResult.failed} failed` : ""}`,
+        });
+      } else if (uploadResult.duplicates > 0) {
+        toast({
+          title: "⚠️ All Duplicates",
+          description: `All ${uploadResult.duplicates} phone numbers already exist in the system.`,
+          variant: "destructive",
         });
       } else {
         toast({
           title: "Upload failed",
-          description: "No tenants were added. Check the error details.",
+          description: "No tenants were added. Check the error details below.",
           variant: "destructive",
         });
       }
