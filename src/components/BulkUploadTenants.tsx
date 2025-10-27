@@ -120,19 +120,23 @@ export const BulkUploadTenants = () => {
             location_cell_or_village: row.location_cell_or_village || row["Cell/Village"],
           };
 
-          // Validate required fields
-          if (!tenant.name || !tenant.contact || !tenant.address || !tenant.rent_amount) {
+          // Validate required fields (only name and contact)
+          if (!tenant.name || !tenant.contact) {
             const missingFields = [];
             if (!tenant.name) missingFields.push("name");
             if (!tenant.contact) missingFields.push("contact");
-            if (!tenant.address) missingFields.push("address");
-            if (!tenant.rent_amount) missingFields.push("rent_amount");
             
             uploadResult.failed++;
             uploadResult.errors.push(`Row ${i + 1}: Missing required fields: ${missingFields.join(", ")}`);
             console.error(`Row ${i + 1} validation failed:`, { tenant, missingFields });
             continue;
           }
+
+          // Provide defaults for optional fields to prevent database errors
+          if (!tenant.address) tenant.address = "Not provided";
+          if (!tenant.rent_amount) tenant.rent_amount = 0;
+          if (!tenant.landlord) tenant.landlord = "Not provided";
+          if (!tenant.landlord_contact) tenant.landlord_contact = "Not provided";
 
           // Check for duplicate phone number
           const { data: existingTenant, error: checkError } = await supabase
@@ -247,7 +251,7 @@ export const BulkUploadTenants = () => {
           <DialogTitle>Bulk Upload Tenants</DialogTitle>
           <DialogDescription>
             Upload a Google Sheets file (.xlsx, .xls) with tenant information.
-            Required columns: name, contact, address, rent_amount
+            Required columns: name, contact. All other fields can be filled in later.
           </DialogDescription>
         </DialogHeader>
 
@@ -336,14 +340,12 @@ export const BulkUploadTenants = () => {
             <h4 className="font-medium">Expected columns:</h4>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
               <li><strong>name</strong> (required)</li>
-              <li><strong>contact</strong> (required)</li>
-              <li><strong>address</strong> (required)</li>
-              <li><strong>rent_amount</strong> (required)</li>
-              <li>landlord, landlord_contact</li>
-              <li>agent_name, agent_phone</li>
-              <li>repayment_days (default: 30)</li>
-              <li>registration_fee (default: 10000)</li>
-              <li>guarantor1_name, guarantor1_contact, guarantor2_name, guarantor2_contact</li>
+              <li><strong>contact</strong> (required - phone number)</li>
+              <li>address, rent_amount (optional - can be added later)</li>
+              <li>landlord, landlord_contact (optional)</li>
+              <li>agent_name, agent_phone (optional)</li>
+              <li>repayment_days, registration_fee (optional)</li>
+              <li>guarantor1_name, guarantor1_contact, guarantor2_name, guarantor2_contact (optional)</li>
             </ul>
           </div>
         </div>
