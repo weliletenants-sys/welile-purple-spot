@@ -90,16 +90,6 @@ export const BulkUploadTenants = () => {
         setProgress(Math.round(((i + 1) / jsonData.length) * 100));
 
         try {
-          // Get current user
-          const { data: { user } } = await supabase.auth.getUser();
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", user?.id)
-            .maybeSingle();
-
-          const uploadedBy = profile?.full_name || user?.email || "Unknown";
-
           const tenant: ParsedTenant = {
             name: row.name || row.Name || row.NAME,
             contact: row.contact || row.Contact || row.CONTACT || row.phone || row.Phone,
@@ -155,7 +145,7 @@ export const BulkUploadTenants = () => {
               status: "active",
               payment_status: "pending",
               performance: 80,
-              edited_by: uploadedBy,
+              edited_by: "Bulk Upload",
               edited_at: new Date().toISOString(),
             })
             .select()

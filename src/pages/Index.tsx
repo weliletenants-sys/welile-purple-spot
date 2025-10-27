@@ -8,11 +8,9 @@ import { ShareButton } from "@/components/ShareButton";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { useTenants } from "@/hooks/useTenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, LogOut } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 // Lazy load heavy components
 const AgentLeaderboard = lazy(() => import("@/components/AgentLeaderboard").then(m => ({ default: m.AgentLeaderboard })));
@@ -43,31 +41,12 @@ import {
 const Index = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [feeFilter, setFeeFilter] = useState<string>("all");
-  const [userEmail, setUserEmail] = useState<string>("");
   const pageSize = 10;
-
-  // Get current user
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUserEmail(user.email || "");
-      }
-    });
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You've been successfully signed out.",
-    });
-  };
 
   // Handle URL parameters for filtering
   useEffect(() => {
@@ -155,20 +134,6 @@ const Index = () => {
                 <Users className="w-5 h-5 text-primary-foreground" />
                 <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
               </div>
-              {userEmail && (
-                <div className="text-sm text-muted-foreground hidden md:block">
-                  {userEmail}
-                </div>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
               <ShareButton />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -51,6 +51,7 @@ interface TenantFormData {
   locationCellOrVillage: string;
   agentName: string;
   agentPhone: string;
+  editorName: string;
 }
 
 export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
@@ -87,6 +88,7 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
     locationCellOrVillage: tenant.location?.cellOrVillage || "",
     agentName: validAgentName || "",
     agentPhone: tenant.agentPhone || "",
+    editorName: "",
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
@@ -120,6 +122,7 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
     if (!formData.rentAmount || Number(formData.rentAmount) <= 0) {
       newErrors.rentAmount = "Valid rent amount is required";
     }
+    if (!formData.editorName.trim()) newErrors.editorName = "Please enter your name";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -178,14 +181,6 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
     }
 
     try {
-      // Get current user info
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user?.id)
-        .maybeSingle();
-
       await updateTenant({
         id: tenant.id,
         updates: {
@@ -221,7 +216,7 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
           },
           agentName: formData.agentName,
           agentPhone: formData.agentPhone,
-          editedBy: profile?.full_name || user?.email || "Unknown",
+          editedBy: formData.editorName.trim(),
           editedAt: new Date().toISOString(),
         },
       });
@@ -291,6 +286,21 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
               <AlertDescription>{duplicateWarning}</AlertDescription>
             </Alert>
           )}
+          
+          {/* Editor Name - Required */}
+          <div className="space-y-2 border-2 border-primary/30 rounded-lg p-4 bg-primary/5">
+            <Label htmlFor="editorName" className="text-base font-semibold">
+              Your Name * <span className="text-sm font-normal text-muted-foreground">(Required to save changes)</span>
+            </Label>
+            <Input
+              id="editorName"
+              placeholder="Enter your full name"
+              value={formData.editorName}
+              onChange={(e) => handleChange("editorName", e.target.value)}
+              className={errors.editorName ? "border-destructive" : ""}
+            />
+            {errors.editorName && <p className="text-sm text-destructive mt-1">{errors.editorName}</p>}
+          </div>
           
           {/* Personal Information */}
           <div className="space-y-4">
