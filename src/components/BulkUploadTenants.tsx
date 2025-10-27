@@ -132,6 +132,7 @@ export const BulkUploadTenants = () => {
             "name",
             "tenant",
             "tenant_name",
+            "tenants_name",
             "contact_name",
             "full_name",
             "fullname",
@@ -149,6 +150,8 @@ export const BulkUploadTenants = () => {
             "phone_number",
             "telephone",
             "tel",
+            "tel_no",
+            "tel_no_",
             "mobile",
             "msisdn",
             "contact_number",
@@ -202,12 +205,12 @@ export const BulkUploadTenants = () => {
           const tenant: ParsedTenant = {
             name: nameVal ? String(nameVal).trim() : "",
             contact: phoneVal ? String(phoneVal) : "",
-            address: (get("address", "location", "area") as string) || "Not provided",
+            address: (get("address", "location", "area", "cell_village", "cell", "village") as string) || "Not provided",
             landlord: (get("landlord", "landlord_name") as string) || "Not provided",
             landlord_contact: (get("landlord_contact", "landlord_phone") as string) || "Not provided",
             rent_amount: Number(get("rent_amount", "rent")) || 0,
             repayment_days: Number(get("repayment_days", "days")) || 30,
-            agent_name: (get("agent_name", "agent") as string) || "",
+            agent_name: (get("agent_name", "agent") as string) || "ADEKE ANNET",
             agent_phone: (get("agent_phone", "agent_contact", "agent_phone_number") as string) || "",
             registration_fee: Number(get("registration_fee", "reg_fee")) || 10000,
             access_fee: Number(get("access_fee")) || 0,
@@ -219,7 +222,7 @@ export const BulkUploadTenants = () => {
             location_county: get("location_county", "county") as string | undefined,
             location_district: get("location_district", "district") as string | undefined,
             location_subcounty_or_ward: get("location_subcounty_or_ward", "subcounty", "ward") as string | undefined,
-            location_cell_or_village: get("location_cell_or_village", "cell", "village") as string | undefined,
+            location_cell_or_village: get("location_cell_or_village", "cell_village", "cell", "village") as string | undefined,
           };
 
           // Validate required fields (only name and contact)
