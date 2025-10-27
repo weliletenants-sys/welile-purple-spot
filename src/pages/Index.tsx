@@ -46,14 +46,20 @@ const Index = () => {
   const [locationFilter, setLocationFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [feeFilter, setFeeFilter] = useState<string>("all");
+  const [agentFilter, setAgentFilter] = useState<string>("");
   const pageSize = 10;
 
   // Handle URL parameters for filtering
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const filter = params.get("filter");
+    const agent = params.get("agent");
     if (filter === "registration") {
       setFeeFilter("registration");
+    }
+    if (agent) {
+      setAgentFilter(decodeURIComponent(agent));
+      setSearchTerm(decodeURIComponent(agent)); // Also set search term to show the agent name
     }
   }, []);
 
@@ -77,6 +83,7 @@ const Index = () => {
     searchTerm: debouncedSearchTerm,
     locationFilter,
     feeFilter,
+    agentFilter,
   });
 
   const totalPages = Math.ceil(totalCount / pageSize);

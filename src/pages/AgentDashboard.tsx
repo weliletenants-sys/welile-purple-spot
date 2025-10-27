@@ -375,9 +375,16 @@ const AgentDashboard = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Tenants</span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {agent.tenantsCount}
-                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/?agent=${encodeURIComponent(agent.agentName)}`)}
+                        className="h-auto p-1 hover:bg-primary/10"
+                      >
+                        <span className="text-sm font-semibold text-primary hover:underline">
+                          {agent.tenantsCount}
+                        </span>
+                      </Button>
                     </div>
                   </div>
 

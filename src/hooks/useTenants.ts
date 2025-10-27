@@ -9,6 +9,7 @@ interface UseTenantsPaginationOptions {
   searchTerm?: string;
   locationFilter?: string;
   feeFilter?: string;
+  agentFilter?: string;
 }
 
 export const useTenants = (options?: UseTenantsPaginationOptions) => {
@@ -18,9 +19,10 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
   const searchTerm = options?.searchTerm ?? "";
   const locationFilter = options?.locationFilter ?? "all";
   const feeFilter = options?.feeFilter ?? "all";
+  const agentFilter = options?.agentFilter ?? "";
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tenants", page, pageSize, searchTerm, locationFilter, feeFilter],
+    queryKey: ["tenants", page, pageSize, searchTerm, locationFilter, feeFilter, agentFilter],
     placeholderData: (previousData) => previousData,
     queryFn: async () => {
       const from = (page - 1) * pageSize;
@@ -47,6 +49,11 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
       // Apply fee filter if provided
       if (feeFilter === "registration") {
         query = query.gt("registration_fee", 0);
+      }
+
+      // Apply agent filter if provided
+      if (agentFilter && agentFilter !== "all") {
+        query = query.eq("agent_name", agentFilter);
       }
 
       const { data, error, count } = await query;
