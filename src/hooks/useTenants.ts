@@ -21,6 +21,7 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
 
   const { data, isLoading } = useQuery({
     queryKey: ["tenants", page, pageSize, searchTerm, locationFilter, feeFilter],
+    placeholderData: (previousData) => previousData,
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;

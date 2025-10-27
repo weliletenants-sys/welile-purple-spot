@@ -111,16 +111,6 @@ const Index = () => {
     };
   }, [tenants, totalCount]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading tenants...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
@@ -287,13 +277,21 @@ const Index = () => {
         </div>
 
         {/* Tenant Cards Grid - Fully responsive for all devices */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
-          {tenants.map(tenant => (
-            <TenantCard key={tenant.id} tenant={tenant} />
-          ))}
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm rounded-lg p-4 flex items-center justify-center gap-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+              <span className="text-sm font-medium text-foreground">Searching...</span>
+            </div>
+          )}
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 transition-opacity duration-200 ${isLoading ? 'opacity-60' : 'opacity-100'}`}>
+            {tenants.map(tenant => (
+              <TenantCard key={tenant.id} tenant={tenant} />
+            ))}
+          </div>
         </div>
 
-        {tenants.length === 0 && (
+        {!isLoading && tenants.length === 0 && (
           <div className="text-center py-16">
             <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">No tenants found</h3>
