@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck } from "lucide-react";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit } from "lucide-react";
 import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import { useNavigate } from "react-router-dom";
 import { EditTenantForm } from "./EditTenantForm";
@@ -112,7 +112,18 @@ export const TenantCard = ({ tenant, isFiltered = false }: TenantCardProps) => {
               {tenant.performance}%
             </div>
             <div className="flex items-center gap-1">
-              <EditTenantForm tenant={tenant} />
+              <EditTenantForm tenant={tenant}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <Edit className="h-4 w-4 text-primary" />
+                </Button>
+              </EditTenantForm>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button

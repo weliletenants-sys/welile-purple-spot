@@ -26,6 +26,7 @@ import { useAgents } from "@/hooks/useAgents";
 
 interface EditTenantFormProps {
   tenant: Tenant;
+  children?: React.ReactNode;
 }
 
 interface TenantFormData {
@@ -54,7 +55,7 @@ interface TenantFormData {
   editorName: string;
 }
 
-export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
+export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
   const { toast } = useToast();
   const { updateTenant } = useTenants();
   const { data: agents = [] } = useAgents();
@@ -263,16 +264,18 @@ export const EditTenantForm = ({ tenant }: EditTenantFormProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
+        {children || (
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
