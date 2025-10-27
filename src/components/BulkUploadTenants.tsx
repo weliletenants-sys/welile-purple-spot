@@ -142,8 +142,8 @@ export const BulkUploadTenants = () => {
             nameVal = normalizedRow["contact"]; // Some sheets put name under "contact"
           }
 
-          // Detect phone
-          let phoneVal = get(
+          // Detect phone (robust: ignore non-phone values and scan all columns)
+          let phoneCandidate = get(
             "contact",
             "phone",
             "phone_number",
@@ -154,9 +154,13 @@ export const BulkUploadTenants = () => {
             "contact_number",
             "contact_no"
           );
-          if (!phoneVal) {
-            // Fallback: look for any phone-like value in common fields including misused "address"
-            for (const k of [
+
+          // If the initial candidate isn't a valid phone, discard it
+          if (!phoneCandidate || !looksLikePhone(phoneCandidate)) {
+            phoneCandidate = undefined;
+
+            // Common columns where phones are often misplaced
+            const possiblePhoneKeys = [
               "contact",
               "phone",
               "phone_number",
@@ -167,15 +171,32 @@ export const BulkUploadTenants = () => {
               "contact_number",
               "contact_no",
               "address",
-            ]) {
+              "landlord_contact",
+              "landlord_phone",
+              "landlord_details",
+              "landload_details" // frequent misspelling observed in sheets
+            ];
+
+            for (const k of possiblePhoneKeys) {
               const v = normalizedRow[k];
               if (v && looksLikePhone(v)) {
-                phoneVal = v;
+                phoneCandidate = v;
                 break;
               }
             }
+
+            // Ultimate fallback: scan every cell for a phone-like value
+            if (!phoneCandidate) {
+              for (const v of Object.values(normalizedRow)) {
+                if (v && looksLikePhone(v)) {
+                  phoneCandidate = v;
+                  break;
+                }
+              }
+            }
           }
-          if (phoneVal) phoneVal = normalizePhone(phoneVal);
+
+          let phoneVal = phoneCandidate ? normalizePhone(phoneCandidate) : undefined;
 
           // Build tenant with safe defaults
           const tenant: ParsedTenant = {
