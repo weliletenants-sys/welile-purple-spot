@@ -40,7 +40,9 @@ interface ParsedTenant {
 interface UploadResult {
   success: number;
   failed: number;
+  duplicates: number;
   errors: string[];
+  duplicateContacts: string[];
 }
 
 export const BulkUploadTenants = () => {
@@ -77,7 +79,9 @@ export const BulkUploadTenants = () => {
       const uploadResult: UploadResult = {
         success: 0,
         failed: 0,
+        duplicates: 0,
         errors: [],
+        duplicateContacts: [],
       };
 
       // Process tenants in batches
@@ -113,6 +117,23 @@ export const BulkUploadTenants = () => {
           if (!tenant.name || !tenant.contact || !tenant.address || !tenant.rent_amount) {
             uploadResult.failed++;
             uploadResult.errors.push(`Row ${i + 1}: Missing required fields (name, contact, address, or rent amount)`);
+            continue;
+          }
+
+          // Check for duplicate phone number
+          const { data: existingTenant, error: checkError } = await supabase
+            .from("tenants")
+            .select("id, name, contact")
+            .eq("contact", tenant.contact)
+            .maybeSingle();
+
+          if (checkError && checkError.code !== "PGRST116") {
+            throw checkError;
+          }
+
+          if (existingTenant) {
+            uploadResult.duplicates++;
+            uploadResult.duplicateContacts.push(`${tenant.name} (${tenant.contact})`);
             continue;
           }
 
@@ -173,7 +194,7 @@ export const BulkUploadTenants = () => {
       if (uploadResult.success > 0) {
         toast({
           title: "Upload completed",
-          description: `Successfully added ${uploadResult.success} tenant(s)${uploadResult.failed > 0 ? `, ${uploadResult.failed} failed` : ""}`,
+          description: `Successfully added ${uploadResult.success} tenant(s)${uploadResult.duplicates > 0 ? `, ${uploadResult.duplicates} duplicates skipped` : ""}${uploadResult.failed > 0 ? `, ${uploadResult.failed} failed` : ""}`,
         });
       } else {
         toast({
@@ -245,11 +266,17 @@ export const BulkUploadTenants = () => {
 
           {result && (
             <div className="space-y-4 border rounded-lg p-4 bg-card">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
                   <span className="font-medium">{result.success} successful</span>
                 </div>
+                {result.duplicates > 0 && (
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-500" />
+                    <span className="font-medium">{result.duplicates} duplicates</span>
+                  </div>
+                )}
                 {result.failed > 0 && (
                   <div className="flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-destructive" />
@@ -257,6 +284,19 @@ export const BulkUploadTenants = () => {
                   </div>
                 )}
               </div>
+
+              {result.duplicateContacts.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-yellow-600 dark:text-yellow-500">Duplicates Skipped (Phone Already Exists):</h4>
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {result.duplicateContacts.map((contact, i) => (
+                      <p key={i} className="text-xs text-muted-foreground">
+                        {contact}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {result.errors.length > 0 && (
                 <div className="space-y-2">
