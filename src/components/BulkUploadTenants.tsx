@@ -97,42 +97,122 @@ export const BulkUploadTenants = () => {
         setProgress(Math.round(((i + 1) / jsonData.length) * 100));
 
         try {
+          // Normalize keys to be case/space insensitive
+          const normalizedRow: Record<string, any> = {};
+          Object.entries(row).forEach(([k, v]) => {
+            const key = String(k).toLowerCase().trim().replace(/\s+|\/+|-/g, "_");
+            normalizedRow[key] = v;
+          });
+
+          const get = (...keys: string[]) =>
+            keys
+              .map((k) => normalizedRow[k])
+              .find((v) => v !== undefined && v !== null && String(v).trim() !== "");
+
+          const looksLikePhone = (val: any) => {
+            const digits = String(val).replace(/\D/g, "");
+            return digits.length >= 9 && digits.length <= 12;
+          };
+
+          const normalizePhone = (val: any) => {
+            let digits = String(val).replace(/\D/g, "");
+            if (digits.startsWith("256") && digits.length === 12) {
+              digits = "0" + digits.slice(3);
+            }
+            if (digits.length === 9) {
+              digits = "0" + digits;
+            }
+            return digits;
+          };
+
+          const looksLikeName = (val: any) => /[A-Za-z]/.test(String(val));
+
+          // Detect name
+          let nameVal = get(
+            "name",
+            "tenant",
+            "tenant_name",
+            "contact_name",
+            "full_name",
+            "fullname",
+            "client_name",
+            "names"
+          );
+          if (!nameVal && normalizedRow["contact"] && !looksLikePhone(normalizedRow["contact"]) && looksLikeName(normalizedRow["contact"])) {
+            nameVal = normalizedRow["contact"]; // Some sheets put name under "contact"
+          }
+
+          // Detect phone
+          let phoneVal = get(
+            "contact",
+            "phone",
+            "phone_number",
+            "telephone",
+            "tel",
+            "mobile",
+            "msisdn",
+            "contact_number",
+            "contact_no"
+          );
+          if (!phoneVal) {
+            // Fallback: look for any phone-like value in common fields including misused "address"
+            for (const k of [
+              "contact",
+              "phone",
+              "phone_number",
+              "telephone",
+              "tel",
+              "mobile",
+              "msisdn",
+              "contact_number",
+              "contact_no",
+              "address",
+            ]) {
+              const v = normalizedRow[k];
+              if (v && looksLikePhone(v)) {
+                phoneVal = v;
+                break;
+              }
+            }
+          }
+          if (phoneVal) phoneVal = normalizePhone(phoneVal);
+
+          // Build tenant with safe defaults
           const tenant: ParsedTenant = {
-            name: row.name || row.Name || row.NAME,
-            contact: row.contact || row.Contact || row.CONTACT || row.phone || row.Phone,
-            address: row.address || row.Address || row.ADDRESS,
-            landlord: row.landlord || row.Landlord || row.LANDLORD,
-            landlord_contact: row.landlord_contact || row["Landlord Contact"] || row.landlord_phone,
-            rent_amount: parseFloat(row.rent_amount || row["Rent Amount"] || row.rent || 0),
-            repayment_days: parseInt(row.repayment_days || row["Repayment Days"] || 30),
-            agent_name: row.agent_name || row["Agent Name"] || row.agent || "",
-            agent_phone: row.agent_phone || row["Agent Phone"] || row.agent_contact || "",
-            registration_fee: parseFloat(row.registration_fee || row["Registration Fee"] || 10000),
-            access_fee: parseFloat(row.access_fee || row["Access Fee"] || 0),
-            guarantor1_name: row.guarantor1_name || row["Guarantor 1 Name"],
-            guarantor1_contact: row.guarantor1_contact || row["Guarantor 1 Contact"],
-            guarantor2_name: row.guarantor2_name || row["Guarantor 2 Name"],
-            guarantor2_contact: row.guarantor2_contact || row["Guarantor 2 Contact"],
-            location_country: row.location_country || row["Country"],
-            location_county: row.location_county || row["County"],
-            location_district: row.location_district || row["District"],
-            location_subcounty_or_ward: row.location_subcounty_or_ward || row["Subcounty/Ward"],
-            location_cell_or_village: row.location_cell_or_village || row["Cell/Village"],
+            name: nameVal ? String(nameVal).trim() : "",
+            contact: phoneVal ? String(phoneVal) : "",
+            address: (get("address", "location", "area") as string) || "Not provided",
+            landlord: (get("landlord", "landlord_name") as string) || "Not provided",
+            landlord_contact: (get("landlord_contact", "landlord_phone") as string) || "Not provided",
+            rent_amount: Number(get("rent_amount", "rent")) || 0,
+            repayment_days: Number(get("repayment_days", "days")) || 30,
+            agent_name: (get("agent_name", "agent") as string) || "",
+            agent_phone: (get("agent_phone", "agent_contact", "agent_phone_number") as string) || "",
+            registration_fee: Number(get("registration_fee", "reg_fee")) || 10000,
+            access_fee: Number(get("access_fee")) || 0,
+            guarantor1_name: get("guarantor1_name", "guarantor_name", "guarantor") as string | undefined,
+            guarantor1_contact: get("guarantor1_contact", "guarantor_phone") as string | undefined,
+            guarantor2_name: get("guarantor2_name") as string | undefined,
+            guarantor2_contact: get("guarantor2_contact") as string | undefined,
+            location_country: get("location_country", "country") as string | undefined,
+            location_county: get("location_county", "county") as string | undefined,
+            location_district: get("location_district", "district") as string | undefined,
+            location_subcounty_or_ward: get("location_subcounty_or_ward", "subcounty", "ward") as string | undefined,
+            location_cell_or_village: get("location_cell_or_village", "cell", "village") as string | undefined,
           };
 
           // Validate required fields (only name and contact)
           if (!tenant.name || !tenant.contact) {
-            const missingFields = [];
+            const missingFields = [] as string[];
             if (!tenant.name) missingFields.push("name");
             if (!tenant.contact) missingFields.push("contact");
-            
             uploadResult.failed++;
             uploadResult.errors.push(`Row ${i + 1}: Missing required fields: ${missingFields.join(", ")}`);
-            console.error(`Row ${i + 1} validation failed:`, { tenant, missingFields });
+            console.error(`Row ${i + 1} validation failed:`, { tenant, row: normalizedRow, missingFields });
             continue;
           }
 
-          // Provide defaults for optional fields to prevent database errors
+          // Provide defaults for optional fields to prevent database errors (safety re-check)
           if (!tenant.address) tenant.address = "Not provided";
           if (!tenant.rent_amount) tenant.rent_amount = 0;
           if (!tenant.landlord) tenant.landlord = "Not provided";
