@@ -91,13 +91,14 @@ export const BulkUploadTenants = () => {
         duplicateContacts: [],
       };
 
-      // Process tenants in batches
+      // Parse all tenants first
+      const parsedTenants: ParsedTenant[] = [];
+      
       for (let i = 0; i < jsonData.length; i++) {
         const row = jsonData[i];
-        setProgress(Math.round(((i + 1) / jsonData.length) * 100));
+        setProgress(Math.round(((i + 1) / jsonData.length) * 50)); // First 50% for parsing
 
         try {
-          // Normalize keys to be case/space insensitive
           const normalizedRow: Record<string, any> = {};
           Object.entries(row).forEach(([k, v]) => {
             const key = String(k).toLowerCase().trim().replace(/\s+|\/+|-/g, "_");
@@ -127,59 +128,16 @@ export const BulkUploadTenants = () => {
 
           const looksLikeName = (val: any) => /[A-Za-z]/.test(String(val));
 
-          // Detect name
-          let nameVal = get(
-            "name",
-            "tenant",
-            "tenant_name",
-            "tenants_name",
-            "contact_name",
-            "full_name",
-            "fullname",
-            "client_name",
-            "names"
-          );
+          let nameVal = get("name", "tenant", "tenant_name", "tenants_name", "contact_name", "full_name", "fullname", "client_name", "names");
           if (!nameVal && normalizedRow["contact"] && !looksLikePhone(normalizedRow["contact"]) && looksLikeName(normalizedRow["contact"])) {
-            nameVal = normalizedRow["contact"]; // Some sheets put name under "contact"
+            nameVal = normalizedRow["contact"];
           }
 
-          // Detect phone (robust: ignore non-phone values and scan all columns)
-          let phoneCandidate = get(
-            "contact",
-            "phone",
-            "phone_number",
-            "telephone",
-            "tel",
-            "tel_no",
-            "tel_no_",
-            "mobile",
-            "msisdn",
-            "contact_number",
-            "contact_no"
-          );
+          let phoneCandidate = get("contact", "phone", "phone_number", "telephone", "tel", "tel_no", "tel_no_", "mobile", "msisdn", "contact_number", "contact_no");
 
-          // If the initial candidate isn't a valid phone, discard it
           if (!phoneCandidate || !looksLikePhone(phoneCandidate)) {
             phoneCandidate = undefined;
-
-            // Common columns where phones are often misplaced
-            const possiblePhoneKeys = [
-              "contact",
-              "phone",
-              "phone_number",
-              "telephone",
-              "tel",
-              "mobile",
-              "msisdn",
-              "contact_number",
-              "contact_no",
-              "address",
-              "landlord_contact",
-              "landlord_phone",
-              "landlord_details",
-              "landload_details" // frequent misspelling observed in sheets
-            ];
-
+            const possiblePhoneKeys = ["contact", "phone", "phone_number", "telephone", "tel", "mobile", "msisdn", "contact_number", "contact_no", "address", "landlord_contact", "landlord_phone", "landlord_details", "landload_details"];
             for (const k of possiblePhoneKeys) {
               const v = normalizedRow[k];
               if (v && looksLikePhone(v)) {
@@ -187,8 +145,6 @@ export const BulkUploadTenants = () => {
                 break;
               }
             }
-
-            // Ultimate fallback: scan every cell for a phone-like value
             if (!phoneCandidate) {
               for (const v of Object.values(normalizedRow)) {
                 if (v && looksLikePhone(v)) {
@@ -201,10 +157,9 @@ export const BulkUploadTenants = () => {
 
           let phoneVal = phoneCandidate ? normalizePhone(phoneCandidate) : undefined;
 
-          // Build tenant with safe defaults
           const tenant: ParsedTenant = {
-            name: nameVal ? String(nameVal).trim() : "",
-            contact: phoneVal ? String(phoneVal) : "",
+            name: nameVal ? String(nameVal).trim() : "Unknown",
+            contact: phoneVal ? String(phoneVal) : `temp_${Date.now()}_${i}`,
             address: (get("address", "location", "area", "cell_village", "cell", "village") as string) || "Not provided",
             landlord: (get("landlord", "landlord_name") as string) || "Not provided",
             landlord_contact: (get("landlord_contact", "landlord_phone") as string) || "Not provided",
@@ -225,93 +180,112 @@ export const BulkUploadTenants = () => {
             location_cell_or_village: get("location_cell_or_village", "cell_village", "cell", "village") as string | undefined,
           };
 
-          // Provide defaults for all fields - no validation, import everything
-          if (!tenant.name) tenant.name = "Unknown";
-          if (!tenant.contact) tenant.contact = `temp_${Date.now()}_${i}`;
-          if (!tenant.address) tenant.address = "Not provided";
-          if (!tenant.rent_amount) tenant.rent_amount = 0;
-          if (!tenant.landlord) tenant.landlord = "Not provided";
-          if (!tenant.landlord_contact) tenant.landlord_contact = "Not provided";
+          parsedTenants.push(tenant);
+        } catch (error: any) {
+          uploadResult.errors.push(`Row ${i + 1}: ${error.message}`);
+        }
+      }
 
-          // Check for duplicate phone number
-          const { data: existingTenant, error: checkError } = await supabase
-            .from("tenants")
-            .select("id, name, contact")
-            .eq("contact", tenant.contact)
-            .maybeSingle();
+      // Check for duplicates in batch
+      const contacts = parsedTenants.map(t => t.contact);
+      const { data: existingTenants } = await supabase
+        .from("tenants")
+        .select("contact")
+        .in("contact", contacts);
 
-          if (checkError && checkError.code !== "PGRST116") {
-            throw checkError;
-          }
+      const existingContacts = new Set(existingTenants?.map(t => t.contact) || []);
+      
+      const tenantsToInsert = parsedTenants.filter(tenant => {
+        if (existingContacts.has(tenant.contact)) {
+          uploadResult.duplicates++;
+          uploadResult.duplicateContacts.push(`${tenant.name} (${tenant.contact})`);
+          return false;
+        }
+        return true;
+      });
 
-          if (existingTenant) {
-            uploadResult.duplicates++;
-            uploadResult.duplicateContacts.push(`${tenant.name} (${tenant.contact})`);
-            continue;
-          }
+      setProgress(60);
 
-          // Insert tenant - ignore errors and continue
-          const { data: newTenant, error: tenantError } = await supabase
-            .from("tenants")
-            .insert({
+      // Batch insert all tenants
+      if (tenantsToInsert.length > 0) {
+        const { data: insertedTenants, error: batchError } = await supabase
+          .from("tenants")
+          .insert(
+            tenantsToInsert.map(tenant => ({
               ...tenant,
               status: "active",
               payment_status: "pending",
               performance: 80,
               edited_by: "Bulk Upload",
               edited_at: new Date().toISOString(),
-            })
-            .select()
-            .single();
+            }))
+          )
+          .select();
 
-          if (tenantError) {
-            uploadResult.failed++;
-            uploadResult.errors.push(`Row ${i + 1}: ${tenantError.message}`);
-            continue; // Skip to next tenant
-          }
+        if (batchError) {
+          uploadResult.errors.push(`Batch insert failed: ${batchError.message}`);
+          uploadResult.failed = tenantsToInsert.length;
+        } else {
+          uploadResult.success = insertedTenants?.length || 0;
+          
+          setProgress(80);
 
-          // Create daily payment records - ignore errors
-          try {
-            const payments = [];
+          // Batch insert payments and earnings
+          if (insertedTenants && insertedTenants.length > 0) {
+            const allPayments = [];
+            const allEarnings = [];
             const today = new Date();
-            for (let day = 0; day < tenant.repayment_days; day++) {
-              const date = new Date(today);
-              date.setDate(date.getDate() + day);
-              payments.push({
-                tenant_id: newTenant.id,
-                date: date.toISOString().split("T")[0],
-                amount: tenant.rent_amount / tenant.repayment_days,
-                paid: false,
-              });
-            }
-            await supabase.from("daily_payments").insert(payments);
-          } catch (e) {
-            // Ignore payment errors
-          }
 
-          // Create agent earnings record - ignore errors
-          try {
-            if (tenant.agent_name && tenant.agent_phone) {
-              await supabase.from("agent_earnings").insert({
-                agent_name: tenant.agent_name,
-                agent_phone: tenant.agent_phone,
-                tenant_id: newTenant.id,
-                earning_type: "signup_bonus",
-                amount: 5000,
-              });
-            }
-          } catch (e) {
-            // Ignore earnings errors
-          }
+            for (const newTenant of insertedTenants) {
+              const originalTenant = tenantsToInsert.find(t => t.contact === newTenant.contact);
+              if (!originalTenant) continue;
 
-          uploadResult.success++;
-        } catch (error: any) {
-          uploadResult.failed++;
-          const errorMessage = error.message || "Unknown error";
-          uploadResult.errors.push(`Row ${i + 1}: ${errorMessage}`);
-          console.error(`Row ${i + 1} upload failed:`, error);
+              // Create payments
+              for (let day = 0; day < originalTenant.repayment_days; day++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() + day);
+                allPayments.push({
+                  tenant_id: newTenant.id,
+                  date: date.toISOString().split("T")[0],
+                  amount: originalTenant.rent_amount / originalTenant.repayment_days,
+                  paid: false,
+                });
+              }
+
+              // Create earnings
+              if (originalTenant.agent_name && originalTenant.agent_phone) {
+                allEarnings.push({
+                  agent_name: originalTenant.agent_name,
+                  agent_phone: originalTenant.agent_phone,
+                  tenant_id: newTenant.id,
+                  earning_type: "signup_bonus",
+                  amount: 5000,
+                });
+              }
+            }
+
+            // Batch insert payments
+            if (allPayments.length > 0) {
+              try {
+                await supabase.from("daily_payments").insert(allPayments);
+              } catch (e) {
+                // Ignore payment errors
+              }
+            }
+
+            // Batch insert earnings
+            if (allEarnings.length > 0) {
+              try {
+                await supabase.from("agent_earnings").insert(allEarnings);
+              } catch (e) {
+                // Ignore earnings errors
+              }
+            }
+          }
         }
       }
+
+      setProgress(100);
 
       setResult(uploadResult);
 
