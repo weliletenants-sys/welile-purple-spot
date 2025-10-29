@@ -92,8 +92,6 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
     editorName: "",
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
-
   // Calculate repayment details whenever rent amount or repayment days change
   useMemo(() => {
     const rentAmount = parseFloat(formData.rentAmount);
@@ -112,22 +110,6 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
     return null;
   }, [formData.rentAmount, formData.repaymentDays]);
 
-  const validateForm = () => {
-    const newErrors: Partial<Record<keyof TenantFormData, string>> = {};
-
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.contact.trim()) newErrors.contact = "Contact is required";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
-    if (!formData.landlord.trim()) newErrors.landlord = "Landlord name is required";
-    if (!formData.landlordContact.trim()) newErrors.landlordContact = "Landlord contact is required";
-    if (!formData.rentAmount || Number(formData.rentAmount) <= 0) {
-      newErrors.rentAmount = "Valid rent amount is required";
-    }
-    if (!formData.editorName.trim()) newErrors.editorName = "Please enter your name";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const checkForDuplicates = async () => {
     // Check for duplicate by contact (excluding current tenant)
@@ -159,15 +141,6 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields correctly.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     // Check for duplicates
     const duplicateMessage = await checkForDuplicates();
@@ -240,9 +213,6 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
 
   const handleChange = (field: keyof TenantFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
     // Clear duplicate warning when user changes contact or name
     if ((field === "contact" || field === "name") && duplicateWarning) {
       setDuplicateWarning(null);
@@ -256,9 +226,6 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
       agentName,
       agentPhone: selectedAgent?.phone || prev.agentPhone,
     }));
-    if (errors.agentName) {
-      setErrors(prev => ({ ...prev, agentName: undefined }));
-    }
   };
 
 
@@ -301,9 +268,7 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
               placeholder="Enter your full name"
               value={formData.editorName}
               onChange={(e) => handleChange("editorName", e.target.value)}
-              className={errors.editorName ? "border-destructive" : ""}
             />
-            {errors.editorName && <p className="text-sm text-destructive mt-1">{errors.editorName}</p>}
           </div>
           
           {/* Personal Information */}
@@ -316,9 +281,7 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
-                  className={errors.name ? "border-destructive" : ""}
                 />
-                {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
               </div>
               <div>
                 <Label htmlFor="contact">Contact *</Label>
@@ -326,9 +289,7 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="contact"
                   value={formData.contact}
                   onChange={(e) => handleChange("contact", e.target.value)}
-                  className={errors.contact ? "border-destructive" : ""}
                 />
-                {errors.contact && <p className="text-sm text-destructive mt-1">{errors.contact}</p>}
               </div>
               <div>
                 <Label htmlFor="address">Address *</Label>
@@ -336,9 +297,7 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
-                  className={errors.address ? "border-destructive" : ""}
                 />
-                {errors.address && <p className="text-sm text-destructive mt-1">{errors.address}</p>}
               </div>
               <div>
                 <Label htmlFor="status">Status</Label>
@@ -382,9 +341,7 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="landlord"
                   value={formData.landlord}
                   onChange={(e) => handleChange("landlord", e.target.value)}
-                  className={errors.landlord ? "border-destructive" : ""}
                 />
-                {errors.landlord && <p className="text-sm text-destructive mt-1">{errors.landlord}</p>}
               </div>
               <div>
                 <Label htmlFor="landlordContact">Landlord Contact *</Label>
@@ -392,9 +349,7 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="landlordContact"
                   value={formData.landlordContact}
                   onChange={(e) => handleChange("landlordContact", e.target.value)}
-                  className={errors.landlordContact ? "border-destructive" : ""}
                 />
-                {errors.landlordContact && <p className="text-sm text-destructive mt-1">{errors.landlordContact}</p>}
               </div>
             </div>
           </div>
@@ -410,9 +365,7 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   type="number"
                   value={formData.rentAmount}
                   onChange={(e) => handleChange("rentAmount", e.target.value)}
-                  className={errors.rentAmount ? "border-destructive" : ""}
                 />
-                {errors.rentAmount && <p className="text-sm text-destructive mt-1">{errors.rentAmount}</p>}
               </div>
               <div>
                 <Label htmlFor="repaymentDays">Repayment Days</Label>

@@ -68,8 +68,6 @@ export const AddTenantForm = () => {
     agentPhone: "",
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
-
   // Calculate repayment details whenever rent amount or repayment days change
   const repaymentDetails = useMemo(() => {
     const rentAmount = parseFloat(formData.rentAmount);
@@ -88,89 +86,6 @@ export const AddTenantForm = () => {
     return null;
   }, [formData.rentAmount, formData.repaymentDays]);
 
-  const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof TenantFormData, string>> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    } else if (formData.name.trim().length > 100) {
-      newErrors.name = "Name must be less than 100 characters";
-    }
-
-    if (!formData.contact.trim()) {
-      newErrors.contact = "Contact is required";
-    } else if (!/^[0-9+\s-()]+$/.test(formData.contact)) {
-      newErrors.contact = "Invalid contact format";
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = "Address is required";
-    } else if (formData.address.trim().length > 200) {
-      newErrors.address = "Address must be less than 200 characters";
-    }
-
-    if (!formData.landlord.trim()) {
-      newErrors.landlord = "Landlord name is required";
-    }
-
-    if (!formData.landlordContact.trim()) {
-      newErrors.landlordContact = "Landlord contact is required";
-    } else if (!/^[0-9+\s-()]+$/.test(formData.landlordContact)) {
-      newErrors.landlordContact = "Invalid contact format";
-    }
-
-    const rentAmount = parseFloat(formData.rentAmount);
-    if (!formData.rentAmount || isNaN(rentAmount) || rentAmount <= 0) {
-      newErrors.rentAmount = "Valid rent amount is required";
-    } else if (rentAmount > 100000000) {
-      newErrors.rentAmount = "Rent amount too high";
-    }
-
-    const registrationFee = parseFloat(formData.registrationFee);
-    if (!formData.registrationFee || isNaN(registrationFee) || registrationFee < 0) {
-      newErrors.registrationFee = "Valid registration fee is required";
-    }
-
-    const accessFee = parseFloat(formData.accessFee);
-    if (!formData.accessFee || isNaN(accessFee) || accessFee < 0) {
-      newErrors.accessFee = "Valid access fee is required";
-    }
-
-    if (formData.guarantor1Name.trim() || formData.guarantor1Contact.trim()) {
-      if (!formData.guarantor1Name.trim()) {
-        newErrors.guarantor1Name = "Guarantor 1 name is required";
-      }
-      if (!formData.guarantor1Contact.trim()) {
-        newErrors.guarantor1Contact = "Guarantor 1 contact is required";
-      } else if (!/^[0-9+\s-()]+$/.test(formData.guarantor1Contact)) {
-        newErrors.guarantor1Contact = "Invalid contact format";
-      }
-    }
-
-    if (formData.guarantor2Name.trim() || formData.guarantor2Contact.trim()) {
-      if (!formData.guarantor2Name.trim()) {
-        newErrors.guarantor2Name = "Guarantor 2 name is required";
-      }
-      if (!formData.guarantor2Contact.trim()) {
-        newErrors.guarantor2Contact = "Guarantor 2 contact is required";
-      } else if (!/^[0-9+\s-()]+$/.test(formData.guarantor2Contact)) {
-        newErrors.guarantor2Contact = "Invalid contact format";
-      }
-    }
-
-    if (!formData.agentName.trim()) {
-      newErrors.agentName = "Agent name is required";
-    }
-
-    if (!formData.agentPhone.trim()) {
-      newErrors.agentPhone = "Agent phone is required";
-    } else if (!/^[0-9+\s-()]+$/.test(formData.agentPhone)) {
-      newErrors.agentPhone = "Invalid phone format";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const checkForDuplicates = async () => {
     // Check for duplicate by contact
@@ -200,15 +115,6 @@ export const AddTenantForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form",
-        variant: "destructive",
-      });
-      return;
-    }
 
     // Check for duplicates
     const duplicateMessage = await checkForDuplicates();
@@ -285,7 +191,6 @@ export const AddTenantForm = () => {
         agentName: "MUHWEZI MARTIN",
         agentPhone: "",
       });
-      setErrors({});
       setOpen(false);
     } catch (error: any) {
       toast({
@@ -298,10 +203,6 @@ export const AddTenantForm = () => {
 
   const handleChange = (field: keyof TenantFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error for this field when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
-    }
     // Clear duplicate warning when user changes contact or name
     if ((field === "contact" || field === "name") && duplicateWarning) {
       setDuplicateWarning(null);
@@ -315,12 +216,6 @@ export const AddTenantForm = () => {
       agentName,
       agentPhone: selectedAgent?.phone || "",
     }));
-    if (errors.agentName) {
-      setErrors(prev => ({ ...prev, agentName: undefined }));
-    }
-    if (errors.agentPhone) {
-      setErrors(prev => ({ ...prev, agentPhone: undefined }));
-    }
   };
 
 
@@ -356,9 +251,7 @@ export const AddTenantForm = () => {
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 placeholder="Enter tenant's full name"
-                className={errors.name ? "border-destructive" : ""}
               />
-              {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
             </div>
 
             <div className="space-y-2">
@@ -368,9 +261,7 @@ export const AddTenantForm = () => {
                 value={formData.contact}
                 onChange={(e) => handleChange("contact", e.target.value)}
                 placeholder="e.g., 0700000000"
-                className={errors.contact ? "border-destructive" : ""}
               />
-              {errors.contact && <p className="text-sm text-destructive">{errors.contact}</p>}
             </div>
 
             <div className="space-y-2">
@@ -380,9 +271,7 @@ export const AddTenantForm = () => {
                 value={formData.address}
                 onChange={(e) => handleChange("address", e.target.value)}
                 placeholder="Enter tenant's address"
-                className={errors.address ? "border-destructive" : ""}
               />
-              {errors.address && <p className="text-sm text-destructive">{errors.address}</p>}
             </div>
           </div>
 
@@ -397,9 +286,7 @@ export const AddTenantForm = () => {
                 value={formData.landlord}
                 onChange={(e) => handleChange("landlord", e.target.value)}
                 placeholder="Enter landlord's name"
-                className={errors.landlord ? "border-destructive" : ""}
               />
-              {errors.landlord && <p className="text-sm text-destructive">{errors.landlord}</p>}
             </div>
 
             <div className="space-y-2">
@@ -409,9 +296,7 @@ export const AddTenantForm = () => {
                 value={formData.landlordContact}
                 onChange={(e) => handleChange("landlordContact", e.target.value)}
                 placeholder="e.g., 0700000000"
-                className={errors.landlordContact ? "border-destructive" : ""}
               />
-              {errors.landlordContact && <p className="text-sm text-destructive">{errors.landlordContact}</p>}
             </div>
           </div>
 
@@ -427,9 +312,7 @@ export const AddTenantForm = () => {
                 value={formData.rentAmount}
                 onChange={(e) => handleChange("rentAmount", e.target.value)}
                 placeholder="Enter rent amount"
-                className={errors.rentAmount ? "border-destructive" : ""}
               />
-              {errors.rentAmount && <p className="text-sm text-destructive">{errors.rentAmount}</p>}
             </div>
 
             <div className="space-y-2">
@@ -541,9 +424,7 @@ export const AddTenantForm = () => {
                     value={formData.guarantor1Name}
                     onChange={(e) => handleChange("guarantor1Name", e.target.value)}
                     placeholder="Enter guarantor's name"
-                    className={errors.guarantor1Name ? "border-destructive" : ""}
                   />
-                  {errors.guarantor1Name && <p className="text-sm text-destructive">{errors.guarantor1Name}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="guarantor1Contact">Contact</Label>
@@ -552,9 +433,7 @@ export const AddTenantForm = () => {
                     value={formData.guarantor1Contact}
                     onChange={(e) => handleChange("guarantor1Contact", e.target.value)}
                     placeholder="e.g., 0700000000"
-                    className={errors.guarantor1Contact ? "border-destructive" : ""}
                   />
-                  {errors.guarantor1Contact && <p className="text-sm text-destructive">{errors.guarantor1Contact}</p>}
                 </div>
               </div>
             </div>
@@ -569,9 +448,7 @@ export const AddTenantForm = () => {
                     value={formData.guarantor2Name}
                     onChange={(e) => handleChange("guarantor2Name", e.target.value)}
                     placeholder="Enter guarantor's name"
-                    className={errors.guarantor2Name ? "border-destructive" : ""}
                   />
-                  {errors.guarantor2Name && <p className="text-sm text-destructive">{errors.guarantor2Name}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="guarantor2Contact">Contact</Label>
@@ -580,9 +457,7 @@ export const AddTenantForm = () => {
                     value={formData.guarantor2Contact}
                     onChange={(e) => handleChange("guarantor2Contact", e.target.value)}
                     placeholder="e.g., 0700000000"
-                    className={errors.guarantor2Contact ? "border-destructive" : ""}
                   />
-                  {errors.guarantor2Contact && <p className="text-sm text-destructive">{errors.guarantor2Contact}</p>}
                 </div>
               </div>
             </div>
@@ -649,7 +524,7 @@ export const AddTenantForm = () => {
               <div className="space-y-2">
                 <Label htmlFor="agentName">Agent Name *</Label>
                 <Select value={formData.agentName} onValueChange={handleAgentChange}>
-                  <SelectTrigger id="agentName" className={errors.agentName ? "border-destructive" : ""}>
+                  <SelectTrigger id="agentName">
                     <SelectValue placeholder="Select an agent" />
                   </SelectTrigger>
                   <SelectContent>
@@ -660,7 +535,6 @@ export const AddTenantForm = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.agentName && <p className="text-sm text-destructive">{errors.agentName}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="agentPhone">Agent Phone *</Label>
@@ -669,9 +543,7 @@ export const AddTenantForm = () => {
                   value={formData.agentPhone}
                   onChange={(e) => handleChange("agentPhone", e.target.value)}
                   placeholder="e.g., 0700000000"
-                  className={errors.agentPhone ? "border-destructive" : ""}
                 />
-                {errors.agentPhone && <p className="text-sm text-destructive">{errors.agentPhone}</p>}
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
