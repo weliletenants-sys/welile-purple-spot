@@ -336,7 +336,7 @@ export const BulkUploadTenants = () => {
           <DialogTitle>Bulk Upload Tenants</DialogTitle>
           <DialogDescription>
             Upload a Google Sheets file (.xlsx, .xls) with tenant information.
-            Required columns: name, contact. All other fields can be filled in later.
+            All columns are optional - just upload any data you have and fill in the rest later.
           </DialogDescription>
         </DialogHeader>
 
@@ -422,16 +422,19 @@ export const BulkUploadTenants = () => {
           )}
 
           <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-2">
-            <h4 className="font-medium">Expected columns:</h4>
+            <h4 className="font-medium">Supported columns (all optional):</h4>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li><strong>name</strong> (required)</li>
-              <li><strong>contact</strong> (required - phone number)</li>
-              <li>address, rent_amount (optional - can be added later)</li>
-              <li>landlord, landlord_contact (optional)</li>
-              <li>agent_name, agent_phone (optional)</li>
-              <li>repayment_days, registration_fee (optional)</li>
-              <li>guarantor1_name, guarantor1_contact, guarantor2_name, guarantor2_contact (optional)</li>
+              <li>name, contact (phone number)</li>
+              <li>address, rent_amount, repayment_days</li>
+              <li>landlord, landlord_contact</li>
+              <li>agent_name, agent_phone</li>
+              <li>registration_fee, access_fee</li>
+              <li>guarantor1_name, guarantor1_contact, guarantor2_name, guarantor2_contact</li>
+              <li>location fields (country, county, district, subcounty, cell/village)</li>
             </ul>
+            <p className="text-xs text-muted-foreground mt-2">
+              💡 Missing data will be auto-filled with defaults - you can edit later!
+            </p>
           </div>
         </div>
       </DialogContent>
