@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -328,8 +328,8 @@ export const AddTenantForm = () => {
     }
   };
 
-  const handleVillageSelect = async (villageName: string) => {
-    const locationData = await getLocationByVillage(villageName);
+  const handleVillageSelect = (villageName: string) => {
+    const locationData = getLocationByVillage(villageName);
     if (locationData) {
       setFormData(prev => ({
         ...prev,
@@ -347,26 +347,9 @@ export const AddTenantForm = () => {
     setVillageOpen(false);
   };
 
-  const [filteredVillages, setFilteredVillages] = useState<LocationData[]>([]);
-
-  useEffect(() => {
-    const searchAsync = async () => {
-      if (!villageSearch || villageSearch.length < 2) {
-        setFilteredVillages([]);
-        return;
-      }
-      
-      try {
-        const results = await searchVillages(villageSearch);
-        setFilteredVillages(results);
-      } catch (error) {
-        console.error('Error searching villages:', error);
-        setFilteredVillages([]);
-      }
-    };
-    
-    const timeoutId = setTimeout(searchAsync, 300);
-    return () => clearTimeout(timeoutId);
+  const filteredVillages = useMemo(() => {
+    if (!villageSearch || villageSearch.length < 2) return [];
+    return searchVillages(villageSearch);
   }, [villageSearch]);
 
   return (
