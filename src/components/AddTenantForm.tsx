@@ -4,16 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, AlertTriangle, MapPin } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
 import { calculateRepaymentDetails } from "@/data/tenants";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAgents } from "@/hooks/useAgents";
-import { searchVillages, getLocationByVillage, type LocationData } from "@/data/ugandaLocations";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface TenantFormData {
   name: string;
@@ -46,8 +43,6 @@ export const AddTenantForm = () => {
   const { addTenant } = useTenants();
   const { data: agents = [] } = useAgents();
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
-  const [villageOpen, setVillageOpen] = useState(false);
-  const [villageSearch, setVillageSearch] = useState("");
   const [formData, setFormData] = useState<TenantFormData>({
     name: "",
     contact: "",
@@ -328,29 +323,6 @@ export const AddTenantForm = () => {
     }
   };
 
-  const handleVillageSelect = (villageName: string) => {
-    const locationData = getLocationByVillage(villageName);
-    if (locationData) {
-      setFormData(prev => ({
-        ...prev,
-        cellOrVillage: locationData.village,
-        subcountyOrWard: locationData.subcounty,
-        district: locationData.district,
-        county: locationData.county,
-        country: locationData.country,
-      }));
-      toast({
-        title: "Location Auto-filled",
-        description: `${locationData.village} → ${locationData.subcounty} → ${locationData.district}`,
-      });
-    }
-    setVillageOpen(false);
-  };
-
-  const filteredVillages = useMemo(() => {
-    if (!villageSearch || villageSearch.length < 2) return [];
-    return searchVillages(villageSearch);
-  }, [villageSearch]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -619,79 +591,24 @@ export const AddTenantForm = () => {
           {/* Location Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">Location Details</h3>
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              Start by selecting your village - other fields will auto-fill
-            </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Village field first with autocomplete */}
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="cellOrVillage">Cell / Village (Start Here) *</Label>
-                <Popover open={villageOpen} onOpenChange={setVillageOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={villageOpen}
-                      className="w-full justify-between"
-                    >
-                      {formData.cellOrVillage || "Search and select your village..."}
-                      <MapPin className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
-                    <Command>
-                      <CommandInput 
-                        placeholder="Type village, subcounty, or district..." 
-                        value={villageSearch}
-                        onValueChange={setVillageSearch}
-                      />
-                      <CommandEmpty>No location found. You can still type manually below.</CommandEmpty>
-                      <CommandGroup className="max-h-64 overflow-auto">
-                        {filteredVillages.map((location) => (
-                          <CommandItem
-                            key={location.village}
-                            value={location.village}
-                            onSelect={handleVillageSelect}
-                          >
-                            <div className="flex flex-col">
-                              <span className="font-medium">{location.village}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {location.subcounty} → {location.district}
-                              </span>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <p className="text-xs text-muted-foreground">
-                  💡 Select from the list or type manually below
-                </p>
-              </div>
-
-              {/* Manual input fallback for village */}
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="cellOrVillageManual">Or Type Village Manually</Label>
+              <div className="space-y-2">
+                <Label htmlFor="cellOrVillage">Cell / Village</Label>
                 <Input
-                  id="cellOrVillageManual"
+                  id="cellOrVillage"
                   value={formData.cellOrVillage}
                   onChange={(e) => handleChange("cellOrVillage", e.target.value)}
                   placeholder="Enter cell or village name"
                 />
               </div>
-
-              {/* Auto-filled fields (editable) */}
               <div className="space-y-2">
                 <Label htmlFor="subcountyOrWard">Subcounty / Ward</Label>
                 <Input
                   id="subcountyOrWard"
                   value={formData.subcountyOrWard}
                   onChange={(e) => handleChange("subcountyOrWard", e.target.value)}
-                  placeholder="Auto-filled or enter manually"
-                  className="bg-muted/50"
+                  placeholder="Enter subcounty or ward"
                 />
               </div>
               <div className="space-y-2">
@@ -700,8 +617,7 @@ export const AddTenantForm = () => {
                   id="district"
                   value={formData.district}
                   onChange={(e) => handleChange("district", e.target.value)}
-                  placeholder="Auto-filled or enter manually"
-                  className="bg-muted/50"
+                  placeholder="Enter district"
                 />
               </div>
               <div className="space-y-2">
@@ -710,8 +626,7 @@ export const AddTenantForm = () => {
                   id="county"
                   value={formData.county}
                   onChange={(e) => handleChange("county", e.target.value)}
-                  placeholder="Auto-filled or enter manually"
-                  className="bg-muted/50"
+                  placeholder="Enter county"
                 />
               </div>
               <div className="space-y-2">
@@ -720,8 +635,7 @@ export const AddTenantForm = () => {
                   id="country"
                   value={formData.country}
                   onChange={(e) => handleChange("country", e.target.value)}
-                  placeholder="Auto-filled or enter manually"
-                  className="bg-muted/50"
+                  placeholder="Enter country"
                 />
               </div>
             </div>
