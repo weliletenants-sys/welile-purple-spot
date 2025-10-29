@@ -137,7 +137,7 @@ const Index = () => {
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-accent">
                 <Users className="w-5 h-5 text-primary-foreground" />
-                <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
+                <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Total Tenants</span>
               </div>
               <ShareButton />
               <DropdownMenu>
