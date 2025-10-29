@@ -28,10 +28,24 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
+      // Get latest payment dates for all tenants
+      const { data: paymentData } = await supabase
+        .from("daily_payments")
+        .select("tenant_id, updated_at")
+        .eq("paid", true)
+        .order("updated_at", { ascending: false });
+
+      // Create a map of tenant_id to latest payment date
+      const latestPayments = new Map<string, string>();
+      paymentData?.forEach(payment => {
+        if (!latestPayments.has(payment.tenant_id)) {
+          latestPayments.set(payment.tenant_id, payment.updated_at);
+        }
+      });
+
       let query = supabase
         .from("tenants")
         .select("*", { count: "exact" })
-        .order("created_at", { ascending: false })
         .range(from, to);
 
       // Apply search filter if provided
@@ -101,7 +115,18 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
         agentPhone: tenant.agent_phone || "",
         editedBy: tenant.edited_by,
         editedAt: tenant.edited_at,
+        lastPaymentDate: latestPayments.get(tenant.id) || null,
       })) as Tenant[];
+
+      // Sort by latest payment date (most recent first), then by created_at
+      tenants.sort((a: any, b: any) => {
+        if (a.lastPaymentDate && b.lastPaymentDate) {
+          return new Date(b.lastPaymentDate).getTime() - new Date(a.lastPaymentDate).getTime();
+        }
+        if (a.lastPaymentDate) return -1;
+        if (b.lastPaymentDate) return 1;
+        return new Date(b.editedAt || b.id).getTime() - new Date(a.editedAt || a.id).getTime();
+      });
 
       return { tenants, totalCount: count || 0 };
     },

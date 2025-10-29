@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import RepaymentSchedule from "./pages/RepaymentSchedule";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
+import TopPerformers from "./pages/TopPerformers";
 import NotFound from "./pages/NotFound";
 import BulkAddAdekeAnnet from "./pages/BulkAddAdekeAnnet";
 
@@ -25,6 +26,7 @@ const App = () => {
             <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
             <Route path="/agent-dashboard" element={<AgentDashboard />} />
             <Route path="/agent/:agentName" element={<AgentDashboard />} />
+            <Route path="/top-performers" element={<TopPerformers />} />
             <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -10,10 +10,8 @@ import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { useTenants } from "@/hooks/useTenants";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 
 // Lazy load heavy components
-const AgentLeaderboard = lazy(() => import("@/components/AgentLeaderboard").then(m => ({ default: m.AgentLeaderboard })));
 const AddTenantForm = lazy(() => import("@/components/AddTenantForm").then(m => ({ default: m.AddTenantForm })));
 import {
   Select,
@@ -165,6 +163,12 @@ const Index = () => {
                     AGENT DASHBOARD
                   </DropdownMenuItem>
                   <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => navigate("/top-performers")}
+                  >
+                    TOP PERFORMERS
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     className="p-0"
                     onSelect={(e) => e.preventDefault()}
                   >
@@ -262,21 +266,6 @@ const Index = () => {
             </div>
           </div>
         </div>
-
-        {/* Agent Leaderboard */}
-        <div className="space-y-4">
-          <h3 className="text-xl md:text-2xl font-bold text-center text-foreground">🏆 Top Performers</h3>
-          <Suspense fallback={
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="h-16 w-full rounded-lg" />
-              ))}
-            </div>
-          }>
-            <AgentLeaderboard />
-          </Suspense>
-        </div>
-
 
         {/* Results Count */}
         <div className="flex items-center justify-between flex-wrap gap-4">
