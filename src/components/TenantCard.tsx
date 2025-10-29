@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit, MessageSquare, Send } from "lucide-react";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit, MessageSquare, Send, CreditCard, Sparkles } from "lucide-react";
 import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import { useNavigate } from "react-router-dom";
 import { EditTenantForm } from "./EditTenantForm";
@@ -295,7 +295,42 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
           </div>
         )}
 
-        {/* Comments Section */}
+        {/* Action Buttons - Prominent and Attractive */}
+        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
+          {/* Record Payment Button */}
+          <Button
+            className="relative overflow-hidden group bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/tenant/${tenant.id}`);
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+            <CreditCard className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
+            <span className="font-semibold">Record Payment</span>
+            <Sparkles className="w-3 h-3 ml-1 group-hover:animate-pulse" />
+          </Button>
+
+          {/* Comments Button */}
+          <Button
+            className="relative overflow-hidden group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCommentsOpen(!isCommentsOpen);
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+            <MessageSquare className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
+            <span className="font-semibold">Comments</span>
+            {totalComments > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-white/20 text-xs font-bold animate-pulse">
+                {totalComments}
+              </span>
+            )}
+          </Button>
+        </div>
+
+        {/* Comments Section Collapsible */}
         <Collapsible 
           open={isCommentsOpen} 
           onOpenChange={(open) => {
@@ -303,39 +338,31 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
             if (!open) resetPage(); // Reset pagination when closing
           }}
         >
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full mt-2"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Comments ({totalComments})
-            </Button>
-          </CollapsibleTrigger>
           <CollapsibleContent
-            className="mt-3 space-y-3"
+            className="mt-3 space-y-3 animate-accordion-down"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Add Comment Form */}
-            <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-2">
+            <div className="p-4 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-2 border-purple-200 dark:border-purple-800 space-y-3 animate-scale-in">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <h4 className="font-semibold text-foreground">Add Your Comment</h4>
+              </div>
               <Input
-                placeholder="Your name"
+                placeholder="Enter your name"
                 value={commenterName}
                 onChange={(e) => setCommenterName(e.target.value)}
-                className="text-sm"
+                className="text-sm border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500"
               />
               <Textarea
-                placeholder="Add a comment..."
+                placeholder="Share your thoughts..."
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="text-sm min-h-[60px]"
+                className="text-sm min-h-[80px] border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500"
               />
               <Button
                 size="sm"
-                className="w-full"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (commenterName.trim() && commentText.trim()) {
@@ -350,7 +377,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
                 disabled={!commenterName.trim() || !commentText.trim() || addComment.isPending}
               >
                 <Send className="w-4 h-4 mr-2" />
-                Add Comment
+                <span className="font-semibold">Post Comment</span>
               </Button>
             </div>
 
