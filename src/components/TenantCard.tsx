@@ -23,10 +23,11 @@ import {
 
 interface TenantCardProps {
   tenant: Tenant;
+  tenantNumber?: number;
   isFiltered?: boolean;
 }
 
-export const TenantCard = ({ tenant, isFiltered = false }: TenantCardProps) => {
+export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantCardProps) => {
   const navigate = useNavigate();
   const { deleteTenant } = useTenants();
   const { toast } = useToast();
@@ -96,9 +97,16 @@ export const TenantCard = ({ tenant, isFiltered = false }: TenantCardProps) => {
               {tenant.name.charAt(0)}
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors truncate">
-                {tenant.name}
-              </h3>
+              <div className="flex items-center gap-2">
+                {tenantNumber && (
+                  <span className="px-2 py-0.5 rounded-md bg-primary/20 text-primary text-xs font-bold">
+                    #{tenantNumber}
+                  </span>
+                )}
+                <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors truncate">
+                  {tenant.name}
+                </h3>
+              </div>
               <div className="flex items-center gap-2 mt-1">
                 <Phone className="w-3 h-3 text-muted-foreground shrink-0" />
                 <span className="text-sm text-muted-foreground truncate">{tenant.contact}</span>
