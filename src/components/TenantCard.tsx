@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit } from "lucide-react";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit, MessageSquare, Send } from "lucide-react";
 import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import { useNavigate } from "react-router-dom";
 import { EditTenantForm } from "./EditTenantForm";
@@ -9,6 +9,11 @@ import { useTenants } from "@/hooks/useTenants";
 import { useToast } from "@/hooks/use-toast";
 import { ContactButtons } from "./ContactButtons";
 import { usePayments } from "@/hooks/usePayments";
+import { useTenantComments } from "@/hooks/useTenantComments";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +38,10 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
   const { toast } = useToast();
   const repaymentDetails = calculateRepaymentDetails(tenant.rentAmount, tenant.repaymentDays);
   const { payments } = usePayments(tenant.id);
+  const { comments, addComment, deleteComment } = useTenantComments(tenant.id);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [commenterName, setCommenterName] = useState("");
+  const [commentText, setCommentText] = useState("");
 
   // Calculate balance for this tenant
   const totalPaid = payments?.filter(p => p.paid).reduce((sum, p) => sum + (p.paidAmount || p.amount), 0) || 0;
@@ -285,6 +294,104 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
             </p>
           </div>
         )}
+
+        {/* Comments Section */}
+        <Collapsible open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full mt-2"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Comments ({comments.length})
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent
+            className="mt-3 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Add Comment Form */}
+            <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-2">
+              <Input
+                placeholder="Your name"
+                value={commenterName}
+                onChange={(e) => setCommenterName(e.target.value)}
+                className="text-sm"
+              />
+              <Textarea
+                placeholder="Add a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="text-sm min-h-[60px]"
+              />
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (commenterName.trim() && commentText.trim()) {
+                    addComment.mutate({
+                      commenterName: commenterName.trim(),
+                      commentText: commentText.trim(),
+                    });
+                    setCommenterName("");
+                    setCommentText("");
+                  }
+                }}
+                disabled={!commenterName.trim() || !commentText.trim() || addComment.isPending}
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Add Comment
+              </Button>
+            </div>
+
+            {/* Comments List */}
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className="p-3 rounded-lg bg-card border border-border"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-sm text-foreground">
+                          {comment.commenter_name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(comment.created_at).toLocaleDateString()} at{" "}
+                          {new Date(comment.created_at).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-foreground break-words">
+                        {comment.comment_text}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteComment.mutate(comment.id);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {comments.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No comments yet. Be the first to comment!
+                </p>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </Card>
   );

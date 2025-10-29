@@ -139,6 +139,33 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_comments: {
+        Row: {
+          comment_text: string
+          commenter_name: string
+          created_at: string
+          id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment_text: string
+          commenter_name: string
+          created_at?: string
+          id?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment_text?: string
+          commenter_name?: string
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           access_fee: number
