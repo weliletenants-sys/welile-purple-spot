@@ -38,7 +38,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
   const { toast } = useToast();
   const repaymentDetails = calculateRepaymentDetails(tenant.rentAmount, tenant.repaymentDays);
   const { payments } = usePayments(tenant.id);
-  const { comments, addComment, deleteComment } = useTenantComments(tenant.id);
+  const { comments, totalComments, addComment, deleteComment, hasMore, loadMore, resetPage } = useTenantComments(tenant.id);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commenterName, setCommenterName] = useState("");
   const [commentText, setCommentText] = useState("");
@@ -296,7 +296,13 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
         )}
 
         {/* Comments Section */}
-        <Collapsible open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
+        <Collapsible 
+          open={isCommentsOpen} 
+          onOpenChange={(open) => {
+            setIsCommentsOpen(open);
+            if (!open) resetPage(); // Reset pagination when closing
+          }}
+        >
           <CollapsibleTrigger asChild>
             <Button
               variant="outline"
@@ -306,7 +312,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
               }}
             >
               <MessageSquare className="w-4 h-4 mr-2" />
-              Comments ({comments.length})
+              Comments ({totalComments})
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent
@@ -349,44 +355,68 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
             </div>
 
             {/* Comments List */}
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className="p-3 rounded-lg bg-card border border-border"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-sm text-foreground">
-                          {comment.commenter_name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(comment.created_at).toLocaleDateString()} at{" "}
-                          {new Date(comment.created_at).toLocaleTimeString()}
-                        </span>
+            <div className="space-y-2">
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="p-3 rounded-lg bg-card border border-border"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-sm text-foreground">
+                            {comment.commenter_name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(comment.created_at).toLocaleDateString()} at{" "}
+                            {new Date(comment.created_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-foreground break-words">
+                          {comment.comment_text}
+                        </p>
                       </div>
-                      <p className="text-sm text-foreground break-words">
-                        {comment.comment_text}
-                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteComment.mutate(comment.id);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteComment.mutate(comment.id);
-                      }}
-                    >
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </Button>
                   </div>
-                </div>
-              ))}
-              {comments.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No comments yet. Be the first to comment!
+                ))}
+                {comments.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No comments yet. Be the first to comment!
+                  </p>
+                )}
+              </div>
+
+              {/* Load More Button */}
+              {hasMore && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    loadMore();
+                  }}
+                >
+                  Load More Comments ({totalComments - comments.length} remaining)
+                </Button>
+              )}
+
+              {/* Showing X of Y indicator */}
+              {totalComments > 0 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Showing {comments.length} of {totalComments} comment{totalComments !== 1 ? 's' : ''}
                 </p>
               )}
             </div>

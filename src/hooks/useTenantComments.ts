@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export interface TenantComment {
   id: string;
@@ -11,10 +12,13 @@ export interface TenantComment {
   updated_at: string;
 }
 
+const COMMENTS_PER_PAGE = 3;
+
 export const useTenantComments = (tenantId: string) => {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
 
-  const { data: comments, isLoading } = useQuery({
+  const { data: allComments, isLoading } = useQuery({
     queryKey: ["tenant-comments", tenantId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -27,6 +31,10 @@ export const useTenantComments = (tenantId: string) => {
       return data as TenantComment[];
     },
   });
+
+  const comments = allComments?.slice(0, page * COMMENTS_PER_PAGE) || [];
+  const hasMore = allComments && allComments.length > page * COMMENTS_PER_PAGE;
+  const totalComments = allComments?.length || 0;
 
   const addComment = useMutation({
     mutationFn: async ({ commentText, commenterName }: { commentText: string; commenterName: string }) => {
@@ -45,6 +53,7 @@ export const useTenantComments = (tenantId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenant-comments", tenantId] });
+      setPage(1); // Reset to first page on new comment
       toast.success("Comment added successfully");
     },
     onError: (error) => {
@@ -72,10 +81,22 @@ export const useTenantComments = (tenantId: string) => {
     },
   });
 
+  const loadMore = () => {
+    setPage((prev) => prev + 1);
+  };
+
+  const resetPage = () => {
+    setPage(1);
+  };
+
   return {
-    comments: comments || [],
+    comments,
+    totalComments,
     isLoading,
     addComment,
     deleteComment,
+    hasMore,
+    loadMore,
+    resetPage,
   };
 };
