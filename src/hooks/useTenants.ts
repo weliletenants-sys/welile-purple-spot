@@ -247,6 +247,21 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
         if (earningsError) throw earningsError;
       }
 
+      // Create data entry reward earning (UGX 100)
+      if (tenant.agentName && tenant.agentPhone) {
+        const { error: dataEntryError } = await supabase
+          .from("agent_earnings")
+          .insert({
+            agent_phone: tenant.agentPhone,
+            agent_name: tenant.agentName,
+            tenant_id: data.id,
+            amount: 100,
+            earning_type: "data_entry",
+          });
+
+        if (dataEntryError) throw dataEntryError;
+      }
+
       return data;
     },
     onSuccess: () => {

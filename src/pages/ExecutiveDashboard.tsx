@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload, Edit3, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useExecutiveStats } from "@/hooks/useExecutiveStats";
@@ -210,6 +210,20 @@ const ExecutiveDashboard = () => {
             value={`${stats.collectionRate}%`}
             icon={Percent}
             description="Payment completion rate"
+          />
+
+          <StatsCard
+            title="Data Entry Activities"
+            value={stats.totalDataEntryActivities}
+            icon={Edit3}
+            description="New tenants added"
+          />
+
+          <StatsCard
+            title="Data Entry Rewards"
+            value={`UGX ${stats.totalDataEntryRewards.toLocaleString()}`}
+            icon={Award}
+            description="UGX 100 per tenant"
           />
         </div>
 

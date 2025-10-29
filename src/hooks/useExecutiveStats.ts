@@ -35,6 +35,23 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
 
       if (paymentsError) throw paymentsError;
 
+      // Fetch data entry earnings
+      let earningsQuery = supabase
+        .from("agent_earnings")
+        .select("amount, earning_type, created_at")
+        .eq("earning_type", "data_entry");
+
+      if (dateRange?.startDate) {
+        earningsQuery = earningsQuery.gte("created_at", dateRange.startDate);
+      }
+      if (dateRange?.endDate) {
+        earningsQuery = earningsQuery.lte("created_at", dateRange.endDate);
+      }
+
+      const { data: dataEntryEarnings, error: earningsError } = await earningsQuery;
+
+      if (earningsError) throw earningsError;
+
       // Calculate statistics
       const numberOfTenants = tenants?.length || 0;
       // Count bulk uploads from both source field and edited_by field (for legacy uploads)
@@ -84,6 +101,12 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
 
       const outstandingBalance = totalExpectedRevenue - totalRentPaid;
 
+      // Calculate data entry stats
+      const totalDataEntryRewards = dataEntryEarnings?.reduce((sum, earning) => {
+        return sum + Number(earning.amount);
+      }, 0) || 0;
+      const totalDataEntryActivities = dataEntryEarnings?.length || 0;
+
       return {
         numberOfTenants,
         manualTenants,
@@ -97,6 +120,8 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
         totalExpectedRevenue,
         collectionRate,
         outstandingBalance,
+        totalDataEntryRewards,
+        totalDataEntryActivities,
       };
     },
   });
