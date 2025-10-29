@@ -1,5 +1,7 @@
 // Uganda Location Database
-// This is a starter dataset - expand with more locations as needed
+// Now integrated with Open Data Uganda API for comprehensive village data
+
+import { fetchAllVillages, searchVillagesFromApi, getLocationByVillageFromApi } from '@/services/openDataUgandaApi';
 
 export interface LocationData {
   village: string;
@@ -7,7 +9,13 @@ export interface LocationData {
   district: string;
   county: string;
   country: string;
+  parish?: string; // Added parish field
 }
+
+// Cache for villages data
+let villagesCache: LocationData[] | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
 // Location database - expandable with more villages
 export const ugandaLocations: LocationData[] = [
@@ -82,20 +90,75 @@ export const ugandaLocations: LocationData[] = [
   { village: "Oli", subcounty: "Oli", district: "Arua", county: "Arua", country: "Uganda" },
 ];
 
+// Get all villages (with caching and API fallback)
+export const getAllVillages = async (): Promise<LocationData[]> => {
+  const now = Date.now();
+  
+  // Return cached data if still valid
+  if (villagesCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    return villagesCache;
+  }
+  
+  try {
+    // Fetch from API
+    const apiData = await fetchAllVillages();
+    villagesCache = apiData.map(loc => ({
+      village: loc.village,
+      subcounty: loc.subcounty,
+      district: loc.district,
+      county: loc.county,
+      country: loc.country,
+      parish: loc.parish,
+    }));
+    cacheTimestamp = now;
+    return villagesCache;
+  } catch (error) {
+    console.error('Failed to fetch from API, using static data:', error);
+    // Fallback to static data
+    return ugandaLocations;
+  }
+};
+
 // Helper function to search villages
-export const searchVillages = (query: string): LocationData[] => {
+export const searchVillages = async (query: string): Promise<LocationData[]> => {
   if (!query || query.length < 2) return [];
   
-  const lowercaseQuery = query.toLowerCase().trim();
-  return ugandaLocations.filter(location =>
-    location.village.toLowerCase().includes(lowercaseQuery) ||
-    location.subcounty.toLowerCase().includes(lowercaseQuery) ||
-    location.district.toLowerCase().includes(lowercaseQuery)
-  );
+  try {
+    // Try API search first
+    const apiResults = await searchVillagesFromApi(query);
+    return apiResults;
+  } catch (error) {
+    console.error('API search failed, using static data:', error);
+    // Fallback to static data search
+    const lowercaseQuery = query.toLowerCase().trim();
+    return ugandaLocations.filter(location =>
+      location.village.toLowerCase().includes(lowercaseQuery) ||
+      location.subcounty.toLowerCase().includes(lowercaseQuery) ||
+      location.district.toLowerCase().includes(lowercaseQuery)
+    );
+  }
 };
 
 // Helper function to get location by village name
-export const getLocationByVillage = (villageName: string): LocationData | undefined => {
+export const getLocationByVillage = async (villageName: string): Promise<LocationData | undefined> => {
+  try {
+    // Try API first
+    const apiResult = await getLocationByVillageFromApi(villageName);
+    if (apiResult) {
+      return {
+        village: apiResult.village,
+        subcounty: apiResult.subcounty,
+        district: apiResult.district,
+        county: apiResult.county,
+        country: apiResult.country,
+        parish: apiResult.parish,
+      };
+    }
+  } catch (error) {
+    console.error('API lookup failed, using static data:', error);
+  }
+  
+  // Fallback to static data
   return ugandaLocations.find(
     location => location.village.toLowerCase() === villageName.toLowerCase()
   );

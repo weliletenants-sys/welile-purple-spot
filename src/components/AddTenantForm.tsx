@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { calculateRepaymentDetails } from "@/data/tenants";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAgents } from "@/hooks/useAgents";
-import { searchVillages, getLocationByVillage } from "@/data/ugandaLocations";
+import { searchVillages, getLocationByVillage, type LocationData } from "@/data/ugandaLocations";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -328,8 +328,8 @@ export const AddTenantForm = () => {
     }
   };
 
-  const handleVillageSelect = (villageName: string) => {
-    const locationData = getLocationByVillage(villageName);
+  const handleVillageSelect = async (villageName: string) => {
+    const locationData = await getLocationByVillage(villageName);
     if (locationData) {
       setFormData(prev => ({
         ...prev,
@@ -347,8 +347,26 @@ export const AddTenantForm = () => {
     setVillageOpen(false);
   };
 
-  const filteredVillages = useMemo(() => {
-    return searchVillages(villageSearch);
+  const [filteredVillages, setFilteredVillages] = useState<LocationData[]>([]);
+
+  useEffect(() => {
+    const searchAsync = async () => {
+      if (!villageSearch || villageSearch.length < 2) {
+        setFilteredVillages([]);
+        return;
+      }
+      
+      try {
+        const results = await searchVillages(villageSearch);
+        setFilteredVillages(results);
+      } catch (error) {
+        console.error('Error searching villages:', error);
+        setFilteredVillages([]);
+      }
+    };
+    
+    const timeoutId = setTimeout(searchAsync, 300);
+    return () => clearTimeout(timeoutId);
   }, [villageSearch]);
 
   return (
