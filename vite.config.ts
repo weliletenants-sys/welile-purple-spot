@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico"],
       manifest: {
-        name: "Welile Tenants Hub",
-        short_name: "Welile Hub",
+        name: "Welile Tenants",
+        short_name: "Welile Tenants",
         description: "Monitor and manage tenant performance",
         theme_color: "#7E3AF2",
         background_color: "#ffffff",
