@@ -216,6 +216,7 @@ export const BulkUploadTenants = () => {
               status: "active",
               payment_status: "pending",
               performance: 80,
+              source: "bulk_upload",
               edited_by: "Bulk Upload",
               edited_at: new Date().toISOString(),
             }))

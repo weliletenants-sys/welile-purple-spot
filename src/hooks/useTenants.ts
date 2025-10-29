@@ -185,6 +185,7 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
           status: tenant.status,
           payment_status: tenant.paymentStatus,
           performance: tenant.performance,
+          source: "manual",
           landlord: tenant.landlord,
           landlord_contact: tenant.landlordContact,
           rent_amount: tenant.rentAmount,

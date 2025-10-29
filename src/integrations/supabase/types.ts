@@ -167,6 +167,7 @@ export type Database = {
           registration_fee: number
           rent_amount: number
           repayment_days: number
+          source: string | null
           status: string
           updated_at: string
         }
@@ -197,6 +198,7 @@ export type Database = {
           registration_fee?: number
           rent_amount: number
           repayment_days: number
+          source?: string | null
           status: string
           updated_at?: string
         }
@@ -227,6 +229,7 @@ export type Database = {
           registration_fee?: number
           rent_amount?: number
           repayment_days?: number
+          source?: string | null
           status?: string
           updated_at?: string
         }

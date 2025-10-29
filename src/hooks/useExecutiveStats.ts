@@ -15,7 +15,7 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
       // Fetch tenants
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
-        .select("rent_amount, repayment_days, registration_fee, access_fee");
+        .select("rent_amount, repayment_days, registration_fee, access_fee, source");
 
       if (tenantsError) throw tenantsError;
 
@@ -37,6 +37,9 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
 
       // Calculate statistics
       const numberOfTenants = tenants?.length || 0;
+      const manualTenants = tenants?.filter(t => t.source === 'manual').length || 0;
+      const bulkUploadedTenants = tenants?.filter(t => t.source === 'bulk_upload').length || 0;
+      const autoImportedTenants = tenants?.filter(t => t.source === 'auto_import').length || 0;
       
       // Calculate total access fees using the same formula as tenant cards
       const totalAccessFees = tenants?.reduce((sum, tenant) => {
@@ -80,6 +83,9 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
 
       return {
         numberOfTenants,
+        manualTenants,
+        bulkUploadedTenants,
+        autoImportedTenants,
         totalAccessFees,
         totalRegistrationFees,
         totalRentAmounts,

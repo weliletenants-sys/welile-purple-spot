@@ -69,6 +69,7 @@ const AutoImportTenants = () => {
           status: "Active",
           payment_status: "Pending",
           performance: 80,
+          source: "auto_import",
           landlord: "To be updated",
           landlord_contact: "0000000000",
           rent_amount: 0,

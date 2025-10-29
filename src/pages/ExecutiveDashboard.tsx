@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useExecutiveStats } from "@/hooks/useExecutiveStats";
@@ -156,6 +156,20 @@ const ExecutiveDashboard = () => {
           />
 
           <StatsCard
+            title="Manually Added"
+            value={stats.manualTenants}
+            icon={UserCheck}
+            description="Added via form"
+          />
+
+          <StatsCard
+            title="Bulk Uploaded"
+            value={stats.bulkUploadedTenants}
+            icon={Upload}
+            description="Imported from Excel"
+          />
+
+          <StatsCard
             title="Total Rent Amounts"
             value={`UGX ${stats.totalRentAmounts.toLocaleString()}`}
             icon={Home}
@@ -196,14 +210,6 @@ const ExecutiveDashboard = () => {
             value={`${stats.collectionRate}%`}
             icon={Percent}
             description="Payment completion rate"
-          />
-
-          <StatsCard
-            title="Agent Commissions"
-            value="View Dashboard"
-            icon={UserCheck}
-            description="Track agent earnings"
-            onClick={() => navigate("/agent-dashboard")}
           />
         </div>
 
