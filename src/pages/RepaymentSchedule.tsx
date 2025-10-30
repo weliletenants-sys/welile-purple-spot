@@ -21,7 +21,7 @@ export default function RepaymentSchedule() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { tenants } = useTenants();
+  const { tenants, isLoading } = useTenants();
   const tenant = tenants.find(t => t.id === tenantId);
   const { payments, updatePayment } = usePayments(tenantId || "");
   
@@ -41,6 +41,16 @@ export default function RepaymentSchedule() {
 
     return () => clearInterval(intervalId);
   }, [queryClient, tenantId]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-muted-foreground">Loading tenant...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!tenant) {
     return (
