@@ -21,6 +21,39 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
   const feeFilter = options?.feeFilter ?? "all";
   const agentFilter = options?.agentFilter ?? "";
 
+  // Helper function to calculate relevance score
+  const calculateRelevanceScore = (tenant: any, searchTerm: string): number => {
+    let score = 0;
+    const fields = [
+      { value: tenant.name, weight: 10 }, // Name is most important
+      { value: tenant.contact, weight: 8 },
+      { value: tenant.agentName, weight: 7 },
+      { value: tenant.address, weight: 5 },
+      { value: tenant.landlord, weight: 3 },
+      { value: tenant.status, weight: 2 },
+    ];
+
+    fields.forEach(({ value, weight }) => {
+      if (value) {
+        const lowerValue = value.toLowerCase();
+        // Exact match gets highest score
+        if (lowerValue === searchTerm) {
+          score += weight * 10;
+        }
+        // Starts with search term gets high score
+        else if (lowerValue.startsWith(searchTerm)) {
+          score += weight * 5;
+        }
+        // Contains search term gets medium score
+        else if (lowerValue.includes(searchTerm)) {
+          score += weight * 2;
+        }
+      }
+    });
+
+    return score;
+  };
+
   const { data, isLoading } = useQuery({
     queryKey: ["tenants", page, pageSize, searchTerm, locationFilter, feeFilter, agentFilter],
     placeholderData: (previousData) => previousData,
@@ -118,15 +151,26 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
         lastPaymentDate: latestPayments.get(tenant.id) || null,
       })) as Tenant[];
 
-      // Sort by latest payment date (most recent first), then by created_at
-      tenants.sort((a: any, b: any) => {
-        if (a.lastPaymentDate && b.lastPaymentDate) {
-          return new Date(b.lastPaymentDate).getTime() - new Date(a.lastPaymentDate).getTime();
-        }
-        if (a.lastPaymentDate) return -1;
-        if (b.lastPaymentDate) return 1;
-        return new Date(b.editedAt || b.id).getTime() - new Date(a.editedAt || a.id).getTime();
-      });
+      // Sort by relevance if searching, otherwise by payment date
+      if (searchTerm) {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        tenants.sort((a: any, b: any) => {
+          // Calculate relevance score for each tenant
+          const scoreA = calculateRelevanceScore(a, lowerSearchTerm);
+          const scoreB = calculateRelevanceScore(b, lowerSearchTerm);
+          return scoreB - scoreA; // Higher scores first
+        });
+      } else {
+        // Sort by latest payment date (most recent first), then by created_at
+        tenants.sort((a: any, b: any) => {
+          if (a.lastPaymentDate && b.lastPaymentDate) {
+            return new Date(b.lastPaymentDate).getTime() - new Date(a.lastPaymentDate).getTime();
+          }
+          if (a.lastPaymentDate) return -1;
+          if (b.lastPaymentDate) return 1;
+          return new Date(b.editedAt || b.id).getTime() - new Date(a.editedAt || a.id).getTime();
+        });
+      }
 
       return { tenants, totalCount: count || 0 };
     },
