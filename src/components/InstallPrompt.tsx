@@ -64,7 +64,7 @@ export const InstallPrompt = () => {
           <span className="sr-only">Close</span>
         </button>
         <DialogHeader>
-          <DialogTitle className="text-2xl">Install Welile Hub</DialogTitle>
+          <DialogTitle className="text-2xl">Install Welile Tenants</DialogTitle>
           <DialogDescription className="text-base pt-2">
             Install our app for quick access and a better experience. Works offline too!
           </DialogDescription>
