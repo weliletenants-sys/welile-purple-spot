@@ -421,150 +421,156 @@ export default function RepaymentSchedule() {
         {/* Daily Payments Table */}
         <Card className="p-6">
           <h3 className="text-xl font-bold mb-4">Daily Installments</h3>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {currentPayments.map((payment, index) => (
               <div 
                 key={startIndex + index}
-                className={`p-4 rounded-lg border ${
+                className={`p-5 rounded-xl border-2 transition-all ${
                   payment.paid 
-                    ? 'bg-primary/5 border-primary/20' 
-                    : 'bg-card border-border'
-                } flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4`}
+                    ? 'bg-gradient-to-r from-green-500/10 via-green-600/5 to-emerald-500/10 border-green-500/30 shadow-sm' 
+                    : 'bg-gradient-to-r from-orange-500/5 via-amber-500/5 to-yellow-500/5 border-orange-400/30 hover:border-orange-400/50'
+                } flex flex-col gap-4`}
               >
-                <div className="flex items-center gap-4 flex-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    payment.paid ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-lg shadow-md ${
+                    payment.paid 
+                      ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white' 
+                      : 'bg-gradient-to-br from-orange-400 to-amber-500 text-white'
                   }`}>
-                    {payment.paid ? <Check className="w-4 h-4" /> : startIndex + index + 1}
+                    {payment.paid ? <Check className="w-7 h-7" /> : startIndex + index + 1}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">{payment.date}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Day {startIndex + index + 1} - UGX {payment.amount.toLocaleString()}
-                    </p>
+                    <p className="text-2xl font-bold text-foreground">UGX {payment.amount.toLocaleString()}</p>
+                    <p className="text-base text-muted-foreground font-medium">{payment.date}</p>
                     {payment.recordedBy && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Recorded by: <span className="font-medium text-foreground">{payment.recordedBy}</span>
-                        {payment.recordedAt && (
-                          <span className="ml-1">
-                            on {new Date(payment.recordedAt).toLocaleString()}
-                          </span>
-                        )}
+                      <p className="text-sm text-muted-foreground mt-1">
+                        ✓ By {payment.recordedBy}
+                        {payment.recordedAt && ` • ${new Date(payment.recordedAt).toLocaleDateString()}`}
                       </p>
                     )}
                     {payment.modifiedBy && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Modified by: <span className="font-medium text-foreground">{payment.modifiedBy}</span>
-                        {payment.modifiedAt && (
-                          <span className="ml-1">
-                            on {new Date(payment.modifiedAt).toLocaleString()}
-                          </span>
-                        )}
+                      <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                        ✏️ Edited by {payment.modifiedBy}
+                        {payment.modifiedAt && ` • ${new Date(payment.modifiedAt).toLocaleDateString()}`}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                <div className="flex flex-col gap-3">
                   {payment.paid ? (
                     editingPaymentIndex === index ? (
-                      <div className="flex flex-col gap-2 w-full sm:w-auto">
+                      <div className="space-y-3 p-4 bg-card/50 rounded-lg border border-border">
+                        <Input
+                          type="number"
+                          placeholder="💰 Amount"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          className="h-12 text-lg"
+                        />
+                        <Input
+                          type="text"
+                          placeholder="👤 Your Name"
+                          value={recordedByName}
+                          onChange={(e) => setRecordedByName(e.target.value)}
+                          className="h-12 text-lg"
+                        />
                         <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            placeholder="Amount"
-                            value={paymentAmount}
-                            onChange={(e) => setPaymentAmount(e.target.value)}
-                            className="w-full sm:w-32"
-                          />
-                          <Input
-                            type="text"
-                            placeholder="Your name"
-                            value={recordedByName}
-                            onChange={(e) => setRecordedByName(e.target.value)}
-                            className="w-full sm:w-40"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handleUpdatePayment(index)} className="flex-1">
-                            <Check className="w-4 h-4 mr-1" />
-                            Update
+                          <Button 
+                            size="lg" 
+                            onClick={() => handleUpdatePayment(index)} 
+                            className="flex-1 h-12 text-base font-semibold"
+                          >
+                            <Check className="w-5 h-5 mr-2" />
+                            Save Changes
                           </Button>
                           <Button 
-                            size="sm" 
+                            size="lg" 
                             variant="destructive" 
                             onClick={() => handleDeletePayment(index)}
-                            className="flex-1"
+                            className="h-12"
                           >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Delete
+                            <Trash2 className="w-5 h-5" />
                           </Button>
                           <Button 
-                            size="sm" 
+                            size="lg" 
                             variant="ghost" 
                             onClick={() => {
                               setEditingPaymentIndex(null);
                               setPaymentAmount("");
                               setRecordedByName("");
                             }}
+                            className="h-12"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-5 h-5" />
                           </Button>
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                          Paid: UGX {(payment.paidAmount || 0).toLocaleString()}
-                        </Badge>
+                      <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                          <span className="text-lg font-bold text-green-700 dark:text-green-300">
+                            PAID: UGX {(payment.paidAmount || 0).toLocaleString()}
+                          </span>
+                        </div>
                         <Button 
                           size="sm" 
                           variant="ghost" 
                           onClick={() => handleEditPayment(index)}
-                          className="h-8 w-8 p-0"
+                          className="h-10 w-10 p-0"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-5 h-5" />
                         </Button>
                       </div>
                     )
                   ) : selectedPaymentIndex === index ? (
-                    <div className="flex flex-col gap-2 w-full sm:w-auto">
-                      <div className="flex gap-2">
-                        <Input
-                          type="number"
-                          placeholder="Amount"
-                          value={paymentAmount}
-                          onChange={(e) => setPaymentAmount(e.target.value)}
-                          className="w-full sm:w-32"
-                        />
-                        <Input
-                          type="text"
-                          placeholder="Your name"
-                          value={recordedByName}
-                          onChange={(e) => setRecordedByName(e.target.value)}
-                          className="w-full sm:w-40"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handleRecordPayment(index)} className="flex-1">
-                          Record
+                    <div className="space-y-3 p-4 bg-primary/5 rounded-lg border-2 border-primary/20">
+                      <Input
+                        type="number"
+                        placeholder="💰 Enter Amount"
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        className="h-14 text-lg font-semibold"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="👤 Your Name"
+                        value={recordedByName}
+                        onChange={(e) => setRecordedByName(e.target.value)}
+                        className="h-14 text-lg"
+                      />
+                      <div className="flex gap-3">
+                        <Button 
+                          size="lg" 
+                          onClick={() => handleRecordPayment(index)} 
+                          className="flex-1 h-14 text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                        >
+                          <Check className="w-6 h-6 mr-2" />
+                          CONFIRM PAYMENT
                         </Button>
                         <Button 
-                          size="sm" 
-                          variant="ghost" 
+                          size="lg" 
+                          variant="outline" 
                           onClick={() => {
                             setSelectedPaymentIndex(null);
                             setPaymentAmount("");
                             setRecordedByName("");
                           }}
+                          className="h-14 px-6"
                         >
-                          Cancel
+                          <X className="w-5 h-5" />
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={() => setSelectedPaymentIndex(index)}>
-                      Record Payment
+                    <Button 
+                      size="lg" 
+                      onClick={() => setSelectedPaymentIndex(index)}
+                      className="h-14 text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg hover:shadow-xl transition-all"
+                    >
+                      <DollarSign className="w-6 h-6 mr-2" />
+                      RECORD PAYMENT
                     </Button>
                   )}
                 </div>
