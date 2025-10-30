@@ -35,17 +35,17 @@ export const ContactButtons = ({ phoneNumber, size = "sm", iconOnly = false }: C
           variant="ghost"
           size="icon"
           onClick={handleCall}
-          className="h-6 w-6 hover:bg-primary/10 hover:text-primary"
+          className="h-7 w-7 hover:bg-primary/10 hover:text-primary transition-all duration-200"
         >
-          <Phone className="w-3 h-3" />
+          <Phone className="w-3.5 h-3.5" />
         </Button>
         <Button
-          variant="ghost"
+          variant="default"
           size="icon"
           onClick={handleWhatsApp}
-          className="h-6 w-6 hover:bg-green-500/10 hover:text-green-600"
+          className="h-7 w-7 bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110"
         >
-          <MessageCircle className="w-3 h-3" />
+          <MessageCircle className="w-3.5 h-3.5" />
         </Button>
       </div>
     );
@@ -57,16 +57,15 @@ export const ContactButtons = ({ phoneNumber, size = "sm", iconOnly = false }: C
         variant="outline"
         size={size}
         onClick={handleCall}
-        className="gap-1 hover:bg-primary/10 hover:text-primary hover:border-primary"
+        className="gap-1 hover:bg-primary/10 hover:text-primary hover:border-primary transition-all duration-200"
       >
         <Phone className="w-3 h-3" />
         Call
       </Button>
       <Button
-        variant="outline"
         size={size}
         onClick={handleWhatsApp}
-        className="gap-1 hover:bg-green-500/10 hover:text-green-600 hover:border-green-600"
+        className="gap-1 bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
       >
         <MessageCircle className="w-3 h-3" />
         WhatsApp
