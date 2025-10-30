@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { calculateRepaymentDetails } from "@/data/tenants";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { calculateRepaymentDetails, Tenant } from "@/data/tenants";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X, Trash2, Wallet } from "lucide-react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { useToast } from "@/hooks/use-toast";
-import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { EditTenantForm } from "@/components/EditTenantForm";
 import { ContactButtons } from "@/components/ContactButtons";
+import { supabase } from "@/integrations/supabase/client";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -21,8 +21,53 @@ export default function RepaymentSchedule() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { tenants, isLoading } = useTenants();
-  const tenant = tenants.find(t => t.id === tenantId);
+  
+  // Fetch tenant directly by ID
+  const { data: tenant, isLoading } = useQuery({
+    queryKey: ["tenant", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return null;
+      
+      const { data, error } = await supabase
+        .from("tenants")
+        .select("*")
+        .eq("id", tenantId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching tenant:", error);
+        return null;
+      }
+
+      // Transform database columns to Tenant type
+      return {
+        id: data.id,
+        name: data.name,
+        contact: data.contact,
+        address: data.address,
+        landlord: data.landlord,
+        landlordContact: data.landlord_contact,
+        rentAmount: data.rent_amount,
+        registrationFee: data.registration_fee,
+        accessFee: data.access_fee,
+        repaymentDays: data.repayment_days,
+        performance: data.performance || 0,
+        status: data.status as "active" | "pending" | "review",
+        paymentStatus: data.payment_status as "paid" | "pending" | "overdue",
+        agentName: data.agent_name,
+        agentPhone: data.agent_phone,
+        guarantor1Name: data.guarantor1_name,
+        guarantor1Contact: data.guarantor1_contact,
+        guarantor2Name: data.guarantor2_name,
+        guarantor2Contact: data.guarantor2_contact,
+        editedBy: data.edited_by,
+        editedAt: data.edited_at,
+        dailyPayments: [], // Payments are fetched separately
+      } as Tenant;
+    },
+    enabled: !!tenantId,
+  });
+
   const { payments, updatePayment } = usePayments(tenantId || "");
   
   const [currentPage, setCurrentPage] = useState(1);
