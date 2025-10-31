@@ -8,7 +8,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { useTenants } from "@/hooks/useTenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Lazy load heavy components
@@ -147,6 +147,13 @@ const Index = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-card">
+                  <DropdownMenuItem 
+                    className="cursor-pointer bg-destructive/10 hover:bg-destructive/20 text-destructive font-bold border-2 border-destructive mb-2"
+                    onClick={() => navigate("/missed-payments")}
+                  >
+                    <AlertTriangle className="w-5 h-5 mr-2" />
+                    🚨 MISSED PAYMENTS
+                  </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => navigate("/executive-dashboard")}

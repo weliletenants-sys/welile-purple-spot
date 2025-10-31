@@ -13,6 +13,7 @@ import TopPerformers from "./pages/TopPerformers";
 import NotFound from "./pages/NotFound";
 import BulkAddAdekeAnnet from "./pages/BulkAddAdekeAnnet";
 import AutoImportTenants from "./pages/AutoImportTenants";
+import MissedPayments from "./pages/MissedPayments";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => {
             <Route path="/top-performers" element={<TopPerformers />} />
             <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />
             <Route path="/auto-import" element={<AutoImportTenants />} />
+            <Route path="/missed-payments" element={<MissedPayments />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
