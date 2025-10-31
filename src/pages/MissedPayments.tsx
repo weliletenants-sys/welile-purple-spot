@@ -22,43 +22,57 @@ const MissedPayments = () => {
   const { data: missedTenants, isLoading } = useQuery({
     queryKey: ["missed-payments"],
     queryFn: async () => {
-      // Get all tenants with their daily payments
+      // Get all active tenants
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
         .select("id, name, contact, address, agent_name, agent_phone, rent_amount, status")
         .eq("status", "active");
 
       if (tenantsError) throw tenantsError;
+      if (!tenants || tenants.length === 0) return [];
+
+      // Calculate date range (last 7 days)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+      // Get all payments for all tenants in ONE query
+      const { data: allPayments, error: paymentsError } = await supabase
+        .from("daily_payments")
+        .select("tenant_id, date, paid")
+        .in("tenant_id", tenants.map(t => t.id))
+        .gte("date", sevenDaysAgo.toISOString().split("T")[0])
+        .order("date", { ascending: false });
+
+      if (paymentsError) throw paymentsError;
+
+      // Group payments by tenant_id
+      const paymentsByTenant = (allPayments || []).reduce((acc, payment) => {
+        if (!acc[payment.tenant_id]) acc[payment.tenant_id] = [];
+        acc[payment.tenant_id].push(payment);
+        return acc;
+      }, {} as Record<string, typeof allPayments>);
 
       const tenantsWithMissedPayments: MissedPaymentTenant[] = [];
 
-      for (const tenant of tenants || []) {
-        // Get the last 7 days of payments
-        const { data: payments, error: paymentsError } = await supabase
-          .from("daily_payments")
-          .select("date, paid")
-          .eq("tenant_id", tenant.id)
-          .order("date", { ascending: false })
-          .limit(7);
-
-        if (paymentsError) throw paymentsError;
-
+      for (const tenant of tenants) {
+        const payments = paymentsByTenant[tenant.id] || [];
+        
         // Count consecutive missed days from most recent
         let consecutiveMissedDays = 0;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
 
         for (let i = 0; i < 7; i++) {
           const checkDate = new Date(today);
           checkDate.setDate(checkDate.getDate() - i);
           const dateStr = checkDate.toISOString().split("T")[0];
 
-          const payment = payments?.find(p => p.date === dateStr);
+          const payment = payments.find(p => p.date === dateStr);
           
           if (!payment || !payment.paid) {
             consecutiveMissedDays++;
           } else {
-            break; // Stop counting if we hit a paid day
+            break;
           }
         }
 
@@ -77,10 +91,9 @@ const MissedPayments = () => {
         }
       }
 
-      // Sort by most missed days first
       return tenantsWithMissedPayments.sort((a, b) => b.missedDays - a.missedDays);
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
   });
 
   return (
