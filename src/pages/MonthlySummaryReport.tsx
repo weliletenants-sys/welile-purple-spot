@@ -1,31 +1,41 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft, Download, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useMonthlyReport } from "@/hooks/useMonthlyReport";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import html2canvas from "html2canvas";
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { format, subMonths } from "date-fns";
+import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted))", "hsl(var(--secondary))", "hsl(var(--destructive))"];
 
 const MonthlySummaryReport = () => {
   const navigate = useNavigate();
   const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(
-    `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subMonths(currentDate, 2),
+    to: currentDate,
+  });
+
+  const { data: report, isLoading } = useMonthlyReport(
+    date?.from ? format(date.from, "yyyy-MM-dd") : undefined,
+    date?.to ? format(date.to, "yyyy-MM-dd") : undefined
   );
 
-  const { data: report, isLoading } = useMonthlyReport(selectedMonth);
-
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!report) return;
 
     const doc = new jsPDF();
-    const date = new Date(selectedMonth);
-    const monthName = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    const dateRange = date?.from && date?.to 
+      ? `${format(date.from, "MMM dd, yyyy")} - ${format(date.to, "MMM dd, yyyy")}`
+      : "All Time";
 
     // Title
     doc.setFontSize(20);
@@ -34,7 +44,7 @@ const MonthlySummaryReport = () => {
     
     doc.setFontSize(12);
     doc.setTextColor(100, 100, 100);
-    doc.text(monthName, 14, 28);
+    doc.text(dateRange, 14, 28);
 
     // Summary Stats
     doc.setFontSize(11);
@@ -82,6 +92,36 @@ const MonthlySummaryReport = () => {
       margin: { left: 14, right: 14 },
     });
 
+    // Capture and add charts
+    const chartElements = document.querySelectorAll('[data-chart]');
+    let chartYPos = (doc as any).lastAutoTable.finalY + 15;
+
+    for (let i = 0; i < chartElements.length; i++) {
+      const chartElement = chartElements[i] as HTMLElement;
+      
+      try {
+        const canvas = await html2canvas(chartElement, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 180;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // Add new page if needed
+        if (chartYPos + imgHeight > doc.internal.pageSize.height - 20) {
+          doc.addPage();
+          chartYPos = 20;
+        }
+        
+        doc.addImage(imgData, 'PNG', 14, chartYPos, imgWidth, imgHeight);
+        chartYPos += imgHeight + 10;
+      } catch (error) {
+        console.error('Error capturing chart:', error);
+      }
+    }
+
     // Footer
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
@@ -95,17 +135,8 @@ const MonthlySummaryReport = () => {
       );
     }
 
-    doc.save(`Monthly-Summary-${monthName.replace(" ", "-")}.pdf`);
+    doc.save(`Monthly-Summary-${dateRange.replace(/[^a-z0-9]/gi, '-')}.pdf`);
   };
-
-  const months = [];
-  for (let i = 0; i < 12; i++) {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    const label = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-    months.push({ value, label });
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-8">
@@ -121,20 +152,43 @@ const MonthlySummaryReport = () => {
           </Button>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <h1 className="text-3xl font-bold">Monthly Summary Report</h1>
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {months.map((month) => (
-                <SelectItem key={month.value} value={month.value}>
-                  {month.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[300px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date?.from ? (
+                  date.to ? (
+                    <>
+                      {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(date.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Pick a date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={date?.from}
+                selected={date}
+                onSelect={setDate}
+                numberOfMonths={2}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         {isLoading ? (
@@ -158,7 +212,7 @@ const MonthlySummaryReport = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">UGX {report.totalPayments.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">Collected this month</p>
+                <p className="text-xs text-muted-foreground mt-1">Collected this period</p>
               </CardContent>
             </Card>
 
@@ -230,8 +284,45 @@ const MonthlySummaryReport = () => {
 
           {/* Charts Section */}
           <div className="grid gap-6 md:grid-cols-2 mt-6">
+            {/* Tenant Growth Chart */}
+            <Card className="col-span-full" data-chart>
+              <CardHeader>
+                <CardTitle>Tenant Growth Over Time</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={report.tenantGrowth}>
+                    <defs>
+                      <linearGradient id="colorTenants" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="month" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="count"
+                      stroke="hsl(var(--primary))"
+                      fillOpacity={1}
+                      fill="url(#colorTenants)"
+                      name="Total Tenants"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
             {/* Agent Performance Bar Chart */}
-            <Card className="col-span-full">
+            <Card className="col-span-full" data-chart>
               <CardHeader>
                 <CardTitle>Agent Performance Overview</CardTitle>
               </CardHeader>
@@ -257,7 +348,7 @@ const MonthlySummaryReport = () => {
             </Card>
 
             {/* Payment Distribution Pie Chart */}
-            <Card>
+            <Card data-chart>
               <CardHeader>
                 <CardTitle>Payment Collection Status</CardTitle>
               </CardHeader>
@@ -294,7 +385,7 @@ const MonthlySummaryReport = () => {
             </Card>
 
             {/* Withdrawal Requests Breakdown */}
-            <Card>
+            <Card data-chart>
               <CardHeader>
                 <CardTitle>Withdrawal Requests</CardTitle>
               </CardHeader>
@@ -331,7 +422,7 @@ const MonthlySummaryReport = () => {
             </Card>
 
             {/* Agent Payment Activity */}
-            <Card className="col-span-full">
+            <Card className="col-span-full" data-chart>
               <CardHeader>
                 <CardTitle>Agent Payment Recording Activity</CardTitle>
               </CardHeader>
@@ -363,7 +454,7 @@ const MonthlySummaryReport = () => {
           </div>
           </>
         ) : (
-          <div className="text-center py-12 text-muted-foreground">No data available for this month</div>
+          <div className="text-center py-12 text-muted-foreground">No data available for this period</div>
         )}
       </div>
     </div>
