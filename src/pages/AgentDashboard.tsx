@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -29,6 +29,7 @@ const AgentDashboard = () => {
   const [editedPhone, setEditedPhone] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [searchTerm, setSearchTerm] = useState("");
   const { data: allAgents, isLoading } = useAgentEarnings(period);
   
   // Filter agents if viewing a specific agent
@@ -36,16 +37,25 @@ const AgentDashboard = () => {
     ? allAgents?.filter(agent => agent.agentName === decodeURIComponent(routeAgentName))
     : allAgents;
 
+  // Apply search filter
+  const filteredAgents = agents?.filter(agent => {
+    if (!searchTerm.trim()) return true;
+    const search = searchTerm.toLowerCase().trim();
+    const nameMatch = agent.agentName.toLowerCase().includes(search);
+    const phoneMatch = agent.agentPhone.toLowerCase().includes(search);
+    return nameMatch || phoneMatch;
+  });
+
   // Pagination calculations
-  const totalPages = Math.ceil((agents?.length || 0) / itemsPerPage);
+  const totalPages = Math.ceil((filteredAgents?.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedAgents = agents?.slice(startIndex, endIndex);
+  const paginatedAgents = filteredAgents?.slice(startIndex, endIndex);
 
-  // Reset to page 1 when period changes
+  // Reset to page 1 when period or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [period]);
+  }, [period, searchTerm]);
 
   // Fetch tenants for the specific agent
   const { tenants: agentTenants, isLoading: tenantsLoading } = useTenants({
@@ -179,17 +189,28 @@ const AgentDashboard = () => {
               </div>
             </div>
           </div>
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="daily">Today</SelectItem>
-              <SelectItem value="weekly">Last 7 Days</SelectItem>
-              <SelectItem value="monthly">Last 30 Days</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial sm:w-[280px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value.slice(0, 100))}
+                className="pl-9"
+              />
+            </div>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="daily">Today</SelectItem>
+                <SelectItem value="weekly">Last 7 Days</SelectItem>
+                <SelectItem value="monthly">Last 30 Days</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -244,7 +265,7 @@ const AgentDashboard = () => {
         </div>
 
         {/* Pagination Controls - Top */}
-        {!isLoading && agents && agents.length > itemsPerPage && (
+        {!isLoading && filteredAgents && filteredAgents.length > itemsPerPage && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 p-4 bg-card rounded-lg border border-border">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Show:</span>
@@ -266,7 +287,7 @@ const AgentDashboard = () => {
                 </SelectContent>
               </Select>
               <span className="text-sm text-muted-foreground">
-                Showing {startIndex + 1}-{Math.min(endIndex, agents.length)} of {agents.length}
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredAgents.length)} of {filteredAgents.length}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -515,11 +536,11 @@ const AgentDashboard = () => {
         )}
 
         {/* Pagination Controls - Bottom */}
-        {!isLoading && agents && agents.length > itemsPerPage && (
+        {!isLoading && filteredAgents && filteredAgents.length > itemsPerPage && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-4 bg-card rounded-lg border border-border">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                Showing {startIndex + 1}-{Math.min(endIndex, agents.length)} of {agents.length}
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredAgents.length)} of {filteredAgents.length}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -559,13 +580,27 @@ const AgentDashboard = () => {
         )}
 
         {/* Empty State */}
-        {!isLoading && (!agents || agents.length === 0) && (
+        {!isLoading && (!filteredAgents || filteredAgents.length === 0) && (
           <Card className="p-12 text-center bg-gradient-to-br from-card to-primary/5 border-border">
             <UserCheck className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">No Agent Earnings Yet</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              {searchTerm ? "No agents found" : "No Agent Earnings Yet"}
+            </h3>
             <p className="text-muted-foreground">
-              Agent commissions will appear here once tenants make rent payments
+              {searchTerm 
+                ? `No agents match "${searchTerm}". Try a different search term.`
+                : "Agent commissions will appear here once tenants make rent payments"
+              }
             </p>
+            {searchTerm && (
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => setSearchTerm("")}
+              >
+                Clear Search
+              </Button>
+            )}
           </Card>
         )}
 
