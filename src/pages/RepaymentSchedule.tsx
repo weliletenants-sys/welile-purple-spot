@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X, Trash2, Wallet } from "lucide-react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +16,18 @@ import { ContactButtons } from "@/components/ContactButtons";
 import { supabase } from "@/integrations/supabase/client";
 
 const ITEMS_PER_PAGE = 10;
+
+const AUTHORIZED_RECORDERS = [
+  "Sharimah",
+  "Daniel",
+  "Martin",
+  "Gloria",
+  "James",
+  "Micheal",
+  "Arnold",
+  "Mercy",
+  "Benjamin"
+];
 
 export default function RepaymentSchedule() {
   const { tenantId } = useParams();
@@ -468,13 +481,18 @@ export default function RepaymentSchedule() {
                           onChange={(e) => setPaymentAmount(e.target.value)}
                           className="h-12 text-lg"
                         />
-                        <Input
-                          type="text"
-                          placeholder="👤 Your Name"
-                          value={recordedByName}
-                          onChange={(e) => setRecordedByName(e.target.value)}
-                          className="h-12 text-lg"
-                        />
+                        <Select value={recordedByName} onValueChange={setRecordedByName}>
+                          <SelectTrigger className="h-12 text-lg">
+                            <SelectValue placeholder="👤 Select Your Name" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {AUTHORIZED_RECORDERS.map((name) => (
+                              <SelectItem key={name} value={name}>
+                                {name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <div className="flex gap-2">
                           <Button 
                             size="lg" 
@@ -533,13 +551,18 @@ export default function RepaymentSchedule() {
                         onChange={(e) => setPaymentAmount(e.target.value)}
                         className="h-14 text-lg font-semibold"
                       />
-                      <Input
-                        type="text"
-                        placeholder="👤 Your Name"
-                        value={recordedByName}
-                        onChange={(e) => setRecordedByName(e.target.value)}
-                        className="h-14 text-lg"
-                      />
+                      <Select value={recordedByName} onValueChange={setRecordedByName}>
+                        <SelectTrigger className="h-14 text-lg">
+                          <SelectValue placeholder="👤 Select Your Name" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AUTHORIZED_RECORDERS.map((name) => (
+                            <SelectItem key={name} value={name}>
+                              {name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <div className="flex gap-3">
                         <Button 
                           size="lg" 
