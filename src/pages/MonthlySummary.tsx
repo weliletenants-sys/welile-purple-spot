@@ -1,19 +1,30 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Calendar as CalendarIcon, Filter, Activity } from "lucide-react";
+import { ArrowLeft, Download, Calendar as CalendarIcon, Filter, Activity, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useExecutiveStats } from "@/hooks/useExecutiveStats";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { format, subMonths } from "date-fns";
+import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted))", "hsl(var(--secondary))"];
 
 const MonthlySummary = () => {
   const navigate = useNavigate();
+  const currentDate = new Date();
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subMonths(currentDate, 1),
+    to: currentDate,
+  });
   const [selectedAgent, setSelectedAgent] = useState<string>("all");
   const [agents, setAgents] = useState<string[]>([]);
   const [totalTenants, setTotalTenants] = useState(0);
@@ -26,6 +37,9 @@ const MonthlySummary = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      const startDate = date?.from ? format(date.from, "yyyy-MM-dd") : format(subMonths(currentDate, 1), "yyyy-MM-dd");
+      const endDate = date?.to ? format(date.to, "yyyy-MM-dd") : format(currentDate, "yyyy-MM-dd");
+
       // Get all agents
       const { data: payments } = await supabase
         .from("daily_payments")
@@ -42,11 +56,13 @@ const MonthlySummary = () => {
       
       setTotalTenants(count || 0);
 
-      // Get payments (filtered by agent if selected)
+      // Get payments (filtered by agent and date range)
       let paymentsQuery = supabase
         .from("daily_payments")
-        .select("paid_amount, recorded_by")
-        .eq("paid", true);
+        .select("paid_amount, recorded_by, date")
+        .eq("paid", true)
+        .gte("date", startDate)
+        .lte("date", endDate);
 
       if (selectedAgent !== "all") {
         paymentsQuery = paymentsQuery.eq("recorded_by", selectedAgent);
@@ -80,17 +96,22 @@ const MonthlySummary = () => {
 
       setTopAgents(topAgentsList);
 
-      // Get withdrawals
+      // Get withdrawals (filtered by date range)
+      const start = date?.from || subMonths(currentDate, 1);
+      const end = date?.to || currentDate;
+
       const { data: withdrawals } = await supabase
         .from("withdrawal_requests")
-        .select("status");
+        .select("status")
+        .gte("requested_at", start.toISOString())
+        .lte("requested_at", end.toISOString());
 
       setWithdrawalRequests(withdrawals?.length || 0);
       setPendingWithdrawals(withdrawals?.filter((w) => w.status === "pending").length || 0);
     };
 
     fetchData();
-  }, [selectedAgent]);
+  }, [selectedAgent, date]);
 
   // Real-time updates
   useEffect(() => {
@@ -111,10 +132,20 @@ const MonthlySummary = () => {
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
+    const dateRange = date?.from && date?.to 
+      ? `${format(date.from, "MMM dd, yyyy")} - ${format(date.to, "MMM dd, yyyy")}`
+      : "All Time";
     
     doc.setFontSize(20);
     doc.setTextColor(126, 58, 242);
     doc.text("Monthly Summary Report", 14, 20);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(dateRange, 14, 28);
+    if (selectedAgent !== "all") {
+      doc.text(`Agent: ${selectedAgent}`, 14, 34);
+    }
     
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
@@ -126,7 +157,7 @@ const MonthlySummary = () => {
     ];
 
     autoTable(doc, {
-      startY: 30,
+      startY: selectedAgent !== "all" ? 40 : 35,
       head: [["Metric", "Value"]],
       body: statsData,
       theme: "grid",
@@ -148,7 +179,50 @@ const MonthlySummary = () => {
       headStyles: { fillColor: [126, 58, 242] },
     });
 
-    doc.save(`Monthly-Summary-${new Date().toLocaleDateString()}.pdf`);
+    doc.save(`Monthly-Summary-${dateRange.replace(/[^a-z0-9]/gi, '-')}.pdf`);
+  };
+
+  const handleExportToExcel = () => {
+    const dateRange = date?.from && date?.to 
+      ? `${format(date.from, "MMM dd, yyyy")} - ${format(date.to, "MMM dd, yyyy")}`
+      : "All Time";
+
+    // Summary Sheet
+    const summaryData = [
+      ["Monthly Summary Report"],
+      ["Date Range:", dateRange],
+      ["Agent Filter:", selectedAgent === "all" ? "All Agents" : selectedAgent],
+      [],
+      ["Metric", "Value"],
+      ["Total Tenants", totalTenants],
+      ["Total Payments", `UGX ${totalPayments.toLocaleString()}`],
+      ["Withdrawal Requests", withdrawalRequests],
+      ["Pending Withdrawals", pendingWithdrawals],
+    ];
+
+    // Agent Performance Sheet
+    const agentData = [
+      ["Agent Performance Report"],
+      [],
+      ["Rank", "Agent Name", "Payments Recorded", "Total Amount (UGX)", "Earnings (UGX)"],
+      ...topAgents.map((agent, index) => [
+        index + 1,
+        agent.name,
+        agent.paymentsRecorded,
+        agent.totalAmount,
+        agent.earnings,
+      ]),
+    ];
+
+    const wb = XLSX.utils.book_new();
+    
+    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summaryWs, "Summary");
+    
+    const agentWs = XLSX.utils.aoa_to_sheet(agentData);
+    XLSX.utils.book_append_sheet(wb, agentWs, "Agent Performance");
+
+    XLSX.writeFile(wb, `Monthly-Summary-${dateRange.replace(/[^a-z0-9]/gi, '-')}.xlsx`);
   };
 
   return (
@@ -159,10 +233,16 @@ const MonthlySummary = () => {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
-          <Button onClick={handleDownloadPDF} className="gap-2">
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportToExcel} className="gap-2">
+              <FileSpreadsheet className="h-4 w-4" />
+              Export Excel
+            </Button>
+            <Button onClick={handleDownloadPDF} className="gap-2">
+              <Download className="h-4 w-4" />
+              Download PDF
+            </Button>
+          </div>
         </div>
 
         {/* Real-time Metrics Widget */}
@@ -205,7 +285,8 @@ const MonthlySummary = () => {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <h1 className="text-3xl font-bold">Monthly Summary Report</h1>
           
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {/* Agent Filter */}
             <Select value={selectedAgent} onValueChange={setSelectedAgent}>
               <SelectTrigger className="w-[200px]">
                 <Filter className="h-4 w-4 mr-2" />
@@ -220,6 +301,43 @@ const MonthlySummary = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Date Range Picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[280px] justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date?.from ? (
+                    date.to ? (
+                      <>
+                        {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(date.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>Pick a date range</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={date?.from}
+                  selected={date}
+                  onSelect={setDate}
+                  numberOfMonths={2}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
