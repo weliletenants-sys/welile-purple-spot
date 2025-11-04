@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Lock } from "lucide-react";
+import { ArrowLeft, Download, Lock, TrendingUp, Clock, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { toast } from "@/hooks/use-toast";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const ACCESS_CODE = "Mypart@welile";
 
@@ -52,6 +53,52 @@ export default function WithdrawalHistory() {
     if (dateTo && new Date(request.requested_at) > new Date(dateTo)) return false;
     return true;
   });
+
+  const statistics = useMemo(() => {
+    const totalAmount = requests.reduce((sum, req) => sum + Number(req.amount), 0);
+    const pendingAmount = requests
+      .filter(req => req.status === "pending")
+      .reduce((sum, req) => sum + Number(req.amount), 0);
+    const approvedAmount = requests
+      .filter(req => req.status === "approved")
+      .reduce((sum, req) => sum + Number(req.amount), 0);
+    const rejectedAmount = requests
+      .filter(req => req.status === "rejected")
+      .reduce((sum, req) => sum + Number(req.amount), 0);
+    
+    const totalRequests = requests.length;
+    const pendingCount = requests.filter(req => req.status === "pending").length;
+    const approvedCount = requests.filter(req => req.status === "approved").length;
+    const rejectedCount = requests.filter(req => req.status === "rejected").length;
+    
+    const rejectionRate = totalRequests > 0 ? ((rejectedCount / totalRequests) * 100).toFixed(1) : "0";
+    const approvalRate = totalRequests > 0 ? ((approvedCount / totalRequests) * 100).toFixed(1) : "0";
+
+    return {
+      totalAmount,
+      pendingAmount,
+      approvedAmount,
+      rejectedAmount,
+      totalRequests,
+      pendingCount,
+      approvedCount,
+      rejectedCount,
+      rejectionRate,
+      approvalRate,
+    };
+  }, [requests]);
+
+  const pieChartData = [
+    { name: "Approved", value: statistics.approvedCount, color: "hsl(var(--chart-1))" },
+    { name: "Pending", value: statistics.pendingCount, color: "hsl(var(--chart-2))" },
+    { name: "Rejected", value: statistics.rejectedCount, color: "hsl(var(--chart-3))" },
+  ].filter(item => item.value > 0);
+
+  const barChartData = [
+    { name: "Approved", amount: statistics.approvedAmount, fill: "hsl(var(--chart-1))" },
+    { name: "Pending", amount: statistics.pendingAmount, fill: "hsl(var(--chart-2))" },
+    { name: "Rejected", amount: statistics.rejectedAmount, fill: "hsl(var(--chart-3))" },
+  ];
 
   const exportToExcel = () => {
     const exportData = filteredRequests.map((request) => ({
@@ -125,6 +172,119 @@ export default function WithdrawalHistory() {
             <Download className="h-4 w-4 mr-2" />
             Export to Excel
           </Button>
+        </div>
+
+        {/* Statistics Dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Withdrawals</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">UGX {statistics.totalAmount.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {statistics.totalRequests} total requests
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Amount</CardTitle>
+              <Clock className="h-4 w-4 text-chart-2" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-chart-2">UGX {statistics.pendingAmount.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {statistics.pendingCount} pending requests
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Approved Amount</CardTitle>
+              <CheckCircle className="h-4 w-4 text-chart-1" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-chart-1">UGX {statistics.approvedAmount.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {statistics.approvedCount} approved ({statistics.approvalRate}%)
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rejection Rate</CardTitle>
+              <XCircle className="h-4 w-4 text-chart-3" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-chart-3">{statistics.rejectionRate}%</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {statistics.rejectedCount} rejected requests
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Request Status Distribution</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              {pieChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieChartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  No data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Amount by Status</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis 
+                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => `UGX ${value.toLocaleString()}`}
+                  />
+                  <Bar dataKey="amount" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>
