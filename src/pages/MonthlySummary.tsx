@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { MonthOverMonthComparison } from "@/components/MonthOverMonthComparison";
 import { supabase } from "@/integrations/supabase/client";
 import { useExecutiveStats } from "@/hooks/useExecutiveStats";
 import jsPDF from "jspdf";
@@ -397,6 +398,9 @@ const MonthlySummary = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Month-over-Month Comparison */}
+        <MonthOverMonthComparison />
 
         {/* Charts */}
         <div className="grid gap-6 md:grid-cols-2">
