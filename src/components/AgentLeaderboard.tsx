@@ -14,12 +14,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const AgentLeaderboard = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10; // Increased to show more per page
+  const [pageSize, setPageSize] = useState(10);
   const { data: agents, isLoading } = useAgentEarnings("all");
+
+  // Reset to page 1 when page size changes
+  const handlePageSizeChange = (newSize: string) => {
+    setPageSize(Number(newSize));
+    setCurrentPage(1);
+  };
 
   if (isLoading) {
     return (
@@ -101,9 +114,22 @@ export const AgentLeaderboard = () => {
     <div className="space-y-8">
       {/* Pagination Controls - Top */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-card/50 p-4 rounded-lg border border-border">
-          <div className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} - {Math.min(startIndex + pageSize, sortedAgents.length)} of {sortedAgents.length} agents
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card/50 p-4 rounded-lg border border-border">
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {startIndex + 1} - {Math.min(startIndex + pageSize, sortedAgents.length)} of {sortedAgents.length} agents
+            </div>
+            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+              <SelectTrigger className="w-[140px] bg-card border-border z-50">
+                <SelectValue placeholder="Per page" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border z-50">
+                <SelectItem value="10">10 per page</SelectItem>
+                <SelectItem value="25">25 per page</SelectItem>
+                <SelectItem value="50">50 per page</SelectItem>
+                <SelectItem value="100">100 per page</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -285,9 +311,22 @@ export const AgentLeaderboard = () => {
 
       {/* Pagination Controls - Bottom */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-card/50 p-4 rounded-lg border border-border">
-          <div className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} - {Math.min(startIndex + pageSize, sortedAgents.length)} of {sortedAgents.length} agents
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card/50 p-4 rounded-lg border border-border">
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {startIndex + 1} - {Math.min(startIndex + pageSize, sortedAgents.length)} of {sortedAgents.length} agents
+            </div>
+            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+              <SelectTrigger className="w-[140px] bg-card border-border z-50">
+                <SelectValue placeholder="Per page" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border z-50">
+                <SelectItem value="10">10 per page</SelectItem>
+                <SelectItem value="25">25 per page</SelectItem>
+                <SelectItem value="50">50 per page</SelectItem>
+                <SelectItem value="100">100 per page</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-2">
             <Button
