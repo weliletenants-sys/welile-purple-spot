@@ -15,6 +15,8 @@ import NotFound from "./pages/NotFound";
 import BulkAddAdekeAnnet from "./pages/BulkAddAdekeAnnet";
 import AutoImportTenants from "./pages/AutoImportTenants";
 import MissedPayments from "./pages/MissedPayments";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +40,8 @@ const App = () => {
             <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />
             <Route path="/auto-import" element={<AutoImportTenants />} />
             <Route path="/missed-payments" element={<MissedPayments />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

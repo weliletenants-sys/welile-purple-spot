@@ -160,7 +160,7 @@ const Index = () => {
                   >
                     EXECUTIVE DASHBOARD
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => navigate("/admin-login")}>
                     ADMIN DASHBOARD
                   </DropdownMenuItem>
                   <DropdownMenuItem 

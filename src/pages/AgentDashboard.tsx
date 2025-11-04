@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter, Wallet } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -17,6 +17,7 @@ import { useTenants } from "@/hooks/useTenants";
 import { TenantCard } from "@/components/TenantCard";
 import { AgentEarningsBreakdown } from "@/components/AgentEarningsBreakdown";
 import { Badge } from "@/components/ui/badge";
+import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const AgentDashboard = () => {
   const [sortBy, setSortBy] = useState<"earned" | "recording" | "tenants" | "available">("earned");
   const [sortDirection, setSortDirection] = useState<"desc" | "asc">("desc");
   const { data: allAgents, isLoading } = useAgentEarnings(period);
+  const { createRequest } = useWithdrawalRequests();
   
   // Filter agents if viewing a specific agent
   const agents = routeAgentName 
@@ -226,22 +228,14 @@ const AgentDashboard = () => {
     setWithdrawingAgent(agentPhone);
     
     try {
-      const { error } = await supabase
-        .from("agent_earnings")
-        .insert({
-          agent_phone: agentPhone,
-          agent_name: agentName,
-          amount: amount,
-          earning_type: "withdrawal",
-        });
-
-      if (error) throw error;
-
-      toast.success(`Withdrawal of UGX ${amount.toLocaleString()} recorded for ${agentName}`);
-      queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
+      await createRequest({
+        agent_name: agentName,
+        agent_phone: agentPhone,
+        amount: amount,
+      });
     } catch (error) {
-      console.error("Error recording withdrawal:", error);
-      toast.error("Failed to record withdrawal");
+      console.error("Error creating withdrawal request:", error);
+      toast.error("Failed to create withdrawal request");
     } finally {
       setWithdrawingAgent(null);
     }
