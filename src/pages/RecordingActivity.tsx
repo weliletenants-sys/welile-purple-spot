@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, Download, Calendar } from "lucide-react";
+import { ArrowLeft, Star, Download, Calendar, ArrowUpDown, Eye, CheckSquare, Square } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,12 +26,34 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+
+type SortField = "created_at" | "agent_name" | "amount" | "payment_amount";
+type SortOrder = "asc" | "desc";
 
 const RecordingActivity = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [sortField, setSortField] = useState<SortField>("created_at");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
+  const [detailRecord, setDetailRecord] = useState<any>(null);
 
   // Get total count for pagination
   const { data: totalCount } = useQuery({
@@ -58,7 +80,7 @@ const RecordingActivity = () => {
   });
 
   const { data: recordingActivity, isLoading } = useQuery({
-    queryKey: ["recordingActivity", currentPage, searchTerm],
+    queryKey: ["recordingActivity", currentPage, searchTerm, itemsPerPage, sortField, sortOrder],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
@@ -67,12 +89,20 @@ const RecordingActivity = () => {
         .from("agent_earnings")
         .select(`
           *,
-          tenant:tenants(name, contact),
-          payment:daily_payments(amount, paid_amount, date)
+          tenant:tenants(name, contact, address),
+          payment:daily_payments(amount, paid_amount, date, paid)
         `)
-        .eq("earning_type", "recording_bonus")
-        .order("created_at", { ascending: false })
-        .range(from, to);
+        .eq("earning_type", "recording_bonus");
+
+      // Apply sorting
+      if (sortField === "payment_amount") {
+        // For payment amount, we need to handle it differently
+        query = query.order("created_at", { ascending: sortOrder === "asc" });
+      } else {
+        query = query.order(sortField, { ascending: sortOrder === "asc" });
+      }
+      
+      query = query.range(from, to);
 
       if (searchTerm) {
         query = query.or(`agent_name.ilike.%${searchTerm}%,agent_phone.ilike.%${searchTerm}%`);
@@ -83,6 +113,15 @@ const RecordingActivity = () => {
       if (error) {
         console.error("Error fetching recording activity:", error);
         throw error;
+      }
+
+      // Client-side sort for payment_amount if needed
+      if (sortField === "payment_amount" && bonuses) {
+        bonuses.sort((a: any, b: any) => {
+          const amountA = Number(a.payment?.paid_amount || 0);
+          const amountB = Number(b.payment?.paid_amount || 0);
+          return sortOrder === "asc" ? amountA - amountB : amountB - amountA;
+        });
       }
 
       return bonuses || [];
@@ -116,6 +155,72 @@ const RecordingActivity = () => {
   const totalPages = totalCount ? Math.ceil(totalCount / itemsPerPage) : 1;
   const totalRecordings = totalCount || 0;
   const totalBonuses = summaryData?.reduce((sum: number, record: any) => sum + Number(record.amount), 0) || 0;
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedRecords.size === recordingActivity?.length) {
+      setSelectedRecords(new Set());
+    } else {
+      setSelectedRecords(new Set(recordingActivity?.map((r: any) => r.id) || []));
+    }
+  };
+
+  const toggleSelectRecord = (id: string) => {
+    const newSelected = new Set(selectedRecords);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedRecords(newSelected);
+  };
+
+  const handleExportSelected = () => {
+    try {
+      const recordsToExport = recordingActivity?.filter((r: any) => selectedRecords.has(r.id)) || [];
+      
+      if (recordsToExport.length === 0) {
+        toast.error("No records selected for export");
+        return;
+      }
+
+      const exportData = recordsToExport.map((record: any) => ({
+        "Date & Time": format(new Date(record.created_at), "yyyy-MM-dd HH:mm:ss"),
+        "Recorded By": record.agent_name,
+        "Phone": record.agent_phone,
+        "Tenant Name": record.tenant?.name || "-",
+        "Tenant Contact": record.tenant?.contact || "-",
+        "Payment Date": record.payment?.date || "-",
+        "Payment Amount": record.payment?.paid_amount || 0,
+        "Recording Bonus (0.5%)": record.amount,
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      ws['!cols'] = [
+        { wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 25 },
+        { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Selected Records");
+
+      const date = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `Selected_Recordings_${date}.xlsx`);
+      
+      toast.success(`${recordsToExport.length} records exported successfully!`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export selected records");
+    }
+  };
 
   const handleExport = () => {
     try {
@@ -177,15 +282,27 @@ const RecordingActivity = () => {
                 <p className="text-muted-foreground text-sm mt-1">Track who's recording payments and earning bonuses</p>
               </div>
             </div>
-            <Button
-      onClick={handleExport}
-              className="flex items-center gap-2"
-              variant="outline"
-              disabled={!recordingActivity || recordingActivity.length === 0}
-            >
-              <Download className="w-4 h-4" />
-              Export to Excel
-            </Button>
+            <div className="flex gap-2">
+              {selectedRecords.size > 0 && (
+                <Button
+                  onClick={handleExportSelected}
+                  className="flex items-center gap-2"
+                  variant="default"
+                >
+                  <Download className="w-4 h-4" />
+                  Export Selected ({selectedRecords.size})
+                </Button>
+              )}
+              <Button
+                onClick={handleExport}
+                className="flex items-center gap-2"
+                variant="outline"
+                disabled={!recordingActivity || recordingActivity.length === 0}
+              >
+                <Download className="w-4 h-4" />
+                Export All
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -232,19 +349,41 @@ const RecordingActivity = () => {
           </Card>
         </div>
 
-        {/* Search */}
-        <div className="flex items-center gap-4">
+        {/* Search and Controls */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
           <Input
             placeholder="Search by recorder name or phone..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset to first page on search
+              setCurrentPage(1);
             }}
             className="max-w-md"
           />
-          <div className="text-sm text-muted-foreground">
-            Showing {recordingActivity?.length || 0} of {totalRecordings} recordings
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Items per page:</span>
+              <Select
+                value={itemsPerPage.toString()}
+                onValueChange={(value) => {
+                  setItemsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[100px] bg-card">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border z-50">
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value="200">200</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Showing {recordingActivity?.length || 0} of {totalRecordings}
+            </div>
           </div>
         </div>
 
@@ -259,23 +398,52 @@ const RecordingActivity = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-bold">Date & Time</TableHead>
-                    <TableHead className="font-bold">Recorded By</TableHead>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedRecords.size === recordingActivity?.length && recordingActivity?.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="font-bold cursor-pointer" onClick={() => handleSort("created_at")}>
+                      <div className="flex items-center gap-1">
+                        Date & Time
+                        <ArrowUpDown className="w-4 h-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-bold cursor-pointer" onClick={() => handleSort("agent_name")}>
+                      <div className="flex items-center gap-1">
+                        Recorded By
+                        <ArrowUpDown className="w-4 h-4" />
+                      </div>
+                    </TableHead>
                     <TableHead className="font-bold">Phone</TableHead>
                     <TableHead className="font-bold">Tenant</TableHead>
                     <TableHead className="font-bold">Payment Date</TableHead>
-                    <TableHead className="text-right font-bold">Payment Amount</TableHead>
-                    <TableHead className="text-right font-bold bg-primary/10">
+                    <TableHead className="text-right font-bold cursor-pointer" onClick={() => handleSort("payment_amount")}>
+                      <div className="flex items-center justify-end gap-1">
+                        Payment Amount
+                        <ArrowUpDown className="w-4 h-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-right font-bold bg-primary/10 cursor-pointer" onClick={() => handleSort("amount")}>
                       <div className="flex items-center justify-end gap-1">
                         <Star className="w-4 h-4" />
                         Bonus (0.5%)
+                        <ArrowUpDown className="w-4 h-4" />
                       </div>
                     </TableHead>
+                    <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recordingActivity.map((record: any) => (
                     <TableRow key={record.id} className="hover:bg-muted/30">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedRecords.has(record.id)}
+                          onCheckedChange={() => toggleSelectRecord(record.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         {format(new Date(record.created_at), "MMM dd, yyyy HH:mm")}
                       </TableCell>
@@ -295,6 +463,16 @@ const RecordingActivity = () => {
                       </TableCell>
                       <TableCell className="text-right font-bold text-primary bg-primary/5">
                         UGX {Number(record.amount).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDetailRecord(record)}
+                          className="h-8 w-8"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -368,6 +546,109 @@ const RecordingActivity = () => {
           <p className="text-sm mt-2">Powered by Lovable Cloud</p>
         </div>
       </footer>
+
+      {/* Detail View Dialog */}
+      <Dialog open={!!detailRecord} onOpenChange={(open) => !open && setDetailRecord(null)}>
+        <DialogContent className="max-w-2xl bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Recording Details</DialogTitle>
+            <DialogDescription>
+              Complete information about this payment recording
+            </DialogDescription>
+          </DialogHeader>
+          
+          {detailRecord && (
+            <div className="space-y-6">
+              {/* Recording Information */}
+              <div className="border border-border rounded-lg p-4 bg-muted/30">
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-primary" />
+                  Recording Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Recorded By</div>
+                    <div className="font-medium">{detailRecord.agent_name}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Phone</div>
+                    <div className="font-medium">{detailRecord.agent_phone}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Recording Date & Time</div>
+                    <div className="font-medium">
+                      {format(new Date(detailRecord.created_at), "MMMM dd, yyyy 'at' HH:mm")}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Recording Bonus</div>
+                    <div className="font-bold text-primary text-lg">
+                      UGX {Number(detailRecord.amount).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tenant Information */}
+              <div className="border border-border rounded-lg p-4 bg-muted/30">
+                <h3 className="font-semibold text-lg mb-3">Tenant Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Tenant Name</div>
+                    <div className="font-medium">{detailRecord.tenant?.name || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Contact</div>
+                    <div className="font-medium">{detailRecord.tenant?.contact || "-"}</div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="text-sm text-muted-foreground">Address</div>
+                    <div className="font-medium">{detailRecord.tenant?.address || "-"}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Information */}
+              <div className="border border-border rounded-lg p-4 bg-muted/30">
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-accent" />
+                  Payment Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Payment Date</div>
+                    <div className="font-medium">
+                      {detailRecord.payment?.date 
+                        ? format(new Date(detailRecord.payment.date), "MMMM dd, yyyy")
+                        : "-"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Payment Status</div>
+                    <div className="font-medium">
+                      {detailRecord.payment?.paid ? (
+                        <span className="text-green-600 font-semibold">Paid</span>
+                      ) : (
+                        <span className="text-yellow-600 font-semibold">Pending</span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Payment Amount</div>
+                    <div className="font-bold text-lg">
+                      UGX {Number(detailRecord.payment?.paid_amount || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Bonus Rate</div>
+                    <div className="font-medium">0.5%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
