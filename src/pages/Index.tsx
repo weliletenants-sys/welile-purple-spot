@@ -165,6 +165,12 @@ const Index = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
+                    onClick={() => navigate("/withdrawal-history")}
+                  >
+                    💰 WITHDRAWAL HISTORY
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
                     onClick={() => navigate("/agent-dashboard")}
                   >
                     AGENT DASHBOARD
