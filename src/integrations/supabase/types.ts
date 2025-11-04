@@ -62,6 +62,75 @@ export type Database = {
           },
         ]
       }
+      agent_points: {
+        Row: {
+          agent_name: string
+          agent_phone: string
+          created_at: string
+          description: string | null
+          id: string
+          points: number
+          points_source: string
+          updated_at: string
+        }
+        Insert: {
+          agent_name: string
+          agent_phone: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          points?: number
+          points_source: string
+          updated_at?: string
+        }
+        Update: {
+          agent_name?: string
+          agent_phone?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          points?: number
+          points_source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agent_rewards: {
+        Row: {
+          agent_name: string
+          agent_phone: string
+          claimed_at: string
+          fulfilled_at: string | null
+          id: string
+          notes: string | null
+          points_cost: number
+          reward_name: string
+          status: string
+        }
+        Insert: {
+          agent_name: string
+          agent_phone: string
+          claimed_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          notes?: string | null
+          points_cost: number
+          reward_name: string
+          status?: string
+        }
+        Update: {
+          agent_name?: string
+          agent_phone?: string
+          claimed_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          notes?: string | null
+          points_cost?: number
+          reward_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       daily_payments: {
         Row: {
           amount: number
