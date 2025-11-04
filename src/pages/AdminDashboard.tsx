@@ -5,13 +5,16 @@ import { ReportsSection } from "@/components/ReportsSection";
 import { ReportGenerator } from "@/components/ReportGenerator";
 import { ReportComparison } from "@/components/ReportComparison";
 import { AgentPerformanceComparison } from "@/components/AgentPerformanceComparison";
+import { AgentRankingComparison } from "@/components/AgentRankingComparison";
+import { MultiAgentComparison } from "@/components/MultiAgentComparison";
+import { PerformanceGoalsTracking } from "@/components/PerformanceGoalsTracking";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target } from "lucide-react";
 import { format } from "date-fns";
 
 const ADMIN_ACCESS_CODE = "Mypart@welile";
@@ -88,12 +91,12 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="requests" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
             <TabsTrigger value="requests">Requests</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
             <TabsTrigger value="generator">
               <LineChart className="h-4 w-4 mr-2" />
-              Generator
+              Generate
             </TabsTrigger>
             <TabsTrigger value="comparison">
               <GitCompare className="h-4 w-4 mr-2" />
@@ -102,6 +105,18 @@ const AdminDashboard = () => {
             <TabsTrigger value="agent-comparison">
               <UserCheck className="h-4 w-4 mr-2" />
               Agent
+            </TabsTrigger>
+            <TabsTrigger value="rankings">
+              <Trophy className="h-4 w-4 mr-2" />
+              Rankings
+            </TabsTrigger>
+            <TabsTrigger value="multi-agent">
+              <Users className="h-4 w-4 mr-2" />
+              Multi
+            </TabsTrigger>
+            <TabsTrigger value="goals">
+              <Target className="h-4 w-4 mr-2" />
+              Goals
             </TabsTrigger>
           </TabsList>
 
@@ -275,6 +290,18 @@ const AdminDashboard = () => {
 
           <TabsContent value="agent-comparison">
             <AgentPerformanceComparison />
+          </TabsContent>
+
+          <TabsContent value="rankings">
+            <AgentRankingComparison />
+          </TabsContent>
+
+          <TabsContent value="multi-agent">
+            <MultiAgentComparison />
+          </TabsContent>
+
+          <TabsContent value="goals">
+            <PerformanceGoalsTracking />
           </TabsContent>
         </Tabs>
       </div>
