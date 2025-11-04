@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText } from "lucide-react";
 import { format } from "date-fns";
 
 const ADMIN_ACCESS_CODE = "Mypart@welile";
@@ -70,10 +70,16 @@ const AdminDashboard = () => {
               <p className="text-muted-foreground">Manage withdrawal requests</p>
             </div>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/monthly-summary')}>
+              <FileText className="h-4 w-4 mr-2" />
+              Monthly Summary
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Pending Requests */}

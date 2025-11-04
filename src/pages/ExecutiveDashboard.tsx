@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload, Edit3, Award } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload, Edit3, Award, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useExecutiveStats } from "@/hooks/useExecutiveStats";
@@ -106,21 +106,29 @@ const ExecutiveDashboard = () => {
             </div>
           </div>
           
-          {/* Period Filter */}
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className={`w-full sm:w-[200px] bg-card border-border transition-all ${period !== "all" ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:border-primary/50"}`}>
-              <Calendar className={`w-4 h-4 mr-2 ${period !== "all" ? "text-primary" : ""}`} />
-              <SelectValue placeholder="All Time" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="lastMonth">Last Month</SelectItem>
-              <SelectItem value="year">This Year</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row gap-2">
+            {/* Monthly Summary Button */}
+            <Button variant="outline" onClick={() => navigate('/monthly-summary')}>
+              <FileText className="h-4 w-4 mr-2" />
+              Monthly Summary
+            </Button>
+            
+            {/* Period Filter */}
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className={`w-full sm:w-[200px] bg-card border-border transition-all ${period !== "all" ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:border-primary/50"}`}>
+                <Calendar className={`w-4 h-4 mr-2 ${period !== "all" ? "text-primary" : ""}`} />
+                <SelectValue placeholder="All Time" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="lastMonth">Last Month</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Outstanding Balance - Prominent Card */}

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMonthlyReport } from "@/hooks/useMonthlyReport";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const MonthlySummaryReport = () => {
   const navigate = useNavigate();
@@ -16,7 +18,81 @@ const MonthlySummaryReport = () => {
   const { data: report, isLoading } = useMonthlyReport(selectedMonth);
 
   const handleDownloadPDF = () => {
-    window.print();
+    if (!report) return;
+
+    const doc = new jsPDF();
+    const date = new Date(selectedMonth);
+    const monthName = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+    // Title
+    doc.setFontSize(20);
+    doc.setTextColor(126, 58, 242);
+    doc.text("Monthly Summary Report", 14, 20);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(monthName, 14, 28);
+
+    // Summary Stats
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    let yPos = 40;
+    
+    const stats = [
+      ["Total Tenants", report.totalTenants.toString()],
+      ["Total Payments", `UGX ${report.totalPayments.toLocaleString()}`],
+      ["Withdrawal Requests", `${report.withdrawalRequests} (${report.pendingWithdrawals} pending)`],
+      ["Active Agents", report.activeAgents.toString()],
+      ["Payment Rate", `${report.paymentRate}%`],
+      ["Total Earnings", `UGX ${report.totalEarnings.toLocaleString()}`],
+    ];
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [["Metric", "Value"]],
+      body: stats,
+      theme: "grid",
+      headStyles: { fillColor: [126, 58, 242] },
+      margin: { left: 14, right: 14 },
+    });
+
+    // Top Performing Agents
+    yPos = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFontSize(14);
+    doc.setTextColor(126, 58, 242);
+    doc.text("Top Performing Agents", 14, yPos);
+
+    const agentData = report.topAgents.map((agent, index) => [
+      `#${index + 1}`,
+      agent.name,
+      agent.paymentsRecorded.toString(),
+      `UGX ${agent.totalAmount.toLocaleString()}`,
+      `UGX ${agent.earnings.toLocaleString()}`,
+    ]);
+
+    autoTable(doc, {
+      startY: yPos + 5,
+      head: [["Rank", "Agent Name", "Payments", "Total Amount", "Earnings"]],
+      body: agentData,
+      theme: "striped",
+      headStyles: { fillColor: [126, 58, 242] },
+      margin: { left: 14, right: 14 },
+    });
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.setTextColor(150, 150, 150);
+      doc.text(
+        `Generated on ${new Date().toLocaleDateString()} - Page ${i} of ${pageCount}`,
+        14,
+        doc.internal.pageSize.height - 10
+      );
+    }
+
+    doc.save(`Monthly-Summary-${monthName.replace(" ", "-")}.pdf`);
   };
 
   const months = [];
