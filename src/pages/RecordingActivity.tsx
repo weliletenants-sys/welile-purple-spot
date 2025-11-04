@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, Download, Calendar, ArrowUpDown, Eye, CheckSquare, Square } from "lucide-react";
+import { ArrowLeft, Star, Download, Calendar as CalendarIcon, ArrowUpDown, Eye, CheckSquare, Square, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +41,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 type SortField = "created_at" | "agent_name" | "amount" | "payment_amount";
 type SortOrder = "asc" | "desc";
@@ -54,10 +61,12 @@ const RecordingActivity = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
   const [detailRecord, setDetailRecord] = useState<any>(null);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   // Get total count for pagination
   const { data: totalCount } = useQuery({
-    queryKey: ["recordingActivityCount", searchTerm],
+    queryKey: ["recordingActivityCount", searchTerm, startDate, endDate],
     queryFn: async () => {
       let query = supabase
         .from("agent_earnings")
@@ -66,6 +75,16 @@ const RecordingActivity = () => {
 
       if (searchTerm) {
         query = query.or(`agent_name.ilike.%${searchTerm}%,agent_phone.ilike.%${searchTerm}%`);
+      }
+
+      if (startDate) {
+        query = query.gte("created_at", startDate.toISOString());
+      }
+
+      if (endDate) {
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        query = query.lte("created_at", endOfDay.toISOString());
       }
 
       const { count, error } = await query;
@@ -80,7 +99,7 @@ const RecordingActivity = () => {
   });
 
   const { data: recordingActivity, isLoading } = useQuery({
-    queryKey: ["recordingActivity", currentPage, searchTerm, itemsPerPage, sortField, sortOrder],
+    queryKey: ["recordingActivity", currentPage, searchTerm, itemsPerPage, sortField, sortOrder, startDate, endDate],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
@@ -93,6 +112,17 @@ const RecordingActivity = () => {
           payment:daily_payments(amount, paid_amount, date, paid)
         `)
         .eq("earning_type", "recording_bonus");
+
+      // Apply date range filter
+      if (startDate) {
+        query = query.gte("created_at", startDate.toISOString());
+      }
+
+      if (endDate) {
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        query = query.lte("created_at", endOfDay.toISOString());
+      }
 
       // Apply sorting
       if (sortField === "payment_amount") {
@@ -130,7 +160,7 @@ const RecordingActivity = () => {
 
   // Get total summary (not filtered by pagination)
   const { data: summaryData } = useQuery({
-    queryKey: ["recordingActivitySummary", searchTerm],
+    queryKey: ["recordingActivitySummary", searchTerm, startDate, endDate],
     queryFn: async () => {
       let query = supabase
         .from("agent_earnings")
@@ -139,6 +169,16 @@ const RecordingActivity = () => {
 
       if (searchTerm) {
         query = query.or(`agent_name.ilike.%${searchTerm}%,agent_phone.ilike.%${searchTerm}%`);
+      }
+
+      if (startDate) {
+        query = query.gte("created_at", startDate.toISOString());
+      }
+
+      if (endDate) {
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        query = query.lte("created_at", endOfDay.toISOString());
       }
 
       const { data, error } = await query;
@@ -164,6 +204,14 @@ const RecordingActivity = () => {
       setSortOrder("desc");
     }
   };
+
+  const clearDateFilters = () => {
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setCurrentPage(1);
+  };
+
+  const hasDateFilters = startDate || endDate;
 
   const toggleSelectAll = () => {
     if (selectedRecords.size === recordingActivity?.length) {
@@ -324,8 +372,8 @@ const RecordingActivity = () => {
 
           <Card className="p-6 bg-gradient-to-br from-card to-accent/5">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-accent" />
+            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                <CalendarIcon className="w-6 h-6 text-accent" />
               </div>
               <div>
                 <div className="text-2xl font-bold text-foreground">UGX {totalBonuses.toLocaleString()}</div>
@@ -351,15 +399,88 @@ const RecordingActivity = () => {
 
         {/* Search and Controls */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <Input
-            placeholder="Search by recorder name or phone..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="max-w-md"
-          />
+          <div className="flex items-center gap-2 flex-wrap">
+            <Input
+              placeholder="Search by recorder name or phone..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="max-w-md"
+            />
+            
+            {/* Date Range Filters */}
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "MMM dd, yyyy") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-card border-border z-50" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(date) => {
+                      setStartDate(date);
+                      setCurrentPage(1);
+                    }}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <span className="text-muted-foreground">to</span>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "MMM dd, yyyy") : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-card border-border z-50" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={(date) => {
+                      setEndDate(date);
+                      setCurrentPage(1);
+                    }}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {hasDateFilters && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearDateFilters}
+                  className="h-9 w-9"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Items per page:</span>
@@ -611,7 +732,7 @@ const RecordingActivity = () => {
               {/* Payment Information */}
               <div className="border border-border rounded-lg p-4 bg-muted/30">
                 <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-accent" />
+                  <CalendarIcon className="w-5 h-5 text-accent" />
                   Payment Information
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
