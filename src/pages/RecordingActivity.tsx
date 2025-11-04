@@ -18,16 +18,52 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const RecordingActivity = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  // Get total count for pagination
+  const { data: totalCount } = useQuery({
+    queryKey: ["recordingActivityCount", searchTerm],
+    queryFn: async () => {
+      let query = supabase
+        .from("agent_earnings")
+        .select("*", { count: "exact", head: true })
+        .eq("earning_type", "recording_bonus");
+
+      if (searchTerm) {
+        query = query.or(`agent_name.ilike.%${searchTerm}%,agent_phone.ilike.%${searchTerm}%`);
+      }
+
+      const { count, error } = await query;
+
+      if (error) {
+        console.error("Error fetching count:", error);
+        throw error;
+      }
+
+      return count || 0;
+    },
+  });
 
   const { data: recordingActivity, isLoading } = useQuery({
-    queryKey: ["recordingActivity"],
+    queryKey: ["recordingActivity", currentPage, searchTerm],
     queryFn: async () => {
-      // Get all recording bonuses with tenant and payment details
-      const { data: bonuses, error } = await supabase
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      let query = supabase
         .from("agent_earnings")
         .select(`
           *,
@@ -35,7 +71,14 @@ const RecordingActivity = () => {
           payment:daily_payments(amount, paid_amount, date)
         `)
         .eq("earning_type", "recording_bonus")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (searchTerm) {
+        query = query.or(`agent_name.ilike.%${searchTerm}%,agent_phone.ilike.%${searchTerm}%`);
+      }
+
+      const { data: bonuses, error } = await query;
 
       if (error) {
         console.error("Error fetching recording activity:", error);
@@ -46,18 +89,37 @@ const RecordingActivity = () => {
     },
   });
 
-  const filteredActivity = recordingActivity?.filter((record: any) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      record.agent_name?.toLowerCase().includes(searchLower) ||
-      record.agent_phone?.toLowerCase().includes(searchLower) ||
-      record.tenant?.name?.toLowerCase().includes(searchLower)
-    );
+  // Get total summary (not filtered by pagination)
+  const { data: summaryData } = useQuery({
+    queryKey: ["recordingActivitySummary", searchTerm],
+    queryFn: async () => {
+      let query = supabase
+        .from("agent_earnings")
+        .select("amount")
+        .eq("earning_type", "recording_bonus");
+
+      if (searchTerm) {
+        query = query.or(`agent_name.ilike.%${searchTerm}%,agent_phone.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching summary:", error);
+        throw error;
+      }
+
+      return data || [];
+    },
   });
+
+  const totalPages = totalCount ? Math.ceil(totalCount / itemsPerPage) : 1;
+  const totalRecordings = totalCount || 0;
+  const totalBonuses = summaryData?.reduce((sum: number, record: any) => sum + Number(record.amount), 0) || 0;
 
   const handleExport = () => {
     try {
-      const exportData = filteredActivity?.map((record: any) => ({
+      const exportData = recordingActivity?.map((record: any) => ({
         "Date & Time": format(new Date(record.created_at), "yyyy-MM-dd HH:mm:ss"),
         "Recorded By": record.agent_name,
         "Phone": record.agent_phone,
@@ -93,9 +155,6 @@ const RecordingActivity = () => {
     }
   };
 
-  const totalRecordings = filteredActivity?.length || 0;
-  const totalBonuses = filteredActivity?.reduce((sum: number, record: any) => sum + Number(record.amount), 0) || 0;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
       {/* Header */}
@@ -119,10 +178,10 @@ const RecordingActivity = () => {
               </div>
             </div>
             <Button
-              onClick={handleExport}
+      onClick={handleExport}
               className="flex items-center gap-2"
               variant="outline"
-              disabled={!filteredActivity || filteredActivity.length === 0}
+              disabled={!recordingActivity || recordingActivity.length === 0}
             >
               <Download className="w-4 h-4" />
               Export to Excel
@@ -176,11 +235,17 @@ const RecordingActivity = () => {
         {/* Search */}
         <div className="flex items-center gap-4">
           <Input
-            placeholder="Search by recorder name, phone, or tenant..."
+            placeholder="Search by recorder name or phone..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
             className="max-w-md"
           />
+          <div className="text-sm text-muted-foreground">
+            Showing {recordingActivity?.length || 0} of {totalRecordings} recordings
+          </div>
         </div>
 
         {/* Activity Table */}
@@ -189,7 +254,7 @@ const RecordingActivity = () => {
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             </div>
-          ) : filteredActivity && filteredActivity.length > 0 ? (
+          ) : recordingActivity && recordingActivity.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -209,7 +274,7 @@ const RecordingActivity = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredActivity.map((record: any) => (
+                  {recordingActivity.map((record: any) => (
                     <TableRow key={record.id} className="hover:bg-muted/30">
                       <TableCell className="font-medium">
                         {format(new Date(record.created_at), "MMM dd, yyyy HH:mm")}
@@ -246,6 +311,54 @@ const RecordingActivity = () => {
             </div>
           )}
         </Card>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(pageNum)}
+                        isActive={currentPage === pageNum}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </main>
 
       {/* Footer */}
