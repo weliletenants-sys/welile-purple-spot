@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { LogOut, TrendingUp, Users, DollarSign, Award, Download, Target, Trophy, History } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AgentRewardsSystem } from "@/components/AgentRewardsSystem";
 
 interface AgentStats {
   tenantsManaged: number;
@@ -201,16 +200,9 @@ const AgentPortal = () => {
           </CardHeader>
         </Card>
 
-        {/* Main Content Tabs */}
+        {/* Main Content */}
         {stats && (
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="rewards">Rewards</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="space-y-6 mt-6">
+          <div className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-3">
@@ -362,48 +354,7 @@ const AgentPortal = () => {
                 </CardContent>
               </Card>
             )}
-            </TabsContent>
-
-            <TabsContent value="rewards" className="mt-6">
-              <AgentRewardsSystem agentName={agentName} agentPhone={sessionStorage.getItem('agentPhone') || ''} />
-            </TabsContent>
-
-            <TabsContent value="history" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <History className="h-5 w-5 text-primary" />
-                    Payment History
-                  </CardTitle>
-                  <CardDescription>Your earnings and commission history</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {paymentHistory.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No payment history yet</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {paymentHistory.map((payment) => (
-                        <div
-                          key={payment.id}
-                          className="flex items-center justify-between p-4 border rounded-lg"
-                        >
-                          <div>
-                            <p className="font-semibold">{payment.earning_type.replace(/_/g, ' ').toUpperCase()}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(payment.created_at), 'MMM dd, yyyy')}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-lg">UGX {Number(payment.amount).toLocaleString()}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          </div>
         )}
       </div>
     </div>

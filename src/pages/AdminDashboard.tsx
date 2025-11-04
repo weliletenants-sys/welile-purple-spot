@@ -14,9 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, TrendingUp } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target } from "lucide-react";
 import { format } from "date-fns";
-import { LiveAgentLeaderboard } from "@/components/LiveAgentLeaderboard";
 
 const ADMIN_ACCESS_CODE = "Mypart@welile";
 
@@ -95,12 +94,8 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="requests" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
             <TabsTrigger value="requests">Requests</TabsTrigger>
-            <TabsTrigger value="live">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Live
-            </TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
             <TabsTrigger value="generator">
               <LineChart className="h-4 w-4 mr-2" />
@@ -282,10 +277,6 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         )}
-          </TabsContent>
-
-          <TabsContent value="live">
-            <LiveAgentLeaderboard />
           </TabsContent>
 
           <TabsContent value="reports">
