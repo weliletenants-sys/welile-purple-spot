@@ -21,6 +21,7 @@ export interface AgentEarning {
   dataEntryRewards: number;
   recordingBonuses: number;
   commissions: number;
+  hasRecentRecordingActivity: boolean;
 }
 
 export const useAgentEarnings = (period?: string) => {
@@ -122,6 +123,7 @@ export const useAgentEarnings = (period?: string) => {
             dataEntryRewards: 0,
             recordingBonuses: 0,
             commissions: 0,
+            hasRecentRecordingActivity: false,
           });
         }
         const agent = agentMap.get(key)!;
@@ -178,6 +180,7 @@ export const useAgentEarnings = (period?: string) => {
             dataEntryRewards: 0,
             recordingBonuses: 0,
             commissions: 0,
+            hasRecentRecordingActivity: false,
           });
         }
         
@@ -187,6 +190,11 @@ export const useAgentEarnings = (period?: string) => {
           agent.agentPhone = earning.agent_phone;
         }
         
+        // Check if this is a recent recording bonus (within last 7 days)
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const earningDate = new Date(earning.created_at);
+        
         if (earning.earning_type === "commission") {
           agent.earnedCommission += Number(earning.amount);
           agent.commissions += Number(earning.amount);
@@ -195,6 +203,10 @@ export const useAgentEarnings = (period?: string) => {
           agent.earnedCommission += Number(earning.amount);
           agent.recordingBonuses += Number(earning.amount);
           agent.earningsCount += 1;
+          // Mark agent as having recent activity
+          if (earningDate >= oneWeekAgo) {
+            agent.hasRecentRecordingActivity = true;
+          }
         } else if (earning.earning_type === "signup_bonus") {
           agent.earnedCommission += Number(earning.amount);
           agent.signupBonuses += Number(earning.amount);

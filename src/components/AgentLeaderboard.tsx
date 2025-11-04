@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
-import { ChevronLeft, ChevronRight, Trophy, Award, Medal, DollarSign, Gift, FileText, Star, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trophy, Award, Medal, DollarSign, Gift, FileText, Star, Download, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -182,9 +183,17 @@ export const AgentLeaderboard = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="font-semibold text-foreground truncate" title={agent.agentName}>
-                  {agent.agentName}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-foreground truncate" title={agent.agentName}>
+                    {agent.agentName}
+                  </p>
+                  {agent.hasRecentRecordingActivity && (
+                    <Badge variant="default" className="bg-gradient-to-r from-primary to-accent text-primary-foreground px-2 py-0.5 text-xs animate-pulse">
+                      <Zap className="w-3 h-3 mr-1" />
+                      Active
+                    </Badge>
+                  )}
+                </div>
                 {agent.agentPhone && (
                   <p className="text-xs text-muted-foreground truncate" title={agent.agentPhone}>
                     {agent.agentPhone}
@@ -284,7 +293,17 @@ export const AgentLeaderboard = () => {
                         {getRankIcon(index)}
                       </div>
                     </TableCell>
-                    <TableCell className="font-semibold">{agent.agentName}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{agent.agentName}</span>
+                        {agent.hasRecentRecordingActivity && (
+                          <Badge variant="default" className="bg-gradient-to-r from-primary to-accent text-primary-foreground px-2 py-0.5 text-xs animate-pulse">
+                            <Zap className="w-3 h-3 mr-1" />
+                            Active
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{agent.agentPhone || '-'}</TableCell>
                     <TableCell className="text-right">
                       UGX {(agent.signupBonuses || 0).toLocaleString()}
