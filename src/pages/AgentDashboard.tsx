@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { AgentPeriodicEarnings } from "@/components/AgentPeriodicEarnings";
 import { useTenants } from "@/hooks/useTenants";
 import { TenantCard } from "@/components/TenantCard";
+import { AgentEarningsBreakdown } from "@/components/AgentEarningsBreakdown";
+import { Badge } from "@/components/ui/badge";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -347,6 +349,31 @@ const AgentDashboard = () => {
                     </div>
                   </div>
 
+                  {/* Recording Bonuses - Highlighted */}
+                  {agent.recordingBonuses > 0 && (
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 rounded-lg bg-accent/20">
+                            <Zap className="w-5 h-5 text-accent" />
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-accent">Recording Bonuses</span>
+                            {agent.hasRecentRecordingActivity && (
+                              <Badge className="ml-2 bg-gradient-to-r from-accent to-primary text-primary-foreground text-xs animate-pulse">
+                                Active
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-2xl font-bold text-accent">
+                          UGX {agent.recordingBonuses.toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">Earned from recording payments</p>
+                    </div>
+                  )}
+
                   {/* Commission Stats */}
                   <div className="pt-4 border-t border-border space-y-3">
                     <div className="flex items-center justify-between">
@@ -390,6 +417,11 @@ const AgentDashboard = () => {
 
                   {/* Periodic Earnings */}
                   <AgentPeriodicEarnings agentName={agent.agentName} />
+
+                  {/* Earnings Breakdown with Withdrawn Status */}
+                  <div className="pt-4 border-t border-border">
+                    <AgentEarningsBreakdown agentName={agent.agentName} period={period} />
+                  </div>
 
                   {/* Withdraw Button */}
                   <div className="pt-3 border-t border-border">
