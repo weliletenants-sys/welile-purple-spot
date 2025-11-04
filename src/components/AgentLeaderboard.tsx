@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
-import { ChevronLeft, ChevronRight, Trophy, Award, Medal, DollarSign, Gift, FileText, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trophy, Award, Medal, DollarSign, Gift, FileText, Star, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
 import {
   Table,
   TableBody,
@@ -40,6 +42,59 @@ export const AgentLeaderboard = () => {
     if (rank === 1) return <Award className="w-5 h-5 text-gray-400" />;
     if (rank === 2) return <Medal className="w-5 h-5 text-amber-600" />;
     return null;
+  };
+
+  const handleExportToExcel = () => {
+    try {
+      // Prepare data for export
+      const exportData = sortedAgents.map((agent, index) => ({
+        "Rank": index + 1,
+        "Agent Name": agent.agentName,
+        "Phone": agent.agentPhone || "-",
+        "Signup Bonuses": agent.signupBonuses,
+        "Data Entry Rewards": agent.dataEntryRewards,
+        "Recording Bonuses": agent.recordingBonuses,
+        "Commissions": agent.commissions,
+        "Total Earned": agent.earnedCommission,
+        "Tenants Count": agent.tenantsCount,
+        "Expected Commission": agent.expectedCommission,
+        "Withdrawn": agent.withdrawnCommission,
+      }));
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 6 },  // Rank
+        { wch: 25 }, // Agent Name
+        { wch: 15 }, // Phone
+        { wch: 15 }, // Signup Bonuses
+        { wch: 18 }, // Data Entry Rewards
+        { wch: 18 }, // Recording Bonuses
+        { wch: 15 }, // Commissions
+        { wch: 15 }, // Total Earned
+        { wch: 13 }, // Tenants Count
+        { wch: 20 }, // Expected Commission
+        { wch: 12 }, // Withdrawn
+      ];
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Agent Earnings");
+
+      // Generate filename with current date
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `Agent_Earnings_Breakdown_${date}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+      
+      toast.success("Earnings report exported successfully!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export earnings report");
+    }
   };
 
   return (
@@ -130,10 +185,20 @@ export const AgentLeaderboard = () => {
 
       {/* Detailed Earnings Breakdown Table */}
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <DollarSign className="w-6 h-6 text-primary" />
-          Detailed Earnings Breakdown
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <DollarSign className="w-6 h-6 text-primary" />
+            Detailed Earnings Breakdown
+          </h2>
+          <Button
+            onClick={handleExportToExcel}
+            className="flex items-center gap-2"
+            variant="outline"
+          >
+            <Download className="w-4 h-4" />
+            Export to Excel
+          </Button>
+        </div>
         
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
