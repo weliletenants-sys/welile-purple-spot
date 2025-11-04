@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { ReportsSection } from "@/components/ReportsSection";
 import { ReportGenerator } from "@/components/ReportGenerator";
+import { ReportComparison } from "@/components/ReportComparison";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare } from "lucide-react";
 import { format } from "date-fns";
 
 const ADMIN_ACCESS_CODE = "Mypart@welile";
@@ -86,12 +87,16 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="requests" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="requests">Withdrawal Requests</TabsTrigger>
             <TabsTrigger value="reports">Generated Reports</TabsTrigger>
             <TabsTrigger value="generator">
               <LineChart className="h-4 w-4 mr-2" />
-              Report Generator
+              Generator
+            </TabsTrigger>
+            <TabsTrigger value="comparison">
+              <GitCompare className="h-4 w-4 mr-2" />
+              Comparison
             </TabsTrigger>
           </TabsList>
 
@@ -257,6 +262,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="generator">
             <ReportGenerator />
+          </TabsContent>
+
+          <TabsContent value="comparison">
+            <ReportComparison />
           </TabsContent>
         </Tabs>
       </div>
