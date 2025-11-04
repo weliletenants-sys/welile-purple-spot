@@ -19,8 +19,8 @@ export const AgentLeaderboard = () => {
     );
   }
 
-  // Sort agents by tenant count (descending)
-  const sortedAgents = [...(agents || [])].sort((a, b) => b.tenantsCount - a.tenantsCount);
+  // Sort agents by earned commission (descending)
+  const sortedAgents = [...(agents || [])].sort((a, b) => b.earnedCommission - a.earnedCommission);
   
   const totalPages = Math.ceil(sortedAgents.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
@@ -38,8 +38,8 @@ export const AgentLeaderboard = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <Users className="w-6 h-6 text-primary" />
-          Top Agents by Tenants
+          <Trophy className="w-6 h-6 text-primary" />
+          Top Agents by Earnings
         </h2>
         {totalPages > 1 && (
           <div className="flex items-center gap-2">
