@@ -178,6 +178,12 @@ const Index = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
+                    onClick={() => navigate("/agent-portal-login")}
+                  >
+                    🔐 AGENT PORTAL
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
                     onClick={() => navigate("/top-performers")}
                   >
                     TOP PERFORMERS

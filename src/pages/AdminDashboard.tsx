@@ -79,6 +79,9 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/agent-portal-login')}>
+              🔐 Agent Portal
+            </Button>
             <Button variant="outline" onClick={() => navigate('/monthly-summary')}>
               <FileText className="h-4 w-4 mr-2" />
               Monthly Summary
