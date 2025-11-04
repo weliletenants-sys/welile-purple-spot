@@ -2,14 +2,57 @@ import { Card } from "@/components/ui/card";
 import { useReports } from "@/hooks/useReports";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, TrendingUp, Users, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, TrendingUp, Users, DollarSign, Download } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 export const ReportsSection = () => {
   const { data: dailyReports, isLoading: loadingDaily } = useReports('daily');
   const { data: weeklyReports, isLoading: loadingWeekly } = useReports('weekly');
   const { data: monthlyReports, isLoading: loadingMonthly } = useReports('monthly');
+
+  const exportReportToCSV = (report: any) => {
+    const csvData = [
+      ['Metric', 'Value'],
+      ['Report Type', report.report_type],
+      ['Report Date', format(new Date(report.report_date), 'MMM dd, yyyy')],
+      ['Period', `${report.data.period.startDate} to ${report.data.period.endDate}`],
+      ['Total Tenants', report.data.totalTenants],
+      ['Total Payments', `UGX ${report.data.totalPayments.toLocaleString()}`],
+      ['Total Withdrawals', `UGX ${report.data.totalWithdrawals.toLocaleString()}`],
+      ['Pending Withdrawals', report.data.pendingWithdrawals],
+      [''],
+      ['Top Agents'],
+      ['Rank', 'Agent Name', 'Amount (UGX)'],
+      ...report.data.topAgents.map((agent: any, idx: number) => [
+        idx + 1,
+        agent.name,
+        agent.amount.toLocaleString()
+      ])
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(csvData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+    XLSX.writeFile(wb, `${report.report_type}-Report-${report.report_date}.csv`);
+    toast.success('CSV exported successfully');
+  };
+
+  const exportReportToJSON = (report: any) => {
+    const blob = new Blob([JSON.stringify(report.data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${report.report_type}-Report-${report.report_date}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('JSON exported successfully');
+  };
 
   const renderReportCard = (report: any) => (
     <Card key={report.id} className="p-4 mb-3">
@@ -70,6 +113,17 @@ export const ReportsSection = () => {
           </div>
         </div>
       )}
+
+      <div className="mt-3 pt-3 border-t flex gap-2">
+        <Button onClick={() => exportReportToCSV(report)} variant="outline" size="sm" className="flex-1">
+          <Download className="h-3 w-3 mr-1" />
+          CSV
+        </Button>
+        <Button onClick={() => exportReportToJSON(report)} variant="outline" size="sm" className="flex-1">
+          <Download className="h-3 w-3 mr-1" />
+          JSON
+        </Button>
+      </div>
     </Card>
   );
 
