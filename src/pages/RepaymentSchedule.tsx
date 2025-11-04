@@ -17,18 +17,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ITEMS_PER_PAGE = 10;
 
-const AUTHORIZED_RECORDERS = [
-  "Sharimah",
-  "Daniel",
-  "Martin",
-  "Gloria",
-  "James",
-  "Micheal",
-  "Arnold",
-  "Mercy",
-  "Benjamin"
-];
-
 export default function RepaymentSchedule() {
   const { tenantId } = useParams();
   const navigate = useNavigate();
@@ -88,6 +76,41 @@ export default function RepaymentSchedule() {
   const [recordedByName, setRecordedByName] = useState<string>("");
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
+  const [authorizedRecorders, setAuthorizedRecorders] = useState<string[]>([]);
+
+  // Fetch authorized recorders
+  useEffect(() => {
+    const fetchRecorders = async () => {
+      const { data } = await supabase
+        .from('authorized_recorders')
+        .select('name')
+        .eq('is_active', true)
+        .order('name');
+      
+      setAuthorizedRecorders(data?.map(r => r.name) || []);
+    };
+
+    fetchRecorders();
+
+    const channel = supabase
+      .channel('recorders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'authorized_recorders'
+        },
+        () => {
+          fetchRecorders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Auto-refresh data every minute
   useEffect(() => {
@@ -486,7 +509,7 @@ export default function RepaymentSchedule() {
                             <SelectValue placeholder="👤 Select Your Name" />
                           </SelectTrigger>
                           <SelectContent>
-                            {AUTHORIZED_RECORDERS.map((name) => (
+                            {authorizedRecorders.map((name) => (
                               <SelectItem key={name} value={name}>
                                 {name}
                               </SelectItem>
@@ -556,7 +579,7 @@ export default function RepaymentSchedule() {
                           <SelectValue placeholder="👤 Select Your Name" />
                         </SelectTrigger>
                         <SelectContent>
-                          {AUTHORIZED_RECORDERS.map((name) => (
+                          {authorizedRecorders.map((name) => (
                             <SelectItem key={name} value={name}>
                               {name}
                             </SelectItem>

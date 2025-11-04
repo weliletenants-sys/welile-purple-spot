@@ -8,6 +8,7 @@ import { AgentPerformanceComparison } from "@/components/AgentPerformanceCompari
 import { AgentRankingComparison } from "@/components/AgentRankingComparison";
 import { MultiAgentComparison } from "@/components/MultiAgentComparison";
 import { PerformanceGoalsTracking } from "@/components/PerformanceGoalsTracking";
+import { AuthorizedRecordersManager } from "@/components/AuthorizedRecordersManager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -94,8 +95,9 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="requests" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9">
             <TabsTrigger value="requests">Requests</TabsTrigger>
+            <TabsTrigger value="recorders">Recorders</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
             <TabsTrigger value="generator">
               <LineChart className="h-4 w-4 mr-2" />
@@ -277,6 +279,10 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         )}
+          </TabsContent>
+
+          <TabsContent value="recorders">
+            <AuthorizedRecordersManager />
           </TabsContent>
 
           <TabsContent value="reports">
