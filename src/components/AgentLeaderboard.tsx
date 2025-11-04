@@ -18,7 +18,7 @@ import {
 export const AgentLeaderboard = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 4;
+  const pageSize = 10; // Increased to show more per page
   const { data: agents, isLoading } = useAgentEarnings("all");
 
   if (isLoading) {
@@ -99,39 +99,44 @@ export const AgentLeaderboard = () => {
 
   return (
     <div className="space-y-8">
+      {/* Pagination Controls - Top */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-card/50 p-4 rounded-lg border border-border">
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} - {Math.min(startIndex + pageSize, sortedAgents.length)} of {sortedAgents.length} agents
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-semibold px-4">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-primary" />
-            Top Agents by Earnings
-          </h2>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground px-2">
-                {currentPage} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-        </div>
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <Trophy className="w-6 h-6 text-primary" />
+          Top Agents by Earnings
+        </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {paginatedAgents.map((agent, index) => (
             <Card 
               key={agent.agentName}
@@ -277,6 +282,36 @@ export const AgentLeaderboard = () => {
           </div>
         </Card>
       </div>
+
+      {/* Pagination Controls - Bottom */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-card/50 p-4 rounded-lg border border-border">
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} - {Math.min(startIndex + pageSize, sortedAgents.length)} of {sortedAgents.length} agents
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-semibold px-4">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
