@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UserPlus, Trash2, Edit2, Check, X, Users } from "lucide-react";
+import { UserPlus, Trash2, Edit2, Check, X, Users, Download } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import * as XLSX from 'xlsx';
 
 interface Recorder {
   id: string;
@@ -14,6 +15,16 @@ interface Recorder {
   phone: string | null;
   is_active: boolean;
   created_at: string;
+}
+
+interface RecorderStats {
+  name: string;
+  phone: string | null;
+  is_active: boolean;
+  created_at: string;
+  payments_recorded: number;
+  total_amount: number;
+  last_payment_date: string | null;
 }
 
 export const AuthorizedRecordersManager = () => {
@@ -24,6 +35,7 @@ export const AuthorizedRecordersManager = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   const fetchRecorders = async () => {
     try {
@@ -170,6 +182,84 @@ export const AuthorizedRecordersManager = () => {
     }
   };
 
+  const handleExportToExcel = async () => {
+    setExporting(true);
+    try {
+      // Fetch all recorders with their statistics
+      const stats: RecorderStats[] = [];
+
+      for (const recorder of recorders) {
+        // Fetch payment statistics for this recorder
+        const { data: payments } = await supabase
+          .from('daily_payments')
+          .select('paid_amount, date, recorded_at')
+          .eq('recorded_by', recorder.name)
+          .eq('paid', true);
+
+        const paymentsRecorded = payments?.length || 0;
+        const totalAmount = payments?.reduce((sum, p) => sum + (Number(p.paid_amount) || 0), 0) || 0;
+        
+        // Get the most recent payment date
+        const lastPayment = payments?.sort((a, b) => 
+          new Date(b.recorded_at || b.date).getTime() - new Date(a.recorded_at || a.date).getTime()
+        )[0];
+        
+        const lastPaymentDate = lastPayment 
+          ? new Date(lastPayment.recorded_at || lastPayment.date).toLocaleDateString()
+          : null;
+
+        stats.push({
+          name: recorder.name,
+          phone: recorder.phone,
+          is_active: recorder.is_active,
+          created_at: recorder.created_at,
+          payments_recorded: paymentsRecorded,
+          total_amount: totalAmount,
+          last_payment_date: lastPaymentDate
+        });
+      }
+
+      // Create Excel data
+      const excelData = stats.map(stat => ({
+        'Name': stat.name,
+        'Phone': stat.phone || '-',
+        'Status': stat.is_active ? 'Active' : 'Inactive',
+        'Payments Recorded': stat.payments_recorded,
+        'Total Amount (UGX)': stat.total_amount.toLocaleString(),
+        'Last Payment Date': stat.last_payment_date || 'No payments yet',
+        'Added Date': new Date(stat.created_at).toLocaleDateString()
+      }));
+
+      // Create workbook and worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Recorders Statistics');
+
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 20 }, // Name
+        { wch: 15 }, // Phone
+        { wch: 10 }, // Status
+        { wch: 18 }, // Payments Recorded
+        { wch: 20 }, // Total Amount
+        { wch: 20 }, // Last Payment Date
+        { wch: 15 }  // Added Date
+      ];
+
+      // Generate filename with current date
+      const filename = `Authorized_Recorders_Statistics_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      // Download file
+      XLSX.writeFile(wb, filename);
+      toast.success('Report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Failed to export report');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return <Card><CardContent className="py-8 text-center">Loading...</CardContent></Card>;
   }
@@ -177,13 +267,25 @@ export const AuthorizedRecordersManager = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          Authorized Payment Recorders
-        </CardTitle>
-        <CardDescription>
-          Manage the list of people authorized to record payments
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Authorized Payment Recorders
+            </CardTitle>
+            <CardDescription>
+              Manage the list of people authorized to record payments
+            </CardDescription>
+          </div>
+          <Button 
+            onClick={handleExportToExcel} 
+            disabled={exporting || recorders.length === 0}
+            variant="outline"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {exporting ? 'Exporting...' : 'Export to Excel'}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Add New Recorder */}
