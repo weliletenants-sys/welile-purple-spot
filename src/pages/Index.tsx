@@ -7,7 +7,6 @@ import { WelileLogo } from "@/components/WelileLogo";
 import { ShareButton } from "@/components/ShareButton";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
-import { HomeSummaryWidget } from "@/components/HomeSummaryWidget";
 import { useTenants } from "@/hooks/useTenants";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -211,9 +210,6 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Summary Widget */}
-        <HomeSummaryWidget />
-
         {/* PROMINENT SEARCH SECTION */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-accent to-primary p-6 md:p-12 shadow-xl border-2 border-primary/30">
           <div className="absolute inset-0 opacity-10 bg-card"></div>

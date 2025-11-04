@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
+import { HomeSummaryWidget } from "@/components/HomeSummaryWidget";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload, Edit3, Award, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -130,6 +131,9 @@ const ExecutiveDashboard = () => {
             </Select>
           </div>
         </div>
+
+        {/* Quick Summary Widget */}
+        <HomeSummaryWidget />
 
         {/* Outstanding Balance - Prominent Card */}
         <div className="mb-6">

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Trophy, TrendingUp, Calendar, Activity } from "lucide-react";
+import { Trophy, TrendingUp, Calendar, Activity, Filter } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -16,6 +17,11 @@ import {
   Line,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarComponent } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
 
 interface RecorderPerformance {
   recorder_name: string;
@@ -40,22 +46,54 @@ export const RecorderPerformanceComparison = () => {
   const [performanceData, setPerformanceData] = useState<RecorderPerformance[]>([]);
   const [dailyActivities, setDailyActivities] = useState<RecorderDailyActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [allRecorders, setAllRecorders] = useState<string[]>([]);
+  
+  // Filter states
+  const [dateFrom, setDateFrom] = useState<Date>();
+  const [dateTo, setDateTo] = useState<Date>();
+  const [selectedRecorders, setSelectedRecorders] = useState<string[]>([]);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchPerformanceData();
-  }, []);
+  }, [dateFrom, dateTo, selectedRecorders, paymentStatusFilter]);
 
   const fetchPerformanceData = async () => {
     try {
       setLoading(true);
 
-      // Fetch recorder performance stats
-      const { data: payments, error: paymentsError } = await supabase
+      // Build query with filters
+      let query = supabase
         .from("daily_payments")
-        .select("recorded_by, amount, recorded_at")
+        .select("recorded_by, amount, recorded_at, paid")
         .not("recorded_by", "is", null);
 
+      // Apply date filters
+      if (dateFrom) {
+        query = query.gte("recorded_at", format(dateFrom, "yyyy-MM-dd"));
+      }
+      if (dateTo) {
+        query = query.lte("recorded_at", format(dateTo, "yyyy-MM-dd") + "T23:59:59");
+      }
+
+      // Apply recorder filter
+      if (selectedRecorders.length > 0) {
+        query = query.in("recorded_by", selectedRecorders);
+      }
+
+      // Apply payment status filter
+      if (paymentStatusFilter !== "all") {
+        query = query.eq("paid", paymentStatusFilter === "paid");
+      }
+
+      const { data: payments, error: paymentsError } = await query;
+
       if (paymentsError) throw paymentsError;
+
+      // Collect all unique recorders for filter
+      const uniqueRecorders = new Set<string>();
+      payments?.forEach(p => p.recorded_by && uniqueRecorders.add(p.recorded_by));
+      setAllRecorders(Array.from(uniqueRecorders).sort());
 
       // Aggregate performance data
       const performanceMap = new Map<string, RecorderPerformance>();
@@ -123,6 +161,21 @@ export const RecorderPerformanceComparison = () => {
     ? performanceData.reduce((sum, p) => sum + p.total_amount, 0) / performanceData.length
     : 0;
 
+  const toggleRecorder = (recorder: string) => {
+    setSelectedRecorders(prev =>
+      prev.includes(recorder)
+        ? prev.filter(r => r !== recorder)
+        : [...prev, recorder]
+    );
+  };
+
+  const clearFilters = () => {
+    setDateFrom(undefined);
+    setDateTo(undefined);
+    setSelectedRecorders([]);
+    setPaymentStatusFilter("all");
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -135,6 +188,101 @@ export const RecorderPerformanceComparison = () => {
 
   return (
     <div className="space-y-6">
+      {/* Filters Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* Date Range Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date From</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {dateFrom ? format(dateFrom, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date To</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {dateTo ? format(dateTo, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Payment Status Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Payment Status</label>
+              <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Payments" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Payments</SelectItem>
+                  <SelectItem value="paid">Paid Only</SelectItem>
+                  <SelectItem value="unpaid">Unpaid Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Recorder Selection */}
+          <div className="mt-4 space-y-2">
+            <label className="text-sm font-medium">Select Recorders (Optional)</label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 border rounded-lg">
+              {allRecorders.map((recorder) => (
+                <div key={recorder} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={recorder}
+                    checked={selectedRecorders.includes(recorder)}
+                    onCheckedChange={() => toggleRecorder(recorder)}
+                  />
+                  <label
+                    htmlFor={recorder}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {recorder}
+                  </label>
+                </div>
+              ))}
+            </div>
+            {(dateFrom || dateTo || selectedRecorders.length > 0 || paymentStatusFilter !== "all") && (
+              <Button variant="outline" onClick={clearFilters} className="w-full">
+                Clear All Filters
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
