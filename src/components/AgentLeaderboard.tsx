@@ -51,10 +51,10 @@ export const AgentLeaderboard = () => {
         "Rank": index + 1,
         "Agent Name": agent.agentName,
         "Phone": agent.agentPhone || "-",
-        "Signup Bonuses": agent.signupBonuses,
-        "Data Entry Rewards": agent.dataEntryRewards,
-        "Recording Bonuses": agent.recordingBonuses,
-        "Commissions": agent.commissions,
+        "Signup Bonuses": agent.signupBonuses || 0,
+        "Data Entry Rewards": agent.dataEntryRewards || 0,
+        "Recording Bonuses": agent.recordingBonuses || 0,
+        "Commissions": agent.commissions || 0,
         "Total Earned": agent.earnedCommission,
         "Tenants Count": agent.tenantsCount,
         "Expected Commission": agent.expectedCommission,
@@ -256,16 +256,16 @@ export const AgentLeaderboard = () => {
                     <TableCell className="font-semibold">{agent.agentName}</TableCell>
                     <TableCell className="text-muted-foreground">{agent.agentPhone || '-'}</TableCell>
                     <TableCell className="text-right">
-                      UGX {agent.signupBonuses.toLocaleString()}
+                      UGX {(agent.signupBonuses || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      UGX {agent.dataEntryRewards.toLocaleString()}
+                      UGX {(agent.dataEntryRewards || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right text-primary font-semibold">
-                      UGX {agent.recordingBonuses.toLocaleString()}
+                      UGX {(agent.recordingBonuses || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      UGX {agent.commissions.toLocaleString()}
+                      UGX {(agent.commissions || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-bold text-lg bg-primary/5">
                       UGX {agent.earnedCommission.toLocaleString()}
