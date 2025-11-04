@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AgentLeaderboard } from "@/components/AgentLeaderboard";
+import { WeeklyRecordingLeaderboard } from "@/components/WeeklyRecordingLeaderboard";
 
 const TopPerformers = () => {
   const navigate = useNavigate();
@@ -34,6 +35,9 @@ const TopPerformers = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Weekly Recording Leaderboard */}
+        <WeeklyRecordingLeaderboard />
+        
         {/* Agent Leaderboard */}
         <div className="space-y-4">
           <AgentLeaderboard />
