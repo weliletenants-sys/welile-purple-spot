@@ -95,12 +95,22 @@ export const AgentLeaderboard = () => {
                 </p>
               )}
             </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <div className="text-xs text-muted-foreground">
-                Expected Commission
+            <div className="mt-4 pt-4 border-t border-border space-y-2">
+              <div>
+                <div className="text-xs text-muted-foreground">
+                  Earned Commission
+                </div>
+                <div className="text-lg font-bold text-primary">
+                  UGX {agent.earnedCommission.toLocaleString()}
+                </div>
               </div>
-              <div className="text-sm font-semibold text-primary">
-                UGX {agent.expectedCommission.toLocaleString()}
+              <div>
+                <div className="text-xs text-muted-foreground">
+                  Expected Commission
+                </div>
+                <div className="text-sm font-semibold text-muted-foreground">
+                  UGX {agent.expectedCommission.toLocaleString()}
+                </div>
               </div>
             </div>
           </Card>
