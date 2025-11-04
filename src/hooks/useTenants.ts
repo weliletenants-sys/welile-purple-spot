@@ -176,9 +176,9 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
     },
   });
 
-  // Subscribe to realtime changes for tenants
+  // Subscribe to realtime changes for tenants and payments
   useEffect(() => {
-    const channel = supabase
+    const tenantsChannel = supabase
       .channel('tenants-changes')
       .on(
         'postgres_changes',
@@ -188,14 +188,29 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
           table: 'tenants'
         },
         () => {
-          // Invalidate all tenant queries when any change occurs
+          queryClient.invalidateQueries({ queryKey: ["tenants"] });
+        }
+      )
+      .subscribe();
+
+    const paymentsChannel = supabase
+      .channel('payments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_payments'
+        },
+        () => {
           queryClient.invalidateQueries({ queryKey: ["tenants"] });
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(tenantsChannel);
+      supabase.removeChannel(paymentsChannel);
     };
   }, [queryClient]);
 
