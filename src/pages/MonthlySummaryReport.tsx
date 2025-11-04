@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useMonthlyReport } from "@/hooks/useMonthlyReport";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted))", "hsl(var(--secondary))", "hsl(var(--destructive))"];
 
 const MonthlySummaryReport = () => {
   const navigate = useNavigate();
@@ -137,6 +140,7 @@ const MonthlySummaryReport = () => {
         {isLoading ? (
           <div className="text-center py-12">Loading report...</div>
         ) : report ? (
+          <>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader>
@@ -223,6 +227,141 @@ const MonthlySummaryReport = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Charts Section */}
+          <div className="grid gap-6 md:grid-cols-2 mt-6">
+            {/* Agent Performance Bar Chart */}
+            <Card className="col-span-full">
+              <CardHeader>
+                <CardTitle>Agent Performance Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={report.topAgents}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="totalAmount" fill="hsl(var(--primary))" name="Total Amount (UGX)" />
+                    <Bar dataKey="earnings" fill="hsl(var(--accent))" name="Earnings (UGX)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Payment Distribution Pie Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Collection Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Collected", value: report.totalPayments },
+                        { name: "Outstanding", value: Math.max(0, report.totalTenants * 50000 - report.totalPayments) },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="hsl(var(--primary))"
+                      dataKey="value"
+                    >
+                      {[0, 1].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Withdrawal Requests Breakdown */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Withdrawal Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Pending", value: report.pendingWithdrawals },
+                        { name: "Processed", value: report.withdrawalRequests - report.pendingWithdrawals },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={80}
+                      fill="hsl(var(--accent))"
+                      dataKey="value"
+                    >
+                      {[0, 1].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index + 2]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Agent Payment Activity */}
+            <Card className="col-span-full">
+              <CardHeader>
+                <CardTitle>Agent Payment Recording Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={report.topAgents}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="paymentsRecorded"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      name="Payments Recorded"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+          </>
         ) : (
           <div className="text-center py-12 text-muted-foreground">No data available for this month</div>
         )}
