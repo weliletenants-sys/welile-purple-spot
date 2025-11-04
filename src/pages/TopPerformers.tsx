@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AgentLeaderboard } from "@/components/AgentLeaderboard";
 import { WeeklyRecordingLeaderboard } from "@/components/WeeklyRecordingLeaderboard";
+import { MonthlyRecordingLeaderboard } from "@/components/MonthlyRecordingLeaderboard";
 
 const TopPerformers = () => {
   const navigate = useNavigate();
@@ -37,6 +38,9 @@ const TopPerformers = () => {
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Weekly Recording Leaderboard */}
         <WeeklyRecordingLeaderboard />
+        
+        {/* Monthly Recording Leaderboard */}
+        <MonthlyRecordingLeaderboard />
         
         {/* Agent Leaderboard */}
         <div className="space-y-4">
