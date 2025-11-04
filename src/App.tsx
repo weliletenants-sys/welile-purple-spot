@@ -18,6 +18,7 @@ import MissedPayments from "./pages/MissedPayments";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import WithdrawalHistory from "./pages/WithdrawalHistory";
+import MonthlySummaryReport from "./pages/MonthlySummaryReport";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => {
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/withdrawal-history" element={<WithdrawalHistory />} />
+            <Route path="/monthly-summary" element={<MonthlySummaryReport />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
