@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, TrendingUp, Zap, Calendar } from "lucide-react";
+import { Star, TrendingUp, Zap, Calendar, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface WeeklyRecorder {
@@ -10,6 +10,11 @@ interface WeeklyRecorder {
   agentPhone: string;
   weeklyRecordingBonus: number;
   recordingCount: number;
+  lastWeekBonus: number;
+  lastWeekCount: number;
+  bonusChange: number;
+  bonusChangePercent: number;
+  countChange: number;
 }
 
 export const WeeklyRecordingLeaderboard = () => {
@@ -22,27 +27,48 @@ export const WeeklyRecordingLeaderboard = () => {
       const now = new Date();
       const dayOfWeek = now.getDay();
       const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - daysToMonday);
-      weekStart.setHours(0, 0, 0, 0);
+      const thisWeekStart = new Date(now);
+      thisWeekStart.setDate(now.getDate() - daysToMonday);
+      thisWeekStart.setHours(0, 0, 0, 0);
+
+      // Get start of last week
+      const lastWeekStart = new Date(thisWeekStart);
+      lastWeekStart.setDate(thisWeekStart.getDate() - 7);
+      
+      const lastWeekEnd = new Date(thisWeekStart);
+      lastWeekEnd.setMilliseconds(-1); // End of previous week
 
       // Fetch recording bonuses from this week
-      const { data: bonuses, error } = await supabase
+      const { data: thisWeekBonuses, error: thisWeekError } = await supabase
         .from("agent_earnings")
         .select("agent_name, agent_phone, amount")
         .eq("earning_type", "recording_bonus")
-        .gte("created_at", weekStart.toISOString())
+        .gte("created_at", thisWeekStart.toISOString())
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching weekly recording bonuses:", error);
-        throw error;
+      if (thisWeekError) {
+        console.error("Error fetching this week's bonuses:", thisWeekError);
+        throw thisWeekError;
       }
 
-      // Group by agent and sum bonuses
+      // Fetch recording bonuses from last week
+      const { data: lastWeekBonuses, error: lastWeekError } = await supabase
+        .from("agent_earnings")
+        .select("agent_name, agent_phone, amount")
+        .eq("earning_type", "recording_bonus")
+        .gte("created_at", lastWeekStart.toISOString())
+        .lte("created_at", lastWeekEnd.toISOString())
+        .order("created_at", { ascending: false });
+
+      if (lastWeekError) {
+        console.error("Error fetching last week's bonuses:", lastWeekError);
+        throw lastWeekError;
+      }
+
+      // Group by agent for this week
       const agentMap = new Map<string, WeeklyRecorder>();
       
-      bonuses?.forEach((bonus: any) => {
+      thisWeekBonuses?.forEach((bonus: any) => {
         if (!bonus.agent_name) return;
         
         const key = bonus.agent_name.trim().toUpperCase();
@@ -53,6 +79,11 @@ export const WeeklyRecordingLeaderboard = () => {
             agentPhone: bonus.agent_phone || "",
             weeklyRecordingBonus: 0,
             recordingCount: 0,
+            lastWeekBonus: 0,
+            lastWeekCount: 0,
+            bonusChange: 0,
+            bonusChangePercent: 0,
+            countChange: 0,
           });
         }
         
@@ -66,8 +97,50 @@ export const WeeklyRecordingLeaderboard = () => {
         }
       });
 
+      // Add last week's data
+      lastWeekBonuses?.forEach((bonus: any) => {
+        if (!bonus.agent_name) return;
+        
+        const key = bonus.agent_name.trim().toUpperCase();
+        
+        if (!agentMap.has(key)) {
+          agentMap.set(key, {
+            agentName: bonus.agent_name,
+            agentPhone: bonus.agent_phone || "",
+            weeklyRecordingBonus: 0,
+            recordingCount: 0,
+            lastWeekBonus: 0,
+            lastWeekCount: 0,
+            bonusChange: 0,
+            bonusChangePercent: 0,
+            countChange: 0,
+          });
+        }
+        
+        const agent = agentMap.get(key)!;
+        agent.lastWeekBonus += Number(bonus.amount);
+        agent.lastWeekCount += 1;
+        
+        if (bonus.agent_phone && !agent.agentPhone) {
+          agent.agentPhone = bonus.agent_phone;
+        }
+      });
+
+      // Calculate changes and percentages
+      agentMap.forEach((agent) => {
+        agent.bonusChange = agent.weeklyRecordingBonus - agent.lastWeekBonus;
+        agent.countChange = agent.recordingCount - agent.lastWeekCount;
+        
+        if (agent.lastWeekBonus > 0) {
+          agent.bonusChangePercent = (agent.bonusChange / agent.lastWeekBonus) * 100;
+        } else if (agent.weeklyRecordingBonus > 0) {
+          agent.bonusChangePercent = 100; // New recorder this week
+        }
+      });
+
       // Convert to array and sort by weekly recording bonus
       const recorders = Array.from(agentMap.values())
+        .filter(r => r.weeklyRecordingBonus > 0) // Only show agents with recordings this week
         .sort((a, b) => b.weeklyRecordingBonus - a.weeklyRecordingBonus)
         .slice(0, 10); // Top 10
 
@@ -184,16 +257,82 @@ export const WeeklyRecordingLeaderboard = () => {
                   </p>
                 )}
                 
-                <div className="mt-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Recordings</p>
-                    <p className="text-lg font-bold text-primary">{recorder.recordingCount}</p>
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Recordings</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-lg font-bold text-primary">{recorder.recordingCount}</p>
+                        {recorder.countChange !== 0 && (
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs px-1.5 py-0 ${
+                              recorder.countChange > 0 
+                                ? "text-green-600 border-green-600" 
+                                : "text-red-600 border-red-600"
+                            }`}
+                          >
+                            {recorder.countChange > 0 ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            )}
+                            {Math.abs(recorder.countChange)}
+                          </Badge>
+                        )}
+                        {recorder.countChange === 0 && recorder.lastWeekCount > 0 && (
+                          <Badge variant="outline" className="text-xs px-1.5 py-0 text-muted-foreground">
+                            <Minus className="w-3 h-3" />
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Earned</p>
+                      <p className="text-lg font-bold text-accent">
+                        UGX {recorder.weeklyRecordingBonus.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Earned</p>
-                    <p className="text-lg font-bold text-accent">
-                      UGX {recorder.weeklyRecordingBonus.toLocaleString()}
-                    </p>
+                  
+                  {/* Week-over-week comparison */}
+                  <div className="pt-2 border-t border-border/50">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">vs Last Week</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">
+                          UGX {recorder.lastWeekBonus.toLocaleString()}
+                        </span>
+                        {recorder.bonusChangePercent !== 0 && (
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs px-2 py-0.5 font-semibold ${
+                              recorder.bonusChangePercent > 0 
+                                ? "bg-green-50 text-green-700 border-green-600" 
+                                : "bg-red-50 text-red-700 border-red-600"
+                            }`}
+                          >
+                            {recorder.bonusChangePercent > 0 ? (
+                              <ArrowUp className="w-3 h-3 mr-0.5" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3 mr-0.5" />
+                            )}
+                            {Math.abs(recorder.bonusChangePercent).toFixed(0)}%
+                          </Badge>
+                        )}
+                        {recorder.bonusChangePercent === 0 && recorder.lastWeekBonus > 0 && (
+                          <Badge variant="outline" className="text-xs px-2 py-0.5 text-muted-foreground bg-muted">
+                            <Minus className="w-3 h-3 mr-0.5" />
+                            0%
+                          </Badge>
+                        )}
+                        {recorder.lastWeekBonus === 0 && (
+                          <Badge variant="outline" className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-600 font-semibold">
+                            NEW
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
