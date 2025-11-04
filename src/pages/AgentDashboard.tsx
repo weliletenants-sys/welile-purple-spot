@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -30,6 +30,7 @@ const AgentDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"earned" | "recording" | "tenants" | "available">("earned");
   const { data: allAgents, isLoading } = useAgentEarnings(period);
   
   // Filter agents if viewing a specific agent
@@ -46,16 +47,32 @@ const AgentDashboard = () => {
     return nameMatch || phoneMatch;
   });
 
+  // Apply sorting
+  const sortedAgents = filteredAgents?.slice().sort((a, b) => {
+    switch (sortBy) {
+      case "earned":
+        return b.earnedCommission - a.earnedCommission;
+      case "recording":
+        return (b.recordingBonuses || 0) - (a.recordingBonuses || 0);
+      case "tenants":
+        return b.tenantsCount - a.tenantsCount;
+      case "available":
+        return (b.earnedCommission - b.withdrawnCommission) - (a.earnedCommission - a.withdrawnCommission);
+      default:
+        return 0;
+    }
+  });
+
   // Pagination calculations
-  const totalPages = Math.ceil((filteredAgents?.length || 0) / itemsPerPage);
+  const totalPages = Math.ceil((sortedAgents?.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedAgents = filteredAgents?.slice(startIndex, endIndex);
+  const paginatedAgents = sortedAgents?.slice(startIndex, endIndex);
 
-  // Reset to page 1 when period or search changes
+  // Reset to page 1 when period, search, or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [period, searchTerm]);
+  }, [period, searchTerm, sortBy]);
 
   // Fetch tenants for the specific agent
   const { tenants: agentTenants, isLoading: tenantsLoading } = useTenants({
@@ -199,11 +216,23 @@ const AgentDashboard = () => {
                 className="pl-9"
               />
             </div>
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <SelectTrigger className="w-full sm:w-[200px] bg-card">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Sort by..." />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border z-50">
+                <SelectItem value="earned">Earned Commission</SelectItem>
+                <SelectItem value="recording">Recording Bonuses</SelectItem>
+                <SelectItem value="tenants">Tenant Count</SelectItem>
+                <SelectItem value="available">Available Balance</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px] bg-card">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border-border z-50">
                 <SelectItem value="all">All Time</SelectItem>
                 <SelectItem value="daily">Today</SelectItem>
                 <SelectItem value="weekly">Last 7 Days</SelectItem>
@@ -265,7 +294,7 @@ const AgentDashboard = () => {
         </div>
 
         {/* Pagination Controls - Top */}
-        {!isLoading && filteredAgents && filteredAgents.length > itemsPerPage && (
+        {!isLoading && sortedAgents && sortedAgents.length > itemsPerPage && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 p-4 bg-card rounded-lg border border-border">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Show:</span>
@@ -276,10 +305,10 @@ const AgentDashboard = () => {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="w-[100px]">
+                <SelectTrigger className="w-[100px] bg-card">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border z-50">
                   <SelectItem value="6">6 agents</SelectItem>
                   <SelectItem value="12">12 agents</SelectItem>
                   <SelectItem value="24">24 agents</SelectItem>
@@ -287,7 +316,7 @@ const AgentDashboard = () => {
                 </SelectContent>
               </Select>
               <span className="text-sm text-muted-foreground">
-                Showing {startIndex + 1}-{Math.min(endIndex, filteredAgents.length)} of {filteredAgents.length}
+                Showing {startIndex + 1}-{Math.min(endIndex, sortedAgents.length)} of {sortedAgents.length}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -536,11 +565,11 @@ const AgentDashboard = () => {
         )}
 
         {/* Pagination Controls - Bottom */}
-        {!isLoading && filteredAgents && filteredAgents.length > itemsPerPage && (
+        {!isLoading && sortedAgents && sortedAgents.length > itemsPerPage && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-4 bg-card rounded-lg border border-border">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                Showing {startIndex + 1}-{Math.min(endIndex, filteredAgents.length)} of {filteredAgents.length}
+                Showing {startIndex + 1}-{Math.min(endIndex, sortedAgents.length)} of {sortedAgents.length}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -580,7 +609,7 @@ const AgentDashboard = () => {
         )}
 
         {/* Empty State */}
-        {!isLoading && (!filteredAgents || filteredAgents.length === 0) && (
+        {!isLoading && (!sortedAgents || sortedAgents.length === 0) && (
           <Card className="p-12 text-center bg-gradient-to-br from-card to-primary/5 border-border">
             <UserCheck className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
             <h3 className="text-xl font-semibold text-foreground mb-2">
