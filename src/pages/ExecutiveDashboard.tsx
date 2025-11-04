@@ -9,25 +9,20 @@ import { useExecutiveStats } from "@/hooks/useExecutiveStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format } from "date-fns";
-import { useAdminRole } from "@/hooks/useAdminRole";
-import { toast } from "@/hooks/use-toast";
+
+const ADMIN_ACCESS_CODE = "Mypart@welile";
 
 const ExecutiveDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState("all");
-  const { isAdmin, isLoading: checkingRole } = useAdminRole();
 
   useEffect(() => {
-    if (!checkingRole && !isAdmin) {
-      toast({
-        title: "Access denied",
-        description: "You need admin privileges to access this page.",
-        variant: "destructive",
-      });
+    const accessCode = sessionStorage.getItem("adminAccessCode");
+    if (accessCode !== ADMIN_ACCESS_CODE) {
       navigate('/admin-login');
     }
-  }, [isAdmin, checkingRole, navigate]);
+  }, [navigate]);
 
   const dateRange = useMemo(() => {
     const now = new Date();
@@ -75,7 +70,7 @@ const ExecutiveDashboard = () => {
     return () => clearInterval(intervalId);
   }, [queryClient]);
 
-  if (checkingRole || !stats) {
+  if (!stats) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
         <div className="container mx-auto px-4 py-8">

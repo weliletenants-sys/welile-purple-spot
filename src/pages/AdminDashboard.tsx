@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useAdminRole } from "@/hooks/useAdminRole";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,25 +8,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock } from "lucide-react";
 import { format } from "date-fns";
-import { toast } from "@/hooks/use-toast";
+
+const ADMIN_ACCESS_CODE = "Mypart@welile";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { isAdmin, isLoading: checkingRole } = useAdminRole();
   const { requests, isLoading, updateRequest } = useWithdrawalRequests();
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    if (!checkingRole && !isAdmin) {
-      toast({
-        title: "Access denied",
-        description: "You do not have admin privileges.",
-        variant: "destructive",
-      });
+    const accessCode = sessionStorage.getItem("adminAccessCode");
+    if (accessCode !== ADMIN_ACCESS_CODE) {
       navigate('/admin-login');
     }
-  }, [isAdmin, checkingRole, navigate]);
+  }, [navigate]);
 
   const handleApprove = async (id: string) => {
     await updateRequest({ id, status: 'approved', notes });
@@ -42,12 +36,12 @@ const AdminDashboard = () => {
     setNotes("");
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    sessionStorage.removeItem("adminAccessCode");
     navigate('/admin-login');
   };
 
-  if (checkingRole || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Loading...</div>
