@@ -178,6 +178,9 @@ export const useAgentEarnings = (period?: string) => {
         if (earning.earning_type === "commission") {
           agent.earnedCommission += Number(earning.amount);
           agent.earningsCount += 1;
+        } else if (earning.earning_type === "recording_bonus") {
+          agent.earnedCommission += Number(earning.amount);
+          agent.earningsCount += 1;
         } else if (earning.earning_type === "withdrawal") {
           agent.withdrawnCommission += Number(earning.amount);
         }

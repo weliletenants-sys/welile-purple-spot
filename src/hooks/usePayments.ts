@@ -111,6 +111,26 @@ export const usePayments = (tenantId: string) => {
             console.error("Error creating agent commission:", earningsError);
           }
         }
+
+        // Create 0.5% recording bonus for the person who recorded the payment
+        if (updates.recordedBy) {
+          const recordingBonus = Math.round(updates.paidAmount * 0.005); // 0.5% recording bonus
+          
+          const { error: recordingError } = await supabase
+            .from("agent_earnings")
+            .insert({
+              agent_phone: updates.recordedBy, // Using recordedBy as identifier
+              agent_name: updates.recordedBy,
+              tenant_id: tenantId,
+              payment_id: paymentId,
+              amount: recordingBonus,
+              earning_type: "recording_bonus",
+            });
+
+          if (recordingError) {
+            console.error("Error creating recording bonus:", recordingError);
+          }
+        }
       }
 
       return data;
