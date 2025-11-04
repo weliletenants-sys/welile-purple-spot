@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -31,6 +31,7 @@ const AgentDashboard = () => {
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"earned" | "recording" | "tenants" | "available">("earned");
+  const [sortDirection, setSortDirection] = useState<"desc" | "asc">("desc");
   const { data: allAgents, isLoading } = useAgentEarnings(period);
   
   // Filter agents if viewing a specific agent
@@ -49,18 +50,24 @@ const AgentDashboard = () => {
 
   // Apply sorting
   const sortedAgents = filteredAgents?.slice().sort((a, b) => {
+    let comparison = 0;
     switch (sortBy) {
       case "earned":
-        return b.earnedCommission - a.earnedCommission;
+        comparison = b.earnedCommission - a.earnedCommission;
+        break;
       case "recording":
-        return (b.recordingBonuses || 0) - (a.recordingBonuses || 0);
+        comparison = (b.recordingBonuses || 0) - (a.recordingBonuses || 0);
+        break;
       case "tenants":
-        return b.tenantsCount - a.tenantsCount;
+        comparison = b.tenantsCount - a.tenantsCount;
+        break;
       case "available":
-        return (b.earnedCommission - b.withdrawnCommission) - (a.earnedCommission - a.withdrawnCommission);
+        comparison = (b.earnedCommission - b.withdrawnCommission) - (a.earnedCommission - a.withdrawnCommission);
+        break;
       default:
-        return 0;
+        comparison = 0;
     }
+    return sortDirection === "desc" ? comparison : -comparison;
   });
 
   // Pagination calculations
@@ -72,7 +79,7 @@ const AgentDashboard = () => {
   // Reset to page 1 when period, search, or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [period, searchTerm, sortBy]);
+  }, [period, searchTerm, sortBy, sortDirection]);
 
   // Fetch tenants for the specific agent
   const { tenants: agentTenants, isLoading: tenantsLoading } = useTenants({
@@ -216,18 +223,40 @@ const AgentDashboard = () => {
                 className="pl-9"
               />
             </div>
-            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-full sm:w-[200px] bg-card">
-                <ArrowUpDown className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Sort by..." />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
-                <SelectItem value="earned">Earned Commission</SelectItem>
-                <SelectItem value="recording">Recording Bonuses</SelectItem>
-                <SelectItem value="tenants">Tenant Count</SelectItem>
-                <SelectItem value="available">Available Balance</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                <SelectTrigger className="w-full sm:w-[200px] bg-card">
+                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sort by..." />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border z-50">
+                  <SelectItem value="earned">Earned Commission</SelectItem>
+                  <SelectItem value="recording">Recording Bonuses</SelectItem>
+                  <SelectItem value="tenants">Tenant Count</SelectItem>
+                  <SelectItem value="available">Available Balance</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex gap-1">
+                <Button
+                  variant={sortDirection === "desc" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setSortDirection("desc")}
+                  title="Sort Descending (High to Low)"
+                  className="shrink-0"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={sortDirection === "asc" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setSortDirection("asc")}
+                  title="Sort Ascending (Low to High)"
+                  className="shrink-0"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             <Select value={period} onValueChange={setPeriod}>
               <SelectTrigger className="w-full sm:w-[180px] bg-card">
                 <SelectValue placeholder="Select period" />
