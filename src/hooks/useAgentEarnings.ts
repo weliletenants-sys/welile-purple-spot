@@ -17,6 +17,10 @@ export interface AgentEarning {
   expectedCollectionMonthly: number;
   expectedCollectionTwoMonths: number;
   expectedCollectionThreeMonths: number;
+  signupBonuses: number;
+  dataEntryRewards: number;
+  recordingBonuses: number;
+  commissions: number;
 }
 
 export const useAgentEarnings = (period?: string) => {
@@ -114,6 +118,10 @@ export const useAgentEarnings = (period?: string) => {
             expectedCollectionMonthly: 0,
             expectedCollectionTwoMonths: 0,
             expectedCollectionThreeMonths: 0,
+            signupBonuses: 0,
+            dataEntryRewards: 0,
+            recordingBonuses: 0,
+            commissions: 0,
           });
         }
         const agent = agentMap.get(key)!;
@@ -166,6 +174,10 @@ export const useAgentEarnings = (period?: string) => {
             expectedCollectionMonthly: 0,
             expectedCollectionTwoMonths: 0,
             expectedCollectionThreeMonths: 0,
+            signupBonuses: 0,
+            dataEntryRewards: 0,
+            recordingBonuses: 0,
+            commissions: 0,
           });
         }
         
@@ -177,9 +189,19 @@ export const useAgentEarnings = (period?: string) => {
         
         if (earning.earning_type === "commission") {
           agent.earnedCommission += Number(earning.amount);
+          agent.commissions += Number(earning.amount);
           agent.earningsCount += 1;
         } else if (earning.earning_type === "recording_bonus") {
           agent.earnedCommission += Number(earning.amount);
+          agent.recordingBonuses += Number(earning.amount);
+          agent.earningsCount += 1;
+        } else if (earning.earning_type === "signup_bonus") {
+          agent.earnedCommission += Number(earning.amount);
+          agent.signupBonuses += Number(earning.amount);
+          agent.earningsCount += 1;
+        } else if (earning.earning_type === "data_entry") {
+          agent.earnedCommission += Number(earning.amount);
+          agent.dataEntryRewards += Number(earning.amount);
           agent.earningsCount += 1;
         } else if (earning.earning_type === "withdrawal") {
           agent.withdrawnCommission += Number(earning.amount);
