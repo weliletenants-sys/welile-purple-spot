@@ -10,6 +10,7 @@ import RepaymentSchedule from "./pages/RepaymentSchedule";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import TopPerformers from "./pages/TopPerformers";
+import RecordingActivity from "./pages/RecordingActivity";
 import NotFound from "./pages/NotFound";
 import BulkAddAdekeAnnet from "./pages/BulkAddAdekeAnnet";
 import AutoImportTenants from "./pages/AutoImportTenants";
@@ -33,6 +34,7 @@ const App = () => {
             <Route path="/agent-dashboard" element={<AgentDashboard />} />
             <Route path="/agent/:agentName" element={<AgentDashboard />} />
             <Route path="/top-performers" element={<TopPerformers />} />
+            <Route path="/recording-activity" element={<RecordingActivity />} />
             <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />
             <Route path="/auto-import" element={<AutoImportTenants />} />
             <Route path="/missed-payments" element={<MissedPayments />} />

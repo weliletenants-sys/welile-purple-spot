@@ -176,6 +176,12 @@ const Index = () => {
                     TOP PERFORMERS
                   </DropdownMenuItem>
                   <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => navigate("/recording-activity")}
+                  >
+                    ⭐ RECORDING ACTIVITY
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     className="p-0"
                     onSelect={(e) => e.preventDefault()}
                   >
