@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { AgentLeaderboard } from "@/components/AgentLeaderboard";
 import { WeeklyRecordingLeaderboard } from "@/components/WeeklyRecordingLeaderboard";
 import { MonthlyRecordingLeaderboard } from "@/components/MonthlyRecordingLeaderboard";
+import { RecordingActivityChart } from "@/components/RecordingActivityChart";
 
 const TopPerformers = () => {
   const navigate = useNavigate();
@@ -36,6 +37,9 @@ const TopPerformers = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Recording Activity Trends Chart */}
+        <RecordingActivityChart />
+        
         {/* Weekly Recording Leaderboard */}
         <WeeklyRecordingLeaderboard />
         
