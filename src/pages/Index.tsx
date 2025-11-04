@@ -148,10 +148,10 @@ const Index = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-card">
                   <DropdownMenuItem 
-                    className="cursor-pointer bg-destructive/10 hover:bg-destructive/20 text-destructive font-bold border-2 border-destructive mb-2"
+                    className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90 font-extrabold text-lg py-4 border-4 border-destructive mb-3 animate-pulse"
                     onClick={() => navigate("/missed-payments")}
                   >
-                    <AlertTriangle className="w-5 h-5 mr-2" />
+                    <AlertTriangle className="w-6 h-6 mr-2 animate-bounce" />
                     🚨 MISSED PAYMENTS
                   </DropdownMenuItem>
                   <DropdownMenuItem 
