@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -94,6 +94,68 @@ const AgentDashboard = () => {
 
     return () => clearInterval(intervalId);
   }, [queryClient]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + ↑ = Ascending sort
+      if ((e.ctrlKey || e.metaKey) && e.key === "ArrowUp") {
+        e.preventDefault();
+        setSortDirection("asc");
+        toast.success("Sort direction: Ascending (Low to High)");
+      }
+      // Ctrl/Cmd + ↓ = Descending sort
+      if ((e.ctrlKey || e.metaKey) && e.key === "ArrowDown") {
+        e.preventDefault();
+        setSortDirection("desc");
+        toast.success("Sort direction: Descending (High to Low)");
+      }
+      // Ctrl/Cmd + K = Focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        document.getElementById("agent-search")?.focus();
+      }
+      // Ctrl/Cmd + R = Reset filters
+      if ((e.ctrlKey || e.metaKey) && e.key === "r") {
+        e.preventDefault();
+        handleResetFilters();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setSortBy("earned");
+    setSortDirection("desc");
+    setPeriod("all");
+    setCurrentPage(1);
+    toast.success("All filters reset");
+  };
+
+  const hasActiveFilters = searchTerm !== "" || sortBy !== "earned" || sortDirection !== "desc" || period !== "all";
+
+  const getSortLabel = (sort: string) => {
+    switch (sort) {
+      case "earned": return "Earned Commission";
+      case "recording": return "Recording Bonuses";
+      case "tenants": return "Tenant Count";
+      case "available": return "Available Balance";
+      default: return sort;
+    }
+  };
+
+  const getPeriodLabel = (p: string) => {
+    switch (p) {
+      case "all": return "All Time";
+      case "daily": return "Today";
+      case "weekly": return "Last 7 Days";
+      case "monthly": return "Last 30 Days";
+      default: return p;
+    }
+  };
 
   const handleEdit = (agentPhone: string, agentName: string) => {
     setEditingAgent(agentPhone);
@@ -217,10 +279,12 @@ const AgentDashboard = () => {
             <div className="relative flex-1 sm:flex-initial sm:w-[280px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                id="agent-search"
                 placeholder="Search by name or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value.slice(0, 100))}
                 className="pl-9"
+                title="Keyboard shortcut: Ctrl/Cmd + K"
               />
             </div>
             <div className="flex gap-2">
@@ -241,7 +305,7 @@ const AgentDashboard = () => {
                   variant={sortDirection === "desc" ? "default" : "outline"}
                   size="icon"
                   onClick={() => setSortDirection("desc")}
-                  title="Sort Descending (High to Low)"
+                  title="Sort Descending (High to Low) - Ctrl/Cmd + ↓"
                   className="shrink-0"
                 >
                   <ArrowDown className="h-4 w-4" />
@@ -250,7 +314,7 @@ const AgentDashboard = () => {
                   variant={sortDirection === "asc" ? "default" : "outline"}
                   size="icon"
                   onClick={() => setSortDirection("asc")}
-                  title="Sort Ascending (Low to High)"
+                  title="Sort Ascending (Low to High) - Ctrl/Cmd + ↑"
                   className="shrink-0"
                 >
                   <ArrowUp className="h-4 w-4" />
@@ -268,8 +332,59 @@ const AgentDashboard = () => {
                 <SelectItem value="monthly">Last 30 Days</SelectItem>
               </SelectContent>
             </Select>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="default"
+                onClick={handleResetFilters}
+                title="Reset All Filters - Ctrl/Cmd + R"
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset
+              </Button>
+            )}
           </div>
         </div>
+
+        {/* Active Filters Badge */}
+        {hasActiveFilters && (
+          <div className="mb-6 flex items-center gap-2 flex-wrap p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Active Filters:</span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {searchTerm && (
+                <Badge variant="secondary" className="gap-1">
+                  Search: "{searchTerm}"
+                  <X 
+                    className="w-3 h-3 cursor-pointer hover:text-destructive" 
+                    onClick={() => setSearchTerm("")}
+                  />
+                </Badge>
+              )}
+              {(sortBy !== "earned" || sortDirection !== "desc") && (
+                <Badge variant="secondary" className="gap-1">
+                  {getSortLabel(sortBy)} {sortDirection === "desc" ? "↓" : "↑"}
+                </Badge>
+              )}
+              {period !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  Period: {getPeriodLabel(period)}
+                </Badge>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleResetFilters}
+              className="ml-auto text-xs hover:text-destructive"
+            >
+              Clear All
+            </Button>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid gap-6 md:grid-cols-4 mb-8">
