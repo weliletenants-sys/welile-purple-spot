@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
+import { format, subDays, startOfMonth } from "date-fns";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import {
@@ -208,6 +208,31 @@ const RecordingActivity = () => {
   const clearDateFilters = () => {
     setStartDate(undefined);
     setEndDate(undefined);
+    setCurrentPage(1);
+  };
+
+  const setPresetDateRange = (preset: 'today' | 'last7days' | 'last30days' | 'thisMonth') => {
+    const today = new Date();
+    
+    switch (preset) {
+      case 'today':
+        setStartDate(today);
+        setEndDate(today);
+        break;
+      case 'last7days':
+        setStartDate(subDays(today, 7));
+        setEndDate(today);
+        break;
+      case 'last30days':
+        setStartDate(subDays(today, 30));
+        setEndDate(today);
+        break;
+      case 'thisMonth':
+        setStartDate(startOfMonth(today));
+        setEndDate(today);
+        break;
+    }
+    
     setCurrentPage(1);
   };
 
@@ -410,6 +435,42 @@ const RecordingActivity = () => {
               className="max-w-md"
             />
             
+            {/* Date Range Presets */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPresetDateRange('today')}
+                className="h-9"
+              >
+                Today
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPresetDateRange('last7days')}
+                className="h-9"
+              >
+                Last 7 Days
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPresetDateRange('last30days')}
+                className="h-9"
+              >
+                Last 30 Days
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPresetDateRange('thisMonth')}
+                className="h-9"
+              >
+                This Month
+              </Button>
+            </div>
+
             {/* Date Range Filters */}
             <div className="flex items-center gap-2">
               <Popover>
