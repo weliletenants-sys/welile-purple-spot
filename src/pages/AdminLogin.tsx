@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Lock } from "lucide-react";
+import { Lock, Home } from "lucide-react";
 
 const ADMIN_ACCESS_CODE = "Mypart@welile";
 
@@ -40,6 +40,16 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="absolute top-4 left-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/')}
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Back to Home
+        </Button>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">

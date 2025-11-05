@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home } from "lucide-react";
 import { format } from "date-fns";
 
 const ADMIN_ACCESS_CODE = "Mypart@welile";
@@ -81,6 +81,10 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/')}>
+              <Home className="h-4 w-4 mr-2" />
+              Home
+            </Button>
             <Button variant="outline" onClick={() => navigate('/agent-portal-login')}>
               🔐 Agent Portal
             </Button>
