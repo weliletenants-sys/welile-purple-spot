@@ -29,7 +29,7 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import {
   DndContext,
@@ -210,7 +210,7 @@ const AdminDashboard = () => {
 };
 
 // Types
-type SectionId = 'withdrawal' | 'recording' | 'reports';
+type SectionId = 'withdrawal' | 'recording' | 'reports' | 'analytics';
 
 interface Section {
   id: SectionId;
@@ -221,7 +221,8 @@ interface Section {
 const DEFAULT_SECTIONS: Section[] = [
   { id: 'withdrawal', label: 'Withdrawal Management', defaultOpen: true },
   { id: 'recording', label: 'Recording Management', defaultOpen: false },
-  { id: 'reports', label: 'Reports & Analytics', defaultOpen: false }
+  { id: 'reports', label: 'Reports & Analytics', defaultOpen: false },
+  { id: 'analytics', label: 'Location Analytics', defaultOpen: false }
 ];
 
 const STORAGE_KEY = 'admin-sidebar-order';
@@ -233,7 +234,8 @@ const SortableSection = ({
   onToggle,
   navItems,
   activeSection,
-  setActiveSection
+  setActiveSection,
+  navigate
 }: {
   section: Section;
   isOpen: boolean;
@@ -241,6 +243,7 @@ const SortableSection = ({
   navItems: any;
   activeSection: string;
   setActiveSection: (section: string) => void;
+  navigate: any;
 }) => {
   const {
     attributes,
@@ -282,7 +285,13 @@ const SortableSection = ({
                 {navItems[section.id]?.map((item: any) => (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
-                      onClick={() => setActiveSection(item.id)}
+                      onClick={() => {
+                        if (item.id === 'service-centers') {
+                          navigate('/service-center-analytics');
+                        } else {
+                          setActiveSection(item.id);
+                        }
+                      }}
                       isActive={activeSection === item.id}
                       tooltip={item.shortcut}
                     >
@@ -308,6 +317,7 @@ const AdminSidebar = ({
   activeSection: string; 
   setActiveSection: (section: string) => void;
 }) => {
+  const navigate = useNavigate();
   // Load order from localStorage or use default
   const [sections, setSections] = useState<Section[]>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -353,6 +363,9 @@ const AdminSidebar = ({
       { id: 'rankings', label: 'Rankings', icon: Trophy, shortcut: 'Alt+8' },
       { id: 'multi-agent', label: 'Multi-Agent', icon: Users, shortcut: 'Alt+9' },
       { id: 'goals', label: 'Goals Tracking', icon: Target, shortcut: 'Alt+0' }
+    ],
+    analytics: [
+      { id: 'service-centers', label: 'Service Center Analytics', icon: MapPin, shortcut: '' }
     ]
   };
 
@@ -401,6 +414,7 @@ const AdminSidebar = ({
                 navItems={navItems}
                 activeSection={activeSection}
                 setActiveSection={setActiveSection}
+                navigate={navigate}
               />
             ))}
           </SortableContext>

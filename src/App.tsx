@@ -21,6 +21,7 @@ import WithdrawalHistory from "./pages/WithdrawalHistory";
 import MonthlySummary from "./pages/MonthlySummary";
 import AgentPortalLogin from "./pages/AgentPortalLogin";
 import AgentPortal from "./pages/AgentPortal";
+import ServiceCenterAnalytics from "./pages/ServiceCenterAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => {
             <Route path="/monthly-summary" element={<MonthlySummary />} />
             <Route path="/agent-portal-login" element={<AgentPortalLogin />} />
             <Route path="/agent-portal" element={<AgentPortal />} />
+            <Route path="/service-center-analytics" element={<ServiceCenterAnalytics />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
