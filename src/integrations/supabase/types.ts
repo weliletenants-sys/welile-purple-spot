@@ -322,6 +322,50 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_service_center_transfers: {
+        Row: {
+          created_at: string
+          from_service_center: string | null
+          id: string
+          notes: string | null
+          reason: string | null
+          tenant_id: string
+          to_service_center: string
+          transferred_at: string
+          transferred_by: string
+        }
+        Insert: {
+          created_at?: string
+          from_service_center?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string | null
+          tenant_id: string
+          to_service_center: string
+          transferred_at?: string
+          transferred_by: string
+        }
+        Update: {
+          created_at?: string
+          from_service_center?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string | null
+          tenant_id?: string
+          to_service_center?: string
+          transferred_at?: string
+          transferred_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_service_center_transfers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           access_fee: number

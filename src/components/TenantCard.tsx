@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit, MessageSquare, Send, CreditCard, Sparkles } from "lucide-react";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit, MessageSquare, Send, CreditCard, Sparkles, ArrowLeftRight } from "lucide-react";
 import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import { useNavigate } from "react-router-dom";
 import { EditTenantForm } from "./EditTenantForm";
@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { TransferTenantDialog } from "./TransferTenantDialog";
+import { TenantTransferHistory } from "./TenantTransferHistory";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +44,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commenterName, setCommenterName] = useState("");
   const [commentText, setCommentText] = useState("");
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
 
   // Calculate balance for this tenant
   const totalPaid = payments?.filter(p => p.paid).reduce((sum, p) => sum + (p.paidAmount || p.amount), 0) || 0;
@@ -296,7 +299,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
         )}
 
         {/* Action Buttons - Prominent and Attractive */}
-        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
+        <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border">
           {/* Record Payment Button */}
           <Button
             className="relative overflow-hidden group bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in"
@@ -307,7 +310,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             <CreditCard className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
-            <span className="font-semibold">Record Payment</span>
+            <span className="font-semibold">Pay</span>
             <Sparkles className="w-3 h-3 ml-1 group-hover:animate-pulse" />
           </Button>
 
@@ -321,12 +324,25 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             <MessageSquare className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
-            <span className="font-semibold">Comments</span>
+            <span className="font-semibold">Notes</span>
             {totalComments > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-white/20 text-xs font-bold animate-pulse">
                 {totalComments}
               </span>
             )}
+          </Button>
+
+          {/* Transfer Button */}
+          <Button
+            className="relative overflow-hidden group bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsTransferOpen(true);
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+            <ArrowLeftRight className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-300" />
+            <span className="font-semibold">Move</span>
           </Button>
         </div>
 
@@ -449,7 +465,21 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
             </div>
           </CollapsibleContent>
         </Collapsible>
+
+        {/* Service Center Transfer History */}
+        {tenant.serviceCenter && (
+          <div className="pt-3 border-t border-border">
+            <TenantTransferHistory tenantId={tenant.id} />
+          </div>
+        )}
       </div>
+
+      {/* Transfer Tenant Dialog */}
+      <TransferTenantDialog
+        tenant={tenant}
+        open={isTransferOpen}
+        onOpenChange={setIsTransferOpen}
+      />
     </Card>
   );
 };
