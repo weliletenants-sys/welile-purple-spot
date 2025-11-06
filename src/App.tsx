@@ -23,6 +23,7 @@ import AgentPortalLogin from "./pages/AgentPortalLogin";
 import AgentPortal from "./pages/AgentPortal";
 import ServiceCenterAnalytics from "./pages/ServiceCenterAnalytics";
 import ServiceCenterManagement from "./pages/ServiceCenterManagement";
+import ServiceCenterTransferAnalytics from "./pages/ServiceCenterTransferAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => {
             <Route path="/agent-portal" element={<AgentPortal />} />
             <Route path="/service-center-analytics" element={<ServiceCenterAnalytics />} />
             <Route path="/service-center-management" element={<ServiceCenterManagement />} />
+            <Route path="/service-center-transfer-analytics" element={<ServiceCenterTransferAnalytics />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

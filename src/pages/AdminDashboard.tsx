@@ -30,7 +30,7 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight } from "lucide-react";
 import { format } from "date-fns";
 import {
   DndContext,
@@ -291,6 +291,8 @@ const SortableSection = ({
                           navigate('/service-center-analytics');
                         } else if (item.id === 'manage-centers') {
                           navigate('/service-center-management');
+                        } else if (item.id === 'transfer-analytics') {
+                          navigate('/service-center-transfer-analytics');
                         } else {
                           setActiveSection(item.id);
                         }
@@ -369,7 +371,8 @@ const AdminSidebar = ({
     ],
     analytics: [
       { id: 'service-centers', label: 'Service Center Analytics', icon: MapPin, shortcut: '' },
-      { id: 'manage-centers', label: 'Manage Centers', icon: Building2, shortcut: '' }
+      { id: 'manage-centers', label: 'Manage Centers', icon: Building2, shortcut: '' },
+      { id: 'transfer-analytics', label: 'Transfer Analytics', icon: ArrowLeftRight, shortcut: '' }
     ]
   };
 

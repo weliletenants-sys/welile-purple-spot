@@ -15,7 +15,8 @@ import {
   MapPin,
   Building2,
   CheckCircle2,
-  XCircle
+  XCircle,
+  ArrowLeftRight
 } from "lucide-react";
 import {
   Dialog,
@@ -280,13 +281,22 @@ export default function ServiceCenterManagement() {
                 <p className="text-sm text-muted-foreground">Manage service center locations</p>
               </div>
             </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => resetForm()}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Service Center
-                </Button>
-              </DialogTrigger>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/service-center-transfer-analytics')}
+                className="gap-2"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+                Transfer Analytics
+              </Button>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => resetForm()}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Service Center
+                  </Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add New Service Center</DialogTitle>
@@ -352,6 +362,7 @@ export default function ServiceCenterManagement() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </div>
       </header>
