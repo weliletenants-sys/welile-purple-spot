@@ -45,6 +45,7 @@ export interface Tenant {
   agentPhone?: string;
   editedBy?: string;
   editedAt?: string;
+  serviceCenter?: string;
 }
 
 const generateDailyPayments = (days: number): DailyPayment[] => {

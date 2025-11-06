@@ -23,6 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAgents } from "@/hooks/useAgents";
+import { useServiceCenters } from "@/hooks/useServiceCenterAnalytics";
 
 interface EditTenantFormProps {
   tenant: Tenant;
@@ -53,12 +54,14 @@ interface TenantFormData {
   agentName: string;
   agentPhone: string;
   editorName: string;
+  serviceCenter: string;
 }
 
 export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
   const { toast } = useToast();
   const { updateTenant } = useTenants();
   const { data: agents = [] } = useAgents();
+  const { data: serviceCenters = [] } = useServiceCenters();
   const [open, setOpen] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
@@ -89,6 +92,7 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
     locationCellOrVillage: tenant.location?.cellOrVillage || "",
     agentName: validAgentName || "",
     agentPhone: tenant.agentPhone || "",
+    serviceCenter: tenant.serviceCenter || "",
     editorName: "",
   });
 
@@ -190,6 +194,7 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
           },
           agentName: formData.agentName,
           agentPhone: formData.agentPhone,
+          serviceCenter: formData.serviceCenter,
           editedBy: formData.editorName.trim(),
           editedAt: new Date().toISOString(),
         },
@@ -448,6 +453,23 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">Location Details</h3>
             
+            <div className="space-y-2">
+              <Label htmlFor="serviceCenter">Service Center *</Label>
+              <Select value={formData.serviceCenter} onValueChange={(value) => handleChange("serviceCenter", value)}>
+                <SelectTrigger id="serviceCenter">
+                  <SelectValue placeholder="Select service center" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {serviceCenters?.map((center) => (
+                    <SelectItem key={center.id} value={center.name}>
+                      {center.name} ({center.district})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Required: Select which service center registered this tenant</p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="locationCellOrVillage">Cell / Village</Label>

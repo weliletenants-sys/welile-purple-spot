@@ -11,6 +11,7 @@ import { calculateRepaymentDetails } from "@/data/tenants";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAgents } from "@/hooks/useAgents";
+import { useServiceCenters } from "@/hooks/useServiceCenterAnalytics";
 
 interface TenantFormData {
   name: string;
@@ -35,6 +36,7 @@ interface TenantFormData {
   cellOrVillage: string;
   agentName: string;
   agentPhone: string;
+  serviceCenter: string;
 }
 
 export const AddTenantForm = () => {
@@ -42,6 +44,7 @@ export const AddTenantForm = () => {
   const { toast } = useToast();
   const { addTenant } = useTenants();
   const { data: agents = [] } = useAgents();
+  const { data: serviceCenters = [] } = useServiceCenters();
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [formData, setFormData] = useState<TenantFormData>({
     name: "",
@@ -66,6 +69,7 @@ export const AddTenantForm = () => {
     cellOrVillage: "",
     agentName: "MUHWEZI MARTIN",
     agentPhone: "",
+    serviceCenter: "",
   });
 
   // Calculate repayment details whenever rent amount or repayment days change
@@ -159,6 +163,7 @@ export const AddTenantForm = () => {
         },
         agentName: formData.agentName.trim(),
         agentPhone: formData.agentPhone.trim(),
+        serviceCenter: formData.serviceCenter.trim(),
       });
 
       toast({
@@ -190,6 +195,7 @@ export const AddTenantForm = () => {
         cellOrVillage: "",
         agentName: "MUHWEZI MARTIN",
         agentPhone: "",
+        serviceCenter: "",
       });
       setOpen(false);
     } catch (error: any) {
@@ -467,6 +473,23 @@ export const AddTenantForm = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">Location Details</h3>
             
+            <div className="space-y-2">
+              <Label htmlFor="serviceCenter">Service Center *</Label>
+              <Select value={formData.serviceCenter} onValueChange={(value) => handleChange("serviceCenter", value)}>
+                <SelectTrigger id="serviceCenter">
+                  <SelectValue placeholder="Select service center" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {serviceCenters?.map((center) => (
+                    <SelectItem key={center.id} value={center.name}>
+                      {center.name} ({center.district})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Required: Select which service center registered this tenant</p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="cellOrVillage">Cell / Village</Label>

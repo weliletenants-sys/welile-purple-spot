@@ -57,6 +57,7 @@ export default function RepaymentSchedule() {
         paymentStatus: data.payment_status as "paid" | "pending" | "overdue",
         agentName: data.agent_name,
         agentPhone: data.agent_phone,
+        serviceCenter: data.service_center,
         guarantor1Name: data.guarantor1_name,
         guarantor1Contact: data.guarantor1_contact,
         guarantor2Name: data.guarantor2_name,

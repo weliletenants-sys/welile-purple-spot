@@ -146,6 +146,7 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
         },
         agentName: tenant.agent_name || "",
         agentPhone: tenant.agent_phone || "",
+        serviceCenter: tenant.service_center || "",
         editedBy: tenant.edited_by,
         editedAt: tenant.edited_at,
         lastPaymentDate: latestPayments.get(tenant.id) || null,
@@ -262,6 +263,7 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
           location_cell_or_village: tenant.location?.cellOrVillage,
           agent_name: tenant.agentName,
           agent_phone: tenant.agentPhone,
+          service_center: tenant.serviceCenter,
         })
         .select()
         .single();
@@ -369,6 +371,7 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
           }),
           ...(updates.agentName && { agent_name: updates.agentName }),
           ...(updates.agentPhone && { agent_phone: updates.agentPhone }),
+          ...(updates.serviceCenter !== undefined && { service_center: updates.serviceCenter }),
         })
         .eq("id", id)
         .select()
