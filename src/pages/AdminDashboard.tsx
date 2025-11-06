@@ -29,8 +29,25 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical } from "lucide-react";
 import { format } from "date-fns";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const ADMIN_ACCESS_CODE = "Mypart@welile";
 
@@ -192,6 +209,97 @@ const AdminDashboard = () => {
   );
 };
 
+// Types
+type SectionId = 'withdrawal' | 'recording' | 'reports';
+
+interface Section {
+  id: SectionId;
+  label: string;
+  defaultOpen: boolean;
+}
+
+const DEFAULT_SECTIONS: Section[] = [
+  { id: 'withdrawal', label: 'Withdrawal Management', defaultOpen: true },
+  { id: 'recording', label: 'Recording Management', defaultOpen: false },
+  { id: 'reports', label: 'Reports & Analytics', defaultOpen: false }
+];
+
+const STORAGE_KEY = 'admin-sidebar-order';
+
+// Sortable Section Component
+const SortableSection = ({
+  section,
+  isOpen,
+  onToggle,
+  navItems,
+  activeSection,
+  setActiveSection
+}: {
+  section: Section;
+  isOpen: boolean;
+  onToggle: () => void;
+  navItems: any;
+  activeSection: string;
+  setActiveSection: (section: string) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Collapsible open={isOpen} onOpenChange={onToggle}>
+        <SidebarGroup>
+          <CollapsibleTrigger asChild>
+            <SidebarGroupLabel className="cursor-pointer hover:bg-accent/50 rounded-md px-2 py-1.5 flex items-center justify-between group">
+              <div className="flex items-center gap-2">
+                <div
+                  {...attributes}
+                  {...listeners}
+                  className="cursor-grab active:cursor-grabbing hover:bg-accent rounded p-0.5"
+                >
+                  <GripVertical className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <span>{section.label}</span>
+              </div>
+              <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </SidebarGroupLabel>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {navItems[section.id]?.map((item: any) => (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      onClick={() => setActiveSection(item.id)}
+                      isActive={activeSection === item.id}
+                      tooltip={item.shortcut}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </CollapsibleContent>
+        </SidebarGroup>
+      </Collapsible>
+    </div>
+  );
+};
+
 // Sidebar Component
 const AdminSidebar = ({ 
   activeSection, 
@@ -200,9 +308,34 @@ const AdminSidebar = ({
   activeSection: string; 
   setActiveSection: (section: string) => void;
 }) => {
-  const [withdrawalOpen, setWithdrawalOpen] = useState(true);
-  const [recordingOpen, setRecordingOpen] = useState(false);
-  const [reportsOpen, setReportsOpen] = useState(false);
+  // Load order from localStorage or use default
+  const [sections, setSections] = useState<Section[]>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const order = JSON.parse(stored) as SectionId[];
+        return order.map(id => DEFAULT_SECTIONS.find(s => s.id === id)!).filter(Boolean);
+      } catch {
+        return DEFAULT_SECTIONS;
+      }
+    }
+    return DEFAULT_SECTIONS;
+  });
+
+  const [openSections, setOpenSections] = useState<Record<SectionId, boolean>>(() => {
+    const initial: Record<SectionId, boolean> = {} as any;
+    sections.forEach(section => {
+      initial[section.id] = section.defaultOpen;
+    });
+    return initial;
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const navItems = {
     withdrawal: [
@@ -223,98 +356,55 @@ const AdminSidebar = ({
     ]
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setSections((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+        
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder.map(s => s.id)));
+        
+        return newOrder;
+      });
+    }
+  };
+
+  const toggleSection = (sectionId: SectionId) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+
   return (
     <Sidebar className="border-r">
       <SidebarContent>
-        {/* Withdrawal Management Section */}
-        <Collapsible open={withdrawalOpen} onOpenChange={setWithdrawalOpen}>
-          <SidebarGroup>
-            <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="cursor-pointer hover:bg-accent/50 rounded-md px-2 py-1.5 flex items-center justify-between">
-                <span>Withdrawal Management</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${withdrawalOpen ? 'rotate-180' : ''}`} />
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navItems.withdrawal.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton
-                        onClick={() => setActiveSection(item.id)}
-                        isActive={activeSection === item.id}
-                        tooltip={item.shortcut}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
-
-        {/* Recording Management Section */}
-        <Collapsible open={recordingOpen} onOpenChange={setRecordingOpen}>
-          <SidebarGroup>
-            <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="cursor-pointer hover:bg-accent/50 rounded-md px-2 py-1.5 flex items-center justify-between">
-                <span>Recording Management</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${recordingOpen ? 'rotate-180' : ''}`} />
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navItems.recording.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton
-                        onClick={() => setActiveSection(item.id)}
-                        isActive={activeSection === item.id}
-                        tooltip={item.shortcut}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
-
-        {/* Reports & Analytics Section */}
-        <Collapsible open={reportsOpen} onOpenChange={setReportsOpen}>
-          <SidebarGroup>
-            <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="cursor-pointer hover:bg-accent/50 rounded-md px-2 py-1.5 flex items-center justify-between">
-                <span>Reports & Analytics</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${reportsOpen ? 'rotate-180' : ''}`} />
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navItems.reports.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton
-                        onClick={() => setActiveSection(item.id)}
-                        isActive={activeSection === item.id}
-                        tooltip={item.shortcut}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sections.map(s => s.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {sections.map((section) => (
+              <SortableSection
+                key={section.id}
+                section={section}
+                isOpen={openSections[section.id]}
+                onToggle={() => toggleSection(section.id)}
+                navItems={navItems}
+                activeSection={activeSection}
+                setActiveSection={setActiveSection}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
       </SidebarContent>
     </Sidebar>
   );
