@@ -25,6 +25,7 @@ import { format, subDays, startOfMonth } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { PerformanceAlerts } from "@/components/PerformanceAlerts";
 import {
   BarChart,
   Bar,
@@ -342,6 +343,9 @@ export default function ServiceCenterAnalytics() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Performance Alerts */}
+        <PerformanceAlerts />
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

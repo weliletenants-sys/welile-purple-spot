@@ -10,6 +10,7 @@ import { MultiAgentComparison } from "@/components/MultiAgentComparison";
 import { PerformanceGoalsTracking } from "@/components/PerformanceGoalsTracking";
 import { AuthorizedRecordersManager } from "@/components/AuthorizedRecordersManager";
 import { RecorderPerformanceComparison } from "@/components/RecorderPerformanceComparison";
+import { PerformanceAlerts } from "@/components/PerformanceAlerts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,7 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2 } from "lucide-react";
 import { format } from "date-fns";
 import {
   DndContext,
@@ -288,6 +289,8 @@ const SortableSection = ({
                       onClick={() => {
                         if (item.id === 'service-centers') {
                           navigate('/service-center-analytics');
+                        } else if (item.id === 'manage-centers') {
+                          navigate('/service-center-management');
                         } else {
                           setActiveSection(item.id);
                         }
@@ -365,7 +368,8 @@ const AdminSidebar = ({
       { id: 'goals', label: 'Goals Tracking', icon: Target, shortcut: 'Alt+0' }
     ],
     analytics: [
-      { id: 'service-centers', label: 'Service Center Analytics', icon: MapPin, shortcut: '' }
+      { id: 'service-centers', label: 'Service Center Analytics', icon: MapPin, shortcut: '' },
+      { id: 'manage-centers', label: 'Manage Centers', icon: Building2, shortcut: '' }
     ]
   };
 
@@ -445,6 +449,9 @@ const RequestsSection = ({
   handleReject: (id: string) => void;
 }) => (
   <div className="space-y-6">
+    {/* Performance Alerts */}
+    <PerformanceAlerts />
+    
     {/* Pending Requests */}
     <Card>
       <CardHeader>
