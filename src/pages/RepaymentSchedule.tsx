@@ -74,11 +74,13 @@ export default function RepaymentSchedule() {
   const [currentPage, setCurrentPage] = useState(1);
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [recordedByName, setRecordedByName] = useState<string>("");
+  const [selectedServiceCenter, setSelectedServiceCenter] = useState<string>("");
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
   const [authorizedRecorders, setAuthorizedRecorders] = useState<string[]>([]);
+  const [serviceCenters, setServiceCenters] = useState<Array<{ name: string; district: string; region: string }>>([]);
 
-  // Fetch authorized recorders
+  // Fetch authorized recorders and service centers
   useEffect(() => {
     const fetchRecorders = async () => {
       const { data } = await supabase
@@ -90,9 +92,20 @@ export default function RepaymentSchedule() {
       setAuthorizedRecorders(data?.map(r => r.name) || []);
     };
 
-    fetchRecorders();
+    const fetchServiceCenters = async () => {
+      const { data } = await supabase
+        .from('service_centers')
+        .select('name, district, region')
+        .eq('is_active', true)
+        .order('name');
+      
+      setServiceCenters(data || []);
+    };
 
-    const channel = supabase
+    fetchRecorders();
+    fetchServiceCenters();
+
+    const recordersChannel = supabase
       .channel('recorders-changes')
       .on(
         'postgres_changes',
@@ -107,8 +120,24 @@ export default function RepaymentSchedule() {
       )
       .subscribe();
 
+    const centersChannel = supabase
+      .channel('service-centers-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'service_centers'
+        },
+        () => {
+          fetchServiceCenters();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(recordersChannel);
+      supabase.removeChannel(centersChannel);
     };
   }, []);
 
@@ -175,7 +204,16 @@ export default function RepaymentSchedule() {
     if (!recordedByName.trim()) {
       toast({
         title: "Name Required",
-        description: "Please enter your name",
+        description: "Please select your name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedServiceCenter.trim()) {
+      toast({
+        title: "Service Center Required",
+        description: "Please select a service center",
         variant: "destructive",
       });
       return;
@@ -189,11 +227,13 @@ export default function RepaymentSchedule() {
           paidAmount: amount,
           recordedBy: recordedByName.trim(),
           recordedAt: new Date().toISOString(),
+          serviceCenter: selectedServiceCenter.trim(),
         },
       });
 
       setPaymentAmount("");
       setRecordedByName("");
+      setSelectedServiceCenter("");
       setSelectedPaymentIndex(null);
       
       toast({
@@ -212,9 +252,10 @@ export default function RepaymentSchedule() {
 
   const handleEditPayment = (index: number) => {
     const actualIndex = startIndex + index;
-    const payment = payments[actualIndex];
+    const payment = payments[actualIndex] as any;
     setPaymentAmount((payment.paidAmount || 0).toString());
     setRecordedByName("");
+    setSelectedServiceCenter(payment.serviceCenter || "");
     setEditingPaymentIndex(index);
   };
 
@@ -235,7 +276,16 @@ export default function RepaymentSchedule() {
     if (!recordedByName.trim()) {
       toast({
         title: "Name Required",
-        description: "Please enter your name",
+        description: "Please select your name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedServiceCenter.trim()) {
+      toast({
+        title: "Service Center Required",
+        description: "Please select a service center",
         variant: "destructive",
       });
       return;
@@ -249,11 +299,13 @@ export default function RepaymentSchedule() {
           paidAmount: amount,
           modifiedBy: recordedByName.trim(),
           modifiedAt: new Date().toISOString(),
+          serviceCenter: selectedServiceCenter.trim(),
         },
       });
 
       setPaymentAmount("");
       setRecordedByName("");
+      setSelectedServiceCenter("");
       setEditingPaymentIndex(null);
       
       toast({
@@ -484,6 +536,11 @@ export default function RepaymentSchedule() {
                         {payment.recordedAt && ` • ${new Date(payment.recordedAt).toLocaleDateString()}`}
                       </p>
                     )}
+                    {payment.serviceCenter && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        📍 Service Center: {payment.serviceCenter}
+                      </p>
+                    )}
                     {payment.modifiedBy && (
                       <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
                         ✏️ Edited by {payment.modifiedBy}
@@ -516,6 +573,18 @@ export default function RepaymentSchedule() {
                             ))}
                           </SelectContent>
                         </Select>
+                        <Select value={selectedServiceCenter} onValueChange={setSelectedServiceCenter}>
+                          <SelectTrigger className="h-12 text-lg">
+                            <SelectValue placeholder="📍 Select Service Center" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {serviceCenters.map((center) => (
+                              <SelectItem key={center.name} value={center.name}>
+                                {center.name} ({center.district})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <div className="flex gap-2">
                           <Button 
                             size="lg" 
@@ -533,13 +602,14 @@ export default function RepaymentSchedule() {
                           >
                             <Trash2 className="w-5 h-5" />
                           </Button>
-                          <Button 
+                           <Button 
                             size="lg" 
                             variant="ghost" 
                             onClick={() => {
                               setEditingPaymentIndex(null);
                               setPaymentAmount("");
                               setRecordedByName("");
+                              setSelectedServiceCenter("");
                             }}
                             className="h-12"
                           >
@@ -586,6 +656,18 @@ export default function RepaymentSchedule() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <Select value={selectedServiceCenter} onValueChange={setSelectedServiceCenter}>
+                        <SelectTrigger className="h-14 text-lg">
+                          <SelectValue placeholder="📍 Select Service Center" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                          {serviceCenters.map((center) => (
+                            <SelectItem key={center.name} value={center.name}>
+                              {center.name} ({center.district})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <div className="flex gap-3">
                         <Button 
                           size="lg" 
@@ -602,6 +684,7 @@ export default function RepaymentSchedule() {
                             setSelectedPaymentIndex(null);
                             setPaymentAmount("");
                             setRecordedByName("");
+                            setSelectedServiceCenter("");
                           }}
                           className="h-14 px-6"
                         >

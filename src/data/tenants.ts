@@ -7,6 +7,7 @@ export interface DailyPayment {
   recordedAt?: string;
   modifiedBy?: string;
   modifiedAt?: string;
+  serviceCenter?: string;
 }
 
 export interface Guarantor {

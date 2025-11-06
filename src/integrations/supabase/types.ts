@@ -170,6 +170,7 @@ export type Database = {
           paid_amount: number | null
           recorded_at: string | null
           recorded_by: string | null
+          service_center: string | null
           tenant_id: string
           updated_at: string
         }
@@ -184,6 +185,7 @@ export type Database = {
           paid_amount?: number | null
           recorded_at?: string | null
           recorded_by?: string | null
+          service_center?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -198,6 +200,7 @@ export type Database = {
           paid_amount?: number | null
           recorded_at?: string | null
           recorded_by?: string | null
+          service_center?: string | null
           tenant_id?: string
           updated_at?: string
         }
@@ -258,6 +261,36 @@ export type Database = {
           id?: string
           report_date?: string
           report_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_centers: {
+        Row: {
+          created_at: string
+          district: string | null
+          id: string
+          is_active: boolean
+          name: string
+          region: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          district?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          region?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          district?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          region?: string | null
           updated_at?: string
         }
         Relationships: []
