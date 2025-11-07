@@ -1,1 +1,10 @@
 project_id = "ejfimdkqrpfkfuovajpy"
+
+[functions.bulk-add-tenants]
+verify_jwt = false
+
+[functions.generate-reports]
+verify_jwt = false
+
+[functions.generate-daily-forecast]
+verify_jwt = false
