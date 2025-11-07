@@ -24,10 +24,17 @@ export const InstallPrompt = () => {
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
       
-      // Show prompt automatically after a short delay
-      setTimeout(() => {
-        setShowPrompt(true);
-      }, 2000);
+      // Check if user has dismissed before
+      const dismissed = localStorage.getItem('install-prompt-dismissed');
+      const dismissedTime = dismissed ? parseInt(dismissed) : 0;
+      const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+      
+      // Show immediately if never dismissed or dismissed more than 24 hours ago
+      if (!dismissed || dismissedTime < oneDayAgo) {
+        setTimeout(() => {
+          setShowPrompt(true);
+        }, 500);
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -51,6 +58,8 @@ export const InstallPrompt = () => {
 
   const handleDismiss = () => {
     setShowPrompt(false);
+    // Store dismissal time to show again after 24 hours
+    localStorage.setItem('install-prompt-dismissed', Date.now().toString());
   };
 
   return (
@@ -64,17 +73,23 @@ export const InstallPrompt = () => {
           <span className="sr-only">Close</span>
         </button>
         <DialogHeader>
-          <DialogTitle className="text-2xl">Install Welile Tenants</DialogTitle>
-          <DialogDescription className="text-base pt-2">
-            Install our app for quick access and a better experience. Works offline too!
+          <DialogTitle className="text-2xl font-bold">📱 Install Welile Tenants</DialogTitle>
+          <DialogDescription className="text-base pt-2 space-y-2">
+            <p className="font-semibold">Get the full app experience on your device!</p>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              <li>Quick access from your home screen</li>
+              <li>Works offline - no internet needed</li>
+              <li>Faster loading and better performance</li>
+              <li>Push notifications for updates</li>
+            </ul>
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 pt-4">
-          <Button onClick={handleInstall} size="lg" className="w-full">
-            Install App
+          <Button onClick={handleInstall} size="lg" className="w-full text-lg py-6">
+            ⬇️ Install Now
           </Button>
           <Button onClick={handleDismiss} variant="outline" size="lg" className="w-full">
-            Maybe Later
+            Remind Me Tomorrow
           </Button>
         </div>
       </DialogContent>
