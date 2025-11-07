@@ -15,6 +15,7 @@ import { PerformanceGoalsTracking } from "@/components/PerformanceGoalsTracking"
 import { AuthorizedRecordersManager } from "@/components/AuthorizedRecordersManager";
 import { RecorderPerformanceComparison } from "@/components/RecorderPerformanceComparison";
 import { PerformanceAlerts } from "@/components/PerformanceAlerts";
+import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -700,6 +701,9 @@ const RequestsSection = ({
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      {/* Predictive Analytics */}
+      <PredictiveAnalytics />
 
       {/* Geographic Breakdown */}
       <Card>
