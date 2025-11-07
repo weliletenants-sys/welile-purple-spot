@@ -1,12 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, TrendingDown, Activity, Save } from "lucide-react";
 import { format, addDays, startOfDay } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { toast } from "sonner";
 
 export const PredictiveAnalytics = () => {
+  const queryClient = useQueryClient();
+  
   const { data: forecast, isLoading } = useQuery({
     queryKey: ["payment-forecast"],
     queryFn: async () => {
@@ -101,6 +105,8 @@ export const PredictiveAnalytics = () => {
         });
       }
       
+      const forecastDate = format(new Date(), "yyyy-MM-dd");
+      
       return {
         avgCollectionRate,
         trend,
@@ -108,18 +114,69 @@ export const PredictiveAnalytics = () => {
           sevenDays: {
             expected: expected7Days,
             forecast: getForecast(expected7Days, 7),
+            targetDate: sevenDaysFromNow,
           },
           fourteenDays: {
             expected: expected14Days,
             forecast: getForecast(expected14Days, 14),
+            targetDate: fourteenDaysFromNow,
           },
           thirtyDays: {
             expected: expected30Days,
             forecast: getForecast(expected30Days, 30),
+            targetDate: thirtyDaysFromNow,
           },
         },
         dailyForecast,
+        forecastDate,
       };
+    },
+  });
+  
+  // Mutation to save forecast
+  const saveForecastMutation = useMutation({
+    mutationFn: async () => {
+      if (!forecast) return;
+      
+      const forecastsToSave = [
+        {
+          forecast_date: forecast.forecastDate,
+          target_date: forecast.forecasts.sevenDays.targetDate,
+          expected_amount: forecast.forecasts.sevenDays.expected,
+          forecast_amount: forecast.forecasts.sevenDays.forecast,
+          collection_rate: forecast.avgCollectionRate,
+          days_ahead: 7,
+        },
+        {
+          forecast_date: forecast.forecastDate,
+          target_date: forecast.forecasts.fourteenDays.targetDate,
+          expected_amount: forecast.forecasts.fourteenDays.expected,
+          forecast_amount: forecast.forecasts.fourteenDays.forecast,
+          collection_rate: forecast.avgCollectionRate,
+          days_ahead: 14,
+        },
+        {
+          forecast_date: forecast.forecastDate,
+          target_date: forecast.forecasts.thirtyDays.targetDate,
+          expected_amount: forecast.forecasts.thirtyDays.expected,
+          forecast_amount: forecast.forecasts.thirtyDays.forecast,
+          collection_rate: forecast.avgCollectionRate,
+          days_ahead: 30,
+        },
+      ];
+      
+      const { error } = await supabase
+        .from("payment_forecasts")
+        .insert(forecastsToSave);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Forecast saved for accuracy tracking");
+      queryClient.invalidateQueries({ queryKey: ["forecast-accuracy"] });
+    },
+    onError: () => {
+      toast.error("Failed to save forecast");
     },
   });
   
@@ -141,13 +198,26 @@ export const PredictiveAnalytics = () => {
       {/* Summary Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Predictive Analytics
-          </CardTitle>
-          <CardDescription>
-            Forecast expected collections based on historical trends
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Predictive Analytics
+              </CardTitle>
+              <CardDescription>
+                Forecast expected collections based on historical trends
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => saveForecastMutation.mutate()}
+              disabled={saveForecastMutation.isPending}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saveForecastMutation.isPending ? "Saving..." : "Save Forecast"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

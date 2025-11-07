@@ -16,6 +16,7 @@ import { AuthorizedRecordersManager } from "@/components/AuthorizedRecordersMana
 import { RecorderPerformanceComparison } from "@/components/RecorderPerformanceComparison";
 import { PerformanceAlerts } from "@/components/PerformanceAlerts";
 import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
+import { ForecastAccuracy } from "@/components/ForecastAccuracy";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -704,6 +705,9 @@ const RequestsSection = ({
 
       {/* Predictive Analytics */}
       <PredictiveAnalytics />
+
+      {/* Forecast Accuracy */}
+      <ForecastAccuracy />
 
       {/* Geographic Breakdown */}
       <Card>

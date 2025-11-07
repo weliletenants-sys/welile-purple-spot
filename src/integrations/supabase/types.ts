@@ -214,6 +214,39 @@ export type Database = {
           },
         ]
       }
+      payment_forecasts: {
+        Row: {
+          collection_rate: number
+          created_at: string
+          days_ahead: number
+          expected_amount: number
+          forecast_amount: number
+          forecast_date: string
+          id: string
+          target_date: string
+        }
+        Insert: {
+          collection_rate: number
+          created_at?: string
+          days_ahead: number
+          expected_amount: number
+          forecast_amount: number
+          forecast_date: string
+          id?: string
+          target_date: string
+        }
+        Update: {
+          collection_rate?: number
+          created_at?: string
+          days_ahead?: number
+          expected_amount?: number
+          forecast_amount?: number
+          forecast_date?: string
+          id?: string
+          target_date?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
