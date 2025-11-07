@@ -17,6 +17,7 @@ import { RecorderPerformanceComparison } from "@/components/RecorderPerformanceC
 import { PerformanceAlerts } from "@/components/PerformanceAlerts";
 import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
 import { ForecastAccuracy } from "@/components/ForecastAccuracy";
+import { ForecastHistory } from "@/components/ForecastHistory";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -708,6 +709,9 @@ const RequestsSection = ({
 
       {/* Forecast Accuracy */}
       <ForecastAccuracy />
+
+      {/* Forecast History */}
+      <ForecastHistory />
 
       {/* Geographic Breakdown */}
       <Card>
