@@ -34,8 +34,11 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight, DollarSign, TrendingUp } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight, DollarSign, TrendingUp, Calendar as CalendarIcon, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import {
   DndContext,
   closestCenter,
@@ -455,19 +458,33 @@ const RequestsSection = ({
   handleApprove: (id: string) => void;
   handleReject: (id: string) => void;
 }) => {
-  // Fetch executive stats
-  const stats = useExecutiveStats();
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   
-  // Fetch today's payments
+  // Fetch executive stats with date range
+  const stats = useExecutiveStats(
+    dateRange.from && dateRange.to
+      ? {
+          startDate: format(dateRange.from, "yyyy-MM-dd"),
+          endDate: format(dateRange.to, "yyyy-MM-dd"),
+        }
+      : undefined
+  );
+  
+  // Fetch payments with date range
   const { data: dailyPayments } = useQuery({
-    queryKey: ["dailyPayments"],
+    queryKey: ["dailyPayments", dateRange],
     queryFn: async () => {
-      const today = new Date().toISOString().split("T")[0];
-      const { data, error } = await supabase
+      const startDate = dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : new Date().toISOString().split("T")[0];
+      const endDate = dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : startDate;
+      
+      let query = supabase
         .from("daily_payments")
-        .select("paid_amount, amount")
-        .eq("date", today)
-        .eq("paid", true);
+        .select("paid_amount, amount, date")
+        .eq("paid", true)
+        .gte("date", startDate)
+        .lte("date", endDate);
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       
@@ -479,23 +496,256 @@ const RequestsSection = ({
     },
   });
 
+  // Fetch geographic breakdown
+  const { data: geoBreakdown } = useQuery({
+    queryKey: ["geoBreakdown"],
+    queryFn: async () => {
+      const { data: tenants, error: tenantsError } = await supabase
+        .from("tenants")
+        .select("id, service_center, rent_amount, repayment_days");
+      
+      if (tenantsError) throw tenantsError;
+
+      const { data: payments, error: paymentsError } = await supabase
+        .from("daily_payments")
+        .select("tenant_id, paid_amount, amount, paid");
+      
+      if (paymentsError) throw paymentsError;
+
+      // Group by service center
+      const breakdown = tenants?.reduce((acc: any, tenant) => {
+        const serviceCenter = tenant.service_center || "Unassigned";
+        if (!acc[serviceCenter]) {
+          acc[serviceCenter] = {
+            totalExpected: 0,
+            totalPaid: 0,
+            outstanding: 0,
+            tenantCount: 0
+          };
+        }
+        
+        // Calculate expected amount for this tenant
+        const rentAmount = Number(tenant.rent_amount || 0);
+        const repaymentDays = tenant.repayment_days || 30;
+        const dailyAmount = rentAmount / repaymentDays;
+        const totalExpected = rentAmount + dailyAmount * repaymentDays;
+        
+        acc[serviceCenter].totalExpected += totalExpected;
+        acc[serviceCenter].tenantCount += 1;
+        
+        return acc;
+      }, {});
+
+      // Calculate paid amounts
+      payments?.forEach((payment) => {
+        const tenant = tenants?.find(t => t.id === payment.tenant_id);
+        const serviceCenter = tenant?.service_center || "Unassigned";
+        if (breakdown[serviceCenter] && payment.paid) {
+          breakdown[serviceCenter].totalPaid += Number(payment.paid_amount || payment.amount);
+        }
+      });
+
+      // Calculate outstanding
+      Object.keys(breakdown).forEach(key => {
+        breakdown[key].outstanding = breakdown[key].totalExpected - breakdown[key].totalPaid;
+      });
+
+      return Object.entries(breakdown).map(([name, data]: [string, any]) => ({
+        name,
+        ...data
+      }));
+    },
+  });
+
+  // Fetch payment trends
+  const { data: paymentTrends } = useQuery({
+    queryKey: ["paymentTrends", dateRange],
+    queryFn: async () => {
+      const startDate = dateRange.from 
+        ? format(dateRange.from, "yyyy-MM-dd")
+        : format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), "yyyy-MM-dd");
+      const endDate = dateRange.to 
+        ? format(dateRange.to, "yyyy-MM-dd") 
+        : format(new Date(), "yyyy-MM-dd");
+      
+      const { data, error } = await supabase
+        .from("daily_payments")
+        .select("date, paid_amount, amount, paid")
+        .gte("date", startDate)
+        .lte("date", endDate)
+        .order("date");
+      
+      if (error) throw error;
+      
+      // Group by date
+      const trends = data?.reduce((acc: any, payment) => {
+        const date = payment.date;
+        if (!acc[date]) {
+          acc[date] = { date, paid: 0, expected: 0 };
+        }
+        acc[date].expected += Number(payment.amount);
+        if (payment.paid) {
+          acc[date].paid += Number(payment.paid_amount || payment.amount);
+        }
+        return acc;
+      }, {});
+      
+      return Object.values(trends || {}).map((item: any) => ({
+        date: format(new Date(item.date), "MMM dd"),
+        paid: item.paid,
+        expected: item.expected
+      }));
+    },
+  });
+
   return (
     <div className="space-y-6">
+      {/* Date Range Filter */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5" />
+            Date Range Filter
+          </CardTitle>
+          <CardDescription>Filter statistics by date range</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4 items-center">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange.from ? format(dateRange.from, "PPP") : "Pick start date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateRange.from}
+                  onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <span className="text-muted-foreground">to</span>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange.to ? format(dateRange.to, "PPP") : "Pick end date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateRange.to}
+                  onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+
+            {(dateRange.from || dateRange.to) && (
+              <Button variant="ghost" onClick={() => setDateRange({})}>
+                Clear
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <StatsCard
           title="Outstanding Balance"
           value={`UGX ${(stats?.outstandingBalance || 0).toLocaleString()}`}
           icon={TrendingUp}
-          description="Total amount yet to be collected"
+          description={dateRange.from && dateRange.to 
+            ? `${format(dateRange.from, "MMM dd")} - ${format(dateRange.to, "MMM dd")}`
+            : "Total amount yet to be collected"
+          }
         />
         <StatsCard
-          title="Today's Payments"
+          title={dateRange.from && dateRange.to ? "Period Payments" : "Today's Payments"}
           value={`UGX ${(dailyPayments?.total || 0).toLocaleString()}`}
           icon={DollarSign}
-          description={`${dailyPayments?.count || 0} payments recorded today`}
+          description={`${dailyPayments?.count || 0} payments recorded`}
         />
       </div>
+
+      {/* Payment Trends Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Payment Trends
+          </CardTitle>
+          <CardDescription>Daily payment collection vs expected amounts</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={paymentTrends || []}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip 
+                formatter={(value: number) => `UGX ${value.toLocaleString()}`}
+              />
+              <Legend />
+              <Bar dataKey="expected" fill="hsl(var(--muted))" name="Expected" />
+              <Bar dataKey="paid" fill="hsl(var(--primary))" name="Paid" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Geographic Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Outstanding Balance by Service Center
+          </CardTitle>
+          <CardDescription>Regional breakdown of outstanding balances</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {geoBreakdown?.map((center) => (
+              <div key={center.name} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-semibold">{center.name}</h3>
+                    <p className="text-sm text-muted-foreground">{center.tenantCount} tenants</p>
+                  </div>
+                  <Badge variant={center.outstanding > 0 ? "destructive" : "default"}>
+                    UGX {center.outstanding.toLocaleString()}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm mt-3">
+                  <div>
+                    <p className="text-muted-foreground">Expected</p>
+                    <p className="font-medium">UGX {center.totalExpected.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Paid</p>
+                    <p className="font-medium text-green-600">UGX {center.totalPaid.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Collection Rate</p>
+                    <p className="font-medium">
+                      {center.totalExpected > 0 
+                        ? ((center.totalPaid / center.totalExpected) * 100).toFixed(1)
+                        : 0}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Performance Alerts */}
       <PerformanceAlerts />
