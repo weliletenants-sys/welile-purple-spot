@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, Activity, Save } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Save, Clock } from "lucide-react";
 import { format, addDays, startOfDay } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { toast } from "sonner";
@@ -133,50 +133,25 @@ export const PredictiveAnalytics = () => {
     },
   });
   
-  // Mutation to save forecast
-  const saveForecastMutation = useMutation({
+  // Mutation to trigger automated forecast generation
+  const generateForecastMutation = useMutation({
     mutationFn: async () => {
-      if (!forecast) return;
-      
-      const forecastsToSave = [
-        {
-          forecast_date: forecast.forecastDate,
-          target_date: forecast.forecasts.sevenDays.targetDate,
-          expected_amount: forecast.forecasts.sevenDays.expected,
-          forecast_amount: forecast.forecasts.sevenDays.forecast,
-          collection_rate: forecast.avgCollectionRate,
-          days_ahead: 7,
-        },
-        {
-          forecast_date: forecast.forecastDate,
-          target_date: forecast.forecasts.fourteenDays.targetDate,
-          expected_amount: forecast.forecasts.fourteenDays.expected,
-          forecast_amount: forecast.forecasts.fourteenDays.forecast,
-          collection_rate: forecast.avgCollectionRate,
-          days_ahead: 14,
-        },
-        {
-          forecast_date: forecast.forecastDate,
-          target_date: forecast.forecasts.thirtyDays.targetDate,
-          expected_amount: forecast.forecasts.thirtyDays.expected,
-          forecast_amount: forecast.forecasts.thirtyDays.forecast,
-          collection_rate: forecast.avgCollectionRate,
-          days_ahead: 30,
-        },
-      ];
-      
-      const { error } = await supabase
-        .from("payment_forecasts")
-        .insert(forecastsToSave);
+      const { data, error } = await supabase.functions.invoke('generate-daily-forecast', {
+        body: { triggered_by: 'manual' }
+      });
       
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
-      toast.success("Forecast saved for accuracy tracking");
+    onSuccess: (data) => {
+      toast.success("Automated forecast generated successfully");
+      queryClient.invalidateQueries({ queryKey: ["payment-forecast"] });
       queryClient.invalidateQueries({ queryKey: ["forecast-accuracy"] });
+      console.log('Forecast data:', data);
     },
-    onError: () => {
-      toast.error("Failed to save forecast");
+    onError: (error) => {
+      console.error('Forecast generation error:', error);
+      toast.error("Failed to generate forecast");
     },
   });
   
@@ -205,17 +180,17 @@ export const PredictiveAnalytics = () => {
                 Predictive Analytics
               </CardTitle>
               <CardDescription>
-                Forecast expected collections based on historical trends
+                Forecast expected collections based on historical trends • Automated daily at 1:00 AM
               </CardDescription>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => saveForecastMutation.mutate()}
-              disabled={saveForecastMutation.isPending}
+              onClick={() => generateForecastMutation.mutate()}
+              disabled={generateForecastMutation.isPending}
             >
-              <Save className="h-4 w-4 mr-2" />
-              {saveForecastMutation.isPending ? "Saving..." : "Save Forecast"}
+              <Clock className="h-4 w-4 mr-2" />
+              {generateForecastMutation.isPending ? "Generating..." : "Generate Now"}
             </Button>
           </div>
         </CardHeader>
