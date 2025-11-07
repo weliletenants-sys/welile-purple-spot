@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { InstallBanner } from "@/components/InstallBanner";
 import Index from "./pages/Index";
 import RepaymentSchedule from "./pages/RepaymentSchedule";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
@@ -36,6 +37,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <InstallBanner />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
