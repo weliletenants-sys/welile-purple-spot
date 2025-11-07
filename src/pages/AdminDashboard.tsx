@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
+import { useExecutiveStats } from "@/hooks/useExecutiveStats";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { StatsCard } from "@/components/StatsCard";
 import { ReportsSection } from "@/components/ReportsSection";
 import { ReportGenerator } from "@/components/ReportGenerator";
 import { ReportComparison } from "@/components/ReportComparison";
@@ -30,7 +34,7 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight, DollarSign, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import {
   DndContext,
@@ -450,13 +454,54 @@ const RequestsSection = ({
   setNotes: (notes: string) => void;
   handleApprove: (id: string) => void;
   handleReject: (id: string) => void;
-}) => (
-  <div className="space-y-6">
-    {/* Performance Alerts */}
-    <PerformanceAlerts />
+}) => {
+  // Fetch executive stats
+  const stats = useExecutiveStats();
+  
+  // Fetch today's payments
+  const { data: dailyPayments } = useQuery({
+    queryKey: ["dailyPayments"],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("daily_payments")
+        .select("paid_amount, amount")
+        .eq("date", today)
+        .eq("paid", true);
+      
+      if (error) throw error;
+      
+      const total = data?.reduce((sum, payment) => {
+        return sum + Number(payment.paid_amount || payment.amount);
+      }, 0) || 0;
+      
+      return { total, count: data?.length || 0 };
+    },
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <StatsCard
+          title="Outstanding Balance"
+          value={`UGX ${(stats?.outstandingBalance || 0).toLocaleString()}`}
+          icon={TrendingUp}
+          description="Total amount yet to be collected"
+        />
+        <StatsCard
+          title="Today's Payments"
+          value={`UGX ${(dailyPayments?.total || 0).toLocaleString()}`}
+          icon={DollarSign}
+          description={`${dailyPayments?.count || 0} payments recorded today`}
+        />
+      </div>
+
+      {/* Performance Alerts */}
+      <PerformanceAlerts />
     
-    {/* Pending Requests */}
-    <Card>
+      {/* Pending Requests */}
+      <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5" />
@@ -608,7 +653,8 @@ const RequestsSection = ({
         </CardContent>
       </Card>
     )}
-  </div>
-);
+    </div>
+  );
+};
 
 export default AdminDashboard;
