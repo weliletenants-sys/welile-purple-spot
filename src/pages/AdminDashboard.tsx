@@ -8,6 +8,7 @@ import { StatsCard } from "@/components/StatsCard";
 import { ReportsSection } from "@/components/ReportsSection";
 import { ReportGenerator } from "@/components/ReportGenerator";
 import { ReportComparison } from "@/components/ReportComparison";
+import { ScheduledReportsManager } from "@/components/ScheduledReportsManager";
 import { AgentPerformanceComparison } from "@/components/AgentPerformanceComparison";
 import { AgentRankingComparison } from "@/components/AgentRankingComparison";
 import { MultiAgentComparison } from "@/components/MultiAgentComparison";
@@ -211,6 +212,7 @@ const AdminDashboard = () => {
               {activeSection === 'recorders' && <AuthorizedRecordersManager />}
               {activeSection === 'recorder-performance' && <RecorderPerformanceComparison />}
               {activeSection === 'reports' && <ReportsSection />}
+              {activeSection === 'scheduled-reports' && <ScheduledReportsManager />}
               {activeSection === 'generator' && <ReportGenerator />}
               {activeSection === 'comparison' && <ReportComparison />}
               {activeSection === 'agent-comparison' && <AgentPerformanceComparison />}
@@ -377,6 +379,7 @@ const AdminSidebar = ({
     ],
     reports: [
       { id: 'reports', label: 'Reports', icon: FileText, shortcut: 'Alt+4' },
+      { id: 'scheduled-reports', label: 'Scheduled Reports', icon: Clock, shortcut: 'Alt+S' },
       { id: 'generator', label: 'Generate Reports', icon: LineChart, shortcut: 'Alt+5' },
       { id: 'comparison', label: 'Report Comparison', icon: GitCompare, shortcut: 'Alt+6' },
       { id: 'agent-comparison', label: 'Agent Performance', icon: UserCheck, shortcut: 'Alt+7' },

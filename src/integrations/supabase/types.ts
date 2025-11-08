@@ -334,6 +334,33 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_reports: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          last_generated_at: string | null
+          report_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_generated_at?: string | null
+          report_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_generated_at?: string | null
+          report_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_centers: {
         Row: {
           created_at: string
