@@ -4,25 +4,42 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Play, Download } from "lucide-react";
+import { CalendarIcon, Play, Download, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import * as XLSX from "xlsx";
+import { useReportTemplates } from "@/hooks/useReportTemplates";
 
 export const ReportGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportType, setReportType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [date, setDate] = useState<DateRange | undefined>();
   const [lastGeneratedReport, setLastGeneratedReport] = useState<any>(null);
+  const { templates } = useReportTemplates();
 
   const generateReport = async () => {
     setIsGenerating(true);
     try {
+      const body: any = { reportType };
+      
+      if (selectedTemplateId) {
+        const template = templates?.find(t => t.id === selectedTemplateId);
+        if (template) {
+          body.template = {
+            metrics: template.metrics,
+            filters: template.filters,
+            view_options: template.view_options
+          };
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('generate-reports', {
-        body: { reportType }
+        body
       });
 
       if (error) throw error;
@@ -157,26 +174,73 @@ export const ReportGenerator = () => {
       <Card>
         <CardHeader>
           <CardTitle>Quick Report Generation</CardTitle>
-          <CardDescription>Generate standard reports instantly</CardDescription>
+          <CardDescription>Generate standard reports instantly with optional templates</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-3">
-            <Select value={reportType} onValueChange={(value: any) => setReportType(value)}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">Daily Report</SelectItem>
-                <SelectItem value="weekly">Weekly Report</SelectItem>
-                <SelectItem value="monthly">Monthly Report</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button onClick={generateReport} disabled={isGenerating}>
-              <Play className="h-4 w-4 mr-2" />
-              {isGenerating ? 'Generating...' : 'Generate Report'}
-            </Button>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Report Type</label>
+              <Select value={reportType} onValueChange={(value: any) => {
+                setReportType(value);
+                setSelectedTemplateId(null);
+              }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily Report</SelectItem>
+                  <SelectItem value="weekly">Weekly Report</SelectItem>
+                  <SelectItem value="monthly">Monthly Report</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Template (Optional)</label>
+              <Select value={selectedTemplateId || 'none'} onValueChange={(value) => setSelectedTemplateId(value === 'none' ? null : value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    <span className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Default (No Template)
+                    </span>
+                  </SelectItem>
+                  {templates?.filter(t => t.report_type === reportType || t.report_type === 'custom').map(template => (
+                    <SelectItem key={template.id} value={template.id}>
+                      <span className="flex items-center gap-2">
+                        {template.is_default && <Badge variant="secondary" className="text-xs">Default</Badge>}
+                        {template.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {selectedTemplateId && templates?.find(t => t.id === selectedTemplateId) && (
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">
+                {templates.find(t => t.id === selectedTemplateId)?.description}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                <Badge variant="outline" className="text-xs">
+                  {templates.find(t => t.id === selectedTemplateId)?.metrics.length} metrics
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {Object.values(templates.find(t => t.id === selectedTemplateId)?.view_options || {}).filter(Boolean).length} view options
+                </Badge>
+              </div>
+            </div>
+          )}
+            
+          <Button onClick={generateReport} disabled={isGenerating} className="w-full">
+            <Play className="h-4 w-4 mr-2" />
+            {isGenerating ? 'Generating...' : 'Generate Report'}
+          </Button>
         </CardContent>
       </Card>
 

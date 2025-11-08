@@ -307,6 +307,48 @@ export type Database = {
         }
         Relationships: []
       }
+      report_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          filters: Json | null
+          id: string
+          is_default: boolean
+          metrics: Json
+          name: string
+          report_type: string
+          updated_at: string
+          view_options: Json | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filters?: Json | null
+          id?: string
+          is_default?: boolean
+          metrics?: Json
+          name: string
+          report_type: string
+          updated_at?: string
+          view_options?: Json | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filters?: Json | null
+          id?: string
+          is_default?: boolean
+          metrics?: Json
+          name?: string
+          report_type?: string
+          updated_at?: string
+          view_options?: Json | null
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
