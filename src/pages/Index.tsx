@@ -8,8 +8,9 @@ import { ShareButton } from "@/components/ShareButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Lazy load heavy components
@@ -144,79 +145,90 @@ const Index = () => {
               <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" className="hover-scale">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-card">
+                <DropdownMenuContent align="end" className="w-64 bg-card">
                   <DropdownMenuItem 
-                    className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90 font-extrabold text-lg py-4 border-4 border-destructive mb-3 animate-pulse"
+                    className="cursor-pointer bg-red-600 text-white hover:bg-red-700 font-bold text-base py-4 mb-2 rounded-md animate-fade-in flex items-center gap-2"
                     onClick={() => navigate("/missed-payments")}
                   >
-                    <AlertTriangle className="w-6 h-6 mr-2 animate-bounce" />
-                    🚨 MISSED PAYMENTS
+                    <AlertTriangle className="w-5 h-5 animate-bounce" />
+                    <span>🚨 Missed Payments</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer"
+                    className="cursor-pointer flex items-center gap-2 py-3"
                     onClick={() => navigate("/executive-dashboard")}
                   >
-                    EXECUTIVE DASHBOARD
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => navigate("/admin-login")}>
-                    ADMIN DASHBOARD
+                    <BarChart3 className="w-4 h-4" />
+                    <span>Executive Dashboard</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer"
+                    className="cursor-pointer flex items-center gap-2 py-3" 
+                    onClick={() => navigate("/admin-login")}
+                  >
+                    <Users className="w-4 h-4" />
+                    <span>Admin Dashboard</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer flex items-center gap-2 py-3"
                     onClick={() => navigate("/withdrawal-history")}
                   >
-                    💰 WITHDRAWAL HISTORY
+                    <DollarSign className="w-4 h-4" />
+                    <span>💰 Withdrawal History</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer"
+                    className="cursor-pointer flex items-center gap-2 py-3"
                     onClick={() => navigate("/agent-dashboard")}
                   >
-                    AGENT DASHBOARD
+                    <UserPlus className="w-4 h-4" />
+                    <span>Agent Dashboard</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer"
+                    className="cursor-pointer flex items-center gap-2 py-3"
                     onClick={() => navigate("/agent-portal-login")}
                   >
-                    🔐 AGENT PORTAL
+                    <Users className="w-4 h-4" />
+                    <span>🔐 Agent Portal</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer"
+                    className="cursor-pointer flex items-center gap-2 py-3"
                     onClick={() => navigate("/top-performers")}
                   >
-                    TOP PERFORMERS
+                    <TrendingUp className="w-4 h-4" />
+                    <span>Top Performers</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer"
+                    className="cursor-pointer flex items-center gap-2 py-3"
                     onClick={() => navigate("/recording-activity")}
                   >
-                    ⭐ RECORDING ACTIVITY
+                    <Clock className="w-4 h-4" />
+                    <span>⭐ Recording Activity</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer"
+                    className="cursor-pointer flex items-center gap-2 py-3"
                     onClick={() => navigate("/recently-added")}
                   >
-                    📋 RECENTLY ADDED
+                    <Plus className="w-4 w-4" />
+                    <span>📋 Recently Added</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer bg-destructive/10 text-destructive hover:bg-destructive/20 font-semibold"
+                    className="cursor-pointer bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-950/30 font-semibold py-3 rounded-md mt-2 flex items-center gap-2"
                     onClick={() => navigate("/risk-dashboard")}
                   >
-                    <AlertTriangle className="w-4 h-4 mr-2" />
-                    🚨 RISK DASHBOARD
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>🚨 Risk Dashboard</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 font-semibold"
+                    className="cursor-pointer bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
                     onClick={() => navigate("/pipeline-tenants")}
                   >
-                    <Hourglass className="w-4 h-4 mr-2" />
-                    ⏳ PIPELINE CONVERSION
+                    <Clock className="w-4 h-4" />
+                    <span>⏳ Pipeline Conversion</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="p-0"
+                    className="p-0 mt-2"
                     onSelect={(e) => e.preventDefault()}
                   >
                     <BulkUploadTenants />
@@ -287,31 +299,64 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Stats Section */}
-        <div className="flex flex-wrap justify-center gap-4">
-          <div className="flex items-center gap-2 bg-card/80 rounded-xl px-6 py-3 border border-border">
-            <Zap className="w-6 h-6 text-primary" />
-            <div>
-              <div className="text-2xl font-bold text-foreground">{stats.total}</div>
-              <div className="text-xs text-muted-foreground">Total</div>
-            </div>
-          </div>
+        {/* Stats Section with enhanced visuals */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-xl px-6 py-4 border-2 border-blue-200 dark:border-blue-800 hover-scale cursor-help shadow-md">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
+                    <Zap className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{stats.total}</div>
+                    <div className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Tenants</div>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>All tenants in the system</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
-          <div className="flex items-center gap-2 bg-card/80 rounded-xl px-6 py-3 border border-border">
-            <TrendingUp className="w-6 h-6 text-primary" />
-            <div>
-              <div className="text-2xl font-bold text-foreground">{stats.active}</div>
-              <div className="text-xs text-muted-foreground">Active</div>
-            </div>
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 rounded-xl px-6 py-4 border-2 border-green-200 dark:border-green-800 hover-scale cursor-help shadow-md">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+                    <TrendingUp className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-green-700 dark:text-green-300">{stats.active}</div>
+                    <div className="text-sm font-medium text-green-600 dark:text-green-400">Active ({stats.activePercentage}%)</div>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Tenants with active status</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
-          <div className="flex items-center gap-2 bg-card/80 rounded-xl px-6 py-3 border border-border">
-            <Award className="w-6 h-6 text-primary" />
-            <div>
-              <div className="text-2xl font-bold text-foreground">{stats.paymentRate}%</div>
-              <div className="text-xs text-muted-foreground">Paid</div>
-            </div>
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 rounded-xl px-6 py-4 border-2 border-purple-200 dark:border-purple-800 hover-scale cursor-help shadow-md">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600">
+                    <DollarSign className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">{stats.paymentRate}%</div>
+                    <div className="text-sm font-medium text-purple-600 dark:text-purple-400">Payment Rate</div>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Percentage of tenants who have paid</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Results Count */}

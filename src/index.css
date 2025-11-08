@@ -168,6 +168,41 @@ All colors MUST be HSL.
   .safe-right {
     padding-right: env(safe-area-inset-right);
   }
+
+  /* Visual feedback animations */
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+
+  .hover-glow {
+    @apply transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20;
+  }
+
+  .pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Status indicator colors */
+  .status-success {
+    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border-green-300;
+  }
+
+  .status-warning {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 border-yellow-300;
+  }
+
+  .status-danger {
+    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border-red-300;
+  }
+
+  .status-info {
+    @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border-blue-300;
+  }
+
+  /* Interactive link underlines */
+  .story-link {
+    @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
+  }
 }
 
 /* Improve tap targets for mobile */
