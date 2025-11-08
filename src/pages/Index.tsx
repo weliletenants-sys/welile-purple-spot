@@ -9,6 +9,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
+import { AchievementsModal } from "@/components/AchievementsModal";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -45,6 +46,7 @@ const Index = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showTour, completeTour, skipTour } = useOnboardingTour();
+  const [showAchievements, setShowAchievements] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -156,7 +158,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
-      <FloatingQuickActionsPanel />
+      <FloatingQuickActionsPanel onAchievementsClick={() => setShowAchievements(true)} />
       <InstallPrompt />
       
       {showTour && (
@@ -166,6 +168,13 @@ const Index = () => {
           onSkip={skipTour}
         />
       )}
+
+      <AchievementsModal
+        open={showAchievements}
+        onClose={() => setShowAchievements(false)}
+        userIdentifier={agentFilter || undefined}
+      />
+
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">

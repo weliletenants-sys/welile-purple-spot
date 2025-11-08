@@ -19,6 +19,23 @@ export const useOnboardingTour = () => {
   const completeTour = () => {
     localStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
     setShowTour(false);
+    
+    // Award the Welcome Aboard badge
+    const userIdentifier = localStorage.getItem("user_identifier");
+    if (userIdentifier) {
+      // Check for achievements in the background
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-achievements`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          userIdentifier,
+          action: "onboarding_complete",
+        }),
+      }).catch((err) => console.error("Failed to check achievements:", err));
+    }
   };
 
   const skipTour = () => {

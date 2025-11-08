@@ -158,6 +158,42 @@ export type Database = {
         }
         Relationships: []
       }
+      badges: {
+        Row: {
+          category: string
+          created_at: string
+          criteria: Json
+          description: string
+          icon: string
+          id: string
+          name: string
+          points: number
+          rarity: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          criteria: Json
+          description: string
+          icon: string
+          id?: string
+          name: string
+          points?: number
+          rarity?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          criteria?: Json
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          points?: number
+          rarity?: string
+        }
+        Relationships: []
+      }
       daily_payments: {
         Row: {
           amount: number
@@ -603,6 +639,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          is_viewed: boolean
+          progress: Json | null
+          user_identifier: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          is_viewed?: boolean
+          progress?: Json | null
+          user_identifier: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          is_viewed?: boolean
+          progress?: Json | null
+          user_identifier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -671,6 +742,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_award_badge: {
+        Args: { p_badge_name: string; p_user_identifier: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

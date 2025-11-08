@@ -14,17 +14,28 @@ import {
   Menu,
   Clock,
   Target,
-  Sparkles
+  Sparkles,
+  Trophy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 
-export const FloatingQuickActionsPanel = () => {
+export const FloatingQuickActionsPanel = ({ onAchievementsClick }: { onAchievementsClick?: () => void }) => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const { reopenWhatsNew } = useWhatsNew();
 
   const quickActions = [
+    {
+      icon: Trophy,
+      label: "Achievements",
+      color: 'bg-gradient-to-br from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700',
+      action: () => {
+        onAchievementsClick?.();
+        setIsExpanded(false);
+      },
+      priority: 'special'
+    },
     {
       icon: Sparkles,
       label: "What's New",
@@ -134,6 +145,11 @@ export const FloatingQuickActionsPanel = () => {
                     {action.priority === 'new' && (
                       <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white animate-pulse flex items-center justify-center">
                         <Sparkles className="h-3 w-3 text-white" />
+                      </span>
+                    )}
+                    {action.priority === 'special' && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 border-2 border-white animate-pulse flex items-center justify-center">
+                        <Trophy className="h-3 w-3 text-white" />
                       </span>
                     )}
                   </div>
