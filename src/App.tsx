@@ -42,7 +42,6 @@ const App = () => {
       <TooltipProvider>
         <UpdatePrompt />
         <InstallPrompt />
-        <HelpChatbot />
         <WhatsNewModal 
           open={showWhatsNew} 
           onClose={markAsSeen} 
@@ -51,6 +50,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <HelpChatbot />
           <InstallBanner />
           <Routes>
             <Route path="/" element={<Index />} />
