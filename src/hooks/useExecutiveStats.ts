@@ -107,6 +107,28 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
       }, 0) || 0;
       const totalDataEntryActivities = dataEntryEarnings?.length || 0;
 
+      // Fetch pipeline bonus earnings
+      let pipelineBonusQuery = supabase
+        .from("agent_earnings")
+        .select("amount")
+        .eq("earning_type", "pipeline_bonus");
+
+      if (dateRange?.startDate) {
+        pipelineBonusQuery = pipelineBonusQuery.gte("created_at", dateRange.startDate);
+      }
+      if (dateRange?.endDate) {
+        pipelineBonusQuery = pipelineBonusQuery.lte("created_at", dateRange.endDate);
+      }
+
+      const { data: pipelineBonusEarnings, error: pipelineError } = await pipelineBonusQuery;
+
+      if (pipelineError) throw pipelineError;
+
+      const totalPipelineBonuses = pipelineBonusEarnings?.reduce((sum, earning) => {
+        return sum + Number(earning.amount);
+      }, 0) || 0;
+      const totalPipelineActivities = pipelineBonusEarnings?.length || 0;
+
       return {
         numberOfTenants,
         manualTenants,
@@ -122,6 +144,8 @@ export const useExecutiveStats = (dateRange?: DateRange) => {
         outstandingBalance,
         totalDataEntryRewards,
         totalDataEntryActivities,
+        totalPipelineBonuses,
+        totalPipelineActivities,
       };
     },
   });

@@ -146,6 +146,8 @@ export const useComprehensiveStats = (dateRange?: DateRange) => {
       const totalSignupBonuses = agentEarnings?.filter(e => e.earning_type === 'signup_bonus').reduce((sum, e) => sum + Number(e.amount), 0) || 0;
       const totalDataEntryRewards = agentEarnings?.filter(e => e.earning_type === 'data_entry').reduce((sum, e) => sum + Number(e.amount), 0) || 0;
       const totalRecordingBonuses = agentEarnings?.filter(e => e.earning_type === 'recording_bonus').reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+      const totalPipelineBonuses = agentEarnings?.filter(e => e.earning_type === 'pipeline_bonus').reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+      const totalPipelineActivities = agentEarnings?.filter(e => e.earning_type === 'pipeline_bonus').length || 0;
 
       // Service center stats
       const totalServiceCenters = serviceCenters?.length || 0;
@@ -230,6 +232,8 @@ export const useComprehensiveStats = (dateRange?: DateRange) => {
         totalSignupBonuses,
         totalDataEntryRewards,
         totalRecordingBonuses,
+        totalPipelineBonuses,
+        totalPipelineActivities,
         
         // Service center stats
         totalServiceCenters,

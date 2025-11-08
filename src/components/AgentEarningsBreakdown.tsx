@@ -117,6 +117,8 @@ export const AgentEarningsBreakdown = ({ agentName, period = "all" }: AgentEarni
         return <Gift className="w-4 h-4 text-green-600" />;
       case "data_entry":
         return <Database className="w-4 h-4 text-blue-600" />;
+      case "pipeline_bonus":
+        return <TrendingUp className="w-4 h-4 text-purple-600" />;
       default:
         return <TrendingUp className="w-4 h-4 text-muted-foreground" />;
     }
@@ -132,6 +134,8 @@ export const AgentEarningsBreakdown = ({ agentName, period = "all" }: AgentEarni
         return "Signup Bonus";
       case "data_entry":
         return "Data Entry";
+      case "pipeline_bonus":
+        return "Pipeline Bonus";
       default:
         return type;
     }
@@ -147,6 +151,8 @@ export const AgentEarningsBreakdown = ({ agentName, period = "all" }: AgentEarni
         return "bg-green-500/10 text-green-700 border-green-500/20";
       case "data_entry":
         return "bg-blue-500/10 text-blue-700 border-blue-500/20";
+      case "pipeline_bonus":
+        return "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20";
       default:
         return "bg-muted text-muted-foreground";
     }

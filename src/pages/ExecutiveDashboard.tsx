@@ -426,6 +426,13 @@ const ExecutiveDashboard = () => {
           />
 
           <StatsCard
+            title="Pipeline Bonuses"
+            value={`UGX ${stats.totalPipelineBonuses.toLocaleString()}`}
+            icon={GitBranch}
+            description={`${stats.totalPipelineActivities} pipeline tenants`}
+          />
+
+          <StatsCard
             title="Recording Bonuses"
             value={`UGX ${stats.totalRecordingBonuses.toLocaleString()}`}
             icon={BarChart3}

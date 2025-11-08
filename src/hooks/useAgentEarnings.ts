@@ -21,6 +21,7 @@ export interface AgentEarning {
   dataEntryRewards: number;
   recordingBonuses: number;
   commissions: number;
+  pipelineBonuses: number;
   hasRecentRecordingActivity: boolean;
 }
 
@@ -123,6 +124,7 @@ export const useAgentEarnings = (period?: string) => {
             dataEntryRewards: 0,
             recordingBonuses: 0,
             commissions: 0,
+            pipelineBonuses: 0,
             hasRecentRecordingActivity: false,
           });
         }
@@ -180,6 +182,7 @@ export const useAgentEarnings = (period?: string) => {
             dataEntryRewards: 0,
             recordingBonuses: 0,
             commissions: 0,
+            pipelineBonuses: 0,
             hasRecentRecordingActivity: false,
           });
         }
@@ -214,6 +217,10 @@ export const useAgentEarnings = (period?: string) => {
         } else if (earning.earning_type === "data_entry") {
           agent.earnedCommission += Number(earning.amount);
           agent.dataEntryRewards += Number(earning.amount);
+          agent.earningsCount += 1;
+        } else if (earning.earning_type === "pipeline_bonus") {
+          agent.earnedCommission += Number(earning.amount);
+          agent.pipelineBonuses += Number(earning.amount);
           agent.earningsCount += 1;
         } else if (earning.earning_type === "withdrawal") {
           agent.withdrawnCommission += Number(earning.amount);

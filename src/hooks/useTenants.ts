@@ -323,6 +323,21 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
         if (dataEntryError) throw dataEntryError;
       }
 
+      // Create pipeline bonus earning (UGX 100) if tenant is pipeline
+      if ((tenant.status as string) === "Pipeline" && tenant.agentName && tenant.agentPhone) {
+        const { error: pipelineError } = await supabase
+          .from("agent_earnings")
+          .insert({
+            agent_phone: tenant.agentPhone,
+            agent_name: tenant.agentName,
+            tenant_id: data.id,
+            amount: 100,
+            earning_type: "pipeline_bonus",
+          });
+
+        if (pipelineError) throw pipelineError;
+      }
+
       return data;
     },
     onSuccess: () => {
