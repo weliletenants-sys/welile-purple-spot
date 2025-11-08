@@ -18,6 +18,8 @@ import { TenantCard } from "@/components/TenantCard";
 import { AgentEarningsBreakdown } from "@/components/AgentEarningsBreakdown";
 import { Badge } from "@/components/ui/badge";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
+import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
+import { EarningsNotificationDemo } from "@/components/EarningsNotificationDemo";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -35,6 +37,12 @@ const AgentDashboard = () => {
   const [sortDirection, setSortDirection] = useState<"desc" | "asc">("desc");
   const { data: allAgents, isLoading } = useAgentEarnings(period);
   const { createRequest } = useWithdrawalRequests();
+  
+  // Enable real-time earnings notifications for specific agent view
+  useEarningsNotifications({
+    agentName: routeAgentName ? decodeURIComponent(routeAgentName) : undefined,
+    enabled: !!routeAgentName,
+  });
   
   // Filter agents if viewing a specific agent
   const agents = routeAgentName 
@@ -774,6 +782,14 @@ const AgentDashboard = () => {
         {/* Tenants List - Only show when viewing a specific agent */}
         {routeAgentName && (
           <div className="mt-12">
+            {/* Notification Demo for testing */}
+            {paginatedAgents && paginatedAgents.length > 0 && (
+              <EarningsNotificationDemo
+                agentName={paginatedAgents[0].agentName}
+                agentPhone={paginatedAgents[0].agentPhone}
+              />
+            )}
+            
             <h2 className="text-2xl font-bold text-foreground mb-6">
               Tenants ({agentTenants.length})
             </h2>

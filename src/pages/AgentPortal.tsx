@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { LogOut, TrendingUp, Users, DollarSign, Award, Download, Target, Trophy, History } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
+import { EarningsNotificationDemo } from "@/components/EarningsNotificationDemo";
 
 interface AgentStats {
   tenantsManaged: number;
@@ -34,6 +36,12 @@ const AgentPortal = () => {
   const [loading, setLoading] = useState(true);
   const [goals, setGoals] = useState<any[]>([]);
   const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+
+  // Enable real-time earnings notifications
+  useEarningsNotifications({
+    agentName,
+    enabled: !!agentName,
+  });
 
   useEffect(() => {
     // Check if agent is logged in
@@ -291,6 +299,14 @@ const AgentPortal = () => {
                   <CardDescription>Track your progress towards monthly targets</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Notification Demo for testing */}
+                  {agentName && (
+                    <EarningsNotificationDemo
+                      agentName={agentName}
+                      agentPhone={sessionStorage.getItem('agentPhone') || ''}
+                    />
+                  )}
+                  
                   {goals.map((goal, index) => {
                     const progress = Math.min((goal.current / goal.target) * 100, 100);
                     return (
