@@ -31,6 +31,7 @@ import ServiceCenterTransferAnalytics from "./pages/ServiceCenterTransferAnalyti
 import RecentlyAddedTenants from "./pages/RecentlyAddedTenants";
 import RiskDashboard from "./pages/RiskDashboard";
 import PipelineTenants from "./pages/PipelineTenants";
+import Leaderboard from "./pages/Leaderboard";
 
 const queryClient = new QueryClient();
 
@@ -73,8 +74,9 @@ const App = () => {
             <Route path="/service-center-management" element={<ServiceCenterManagement />} />
             <Route path="/service-center-transfer-analytics" element={<ServiceCenterTransferAnalytics />} />
             <Route path="/recently-added" element={<RecentlyAddedTenants />} />
-          <Route path="/risk-dashboard" element={<RiskDashboard />} />
-          <Route path="/pipeline-tenants" element={<PipelineTenants />} />
+            <Route path="/risk-dashboard" element={<RiskDashboard />} />
+            <Route path="/pipeline-tenants" element={<PipelineTenants />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

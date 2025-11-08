@@ -10,6 +10,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { AchievementsModal } from "@/components/AchievementsModal";
+import { LeaderboardModal } from "@/components/LeaderboardModal";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -47,6 +48,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const { showTour, completeTour, skipTour } = useOnboardingTour();
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -158,7 +160,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
-      <FloatingQuickActionsPanel onAchievementsClick={() => setShowAchievements(true)} />
+      <FloatingQuickActionsPanel 
+        onAchievementsClick={() => setShowAchievements(true)}
+        onLeaderboardClick={() => setShowLeaderboard(true)}
+      />
       <InstallPrompt />
       
       {showTour && (
@@ -172,6 +177,12 @@ const Index = () => {
       <AchievementsModal
         open={showAchievements}
         onClose={() => setShowAchievements(false)}
+        userIdentifier={agentFilter || undefined}
+      />
+
+      <LeaderboardModal
+        open={showLeaderboard}
+        onClose={() => setShowLeaderboard(false)}
         userIdentifier={agentFilter || undefined}
       />
 

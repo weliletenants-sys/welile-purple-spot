@@ -20,7 +20,13 @@ import {
 import { cn } from "@/lib/utils";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 
-export const FloatingQuickActionsPanel = ({ onAchievementsClick }: { onAchievementsClick?: () => void }) => {
+export const FloatingQuickActionsPanel = ({ 
+  onAchievementsClick, 
+  onLeaderboardClick 
+}: { 
+  onAchievementsClick?: () => void;
+  onLeaderboardClick?: () => void;
+}) => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const { reopenWhatsNew } = useWhatsNew();
@@ -35,6 +41,16 @@ export const FloatingQuickActionsPanel = ({ onAchievementsClick }: { onAchieveme
         setIsExpanded(false);
       },
       priority: 'special'
+    },
+    {
+      icon: TrendingUp,
+      label: "Leaderboard",
+      color: 'bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700',
+      action: () => {
+        onLeaderboardClick?.();
+        setIsExpanded(false);
+      },
+      priority: 'competitive'
     },
     {
       icon: Sparkles,
@@ -57,7 +73,10 @@ export const FloatingQuickActionsPanel = ({ onAchievementsClick }: { onAchieveme
       icon: TrendingUp,
       label: 'Top Performers',
       color: 'bg-green-600 hover:bg-green-700',
-      path: '/top-performers',
+      action: () => {
+        onLeaderboardClick?.();
+        setIsExpanded(false);
+      },
       priority: 'normal'
     },
     {
@@ -150,6 +169,11 @@ export const FloatingQuickActionsPanel = ({ onAchievementsClick }: { onAchieveme
                     {action.priority === 'special' && (
                       <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 border-2 border-white animate-pulse flex items-center justify-center">
                         <Trophy className="h-3 w-3 text-white" />
+                      </span>
+                    )}
+                    {action.priority === 'competitive' && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 border-2 border-white animate-pulse flex items-center justify-center">
+                        <TrendingUp className="h-3 w-3 text-white" />
                       </span>
                     )}
                   </div>
