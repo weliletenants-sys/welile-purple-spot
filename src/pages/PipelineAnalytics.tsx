@@ -1,9 +1,16 @@
-import { ArrowLeft, TrendingUp, Users, DollarSign, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, TrendingUp, Users, DollarSign, Calendar, Filter, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { usePipelineStats } from "@/hooks/usePipelineStats";
 import { StatsCard } from "@/components/StatsCard";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { format, subMonths } from "date-fns";
 import {
   BarChart,
   Bar,
@@ -25,7 +32,60 @@ const COLORS = ["#8b5cf6", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#ec4899"
 
 export default function PipelineAnalytics() {
   const navigate = useNavigate();
-  const { statsByCenter, agentStats, weeklyTrends, summary, isLoading } = usePipelineStats();
+  const [showFilters, setShowFilters] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [serviceCenter, setServiceCenter] = useState("all");
+  const [agentName, setAgentName] = useState("all");
+
+  const { statsByCenter, agentStats, weeklyTrends, summary, isLoading } = usePipelineStats({
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+    serviceCenter: serviceCenter !== "all" ? serviceCenter : undefined,
+    agentName: agentName !== "all" ? agentName : undefined,
+  });
+
+  // Fetch service centers for filter
+  const { data: serviceCenters = [] } = useQuery({
+    queryKey: ["service-centers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_centers")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch agents for filter
+  const { data: agents = [] } = useQuery({
+    queryKey: ["agents-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tenants")
+        .select("agent_name")
+        .not("agent_name", "is", null)
+        .order("agent_name");
+      
+      if (error) throw error;
+      
+      // Get unique agent names
+      const uniqueAgents = [...new Set(data?.map(t => t.agent_name))];
+      return uniqueAgents.filter(name => name && name.trim() !== "");
+    },
+  });
+
+  const clearFilters = () => {
+    setDateFrom("");
+    setDateTo("");
+    setServiceCenter("all");
+    setAgentName("all");
+  };
+
+  const hasActiveFilters = dateFrom || dateTo || serviceCenter !== "all" || agentName !== "all";
 
   if (isLoading) {
     return (
@@ -46,7 +106,7 @@ export default function PipelineAnalytics() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
@@ -65,7 +125,152 @@ export default function PipelineAnalytics() {
               </p>
             </div>
           </div>
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className="gap-2"
+          >
+            <Filter className="w-4 h-4" />
+            {showFilters ? "Hide Filters" : "Show Filters"}
+            {hasActiveFilters && (
+              <span className="ml-1 px-2 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                Active
+              </span>
+            )}
+          </Button>
         </div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <Card className="p-6 bg-muted/50">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-primary" />
+                  Filter Analytics
+                </h3>
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="gap-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-4 h-4" />
+                    Clear All
+                  </Button>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Date From */}
+                <div className="space-y-2">
+                  <Label htmlFor="dateFrom">Date From</Label>
+                  <Input
+                    id="dateFrom"
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    max={dateTo || format(new Date(), "yyyy-MM-dd")}
+                  />
+                </div>
+
+                {/* Date To */}
+                <div className="space-y-2">
+                  <Label htmlFor="dateTo">Date To</Label>
+                  <Input
+                    id="dateTo"
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    min={dateFrom}
+                    max={format(new Date(), "yyyy-MM-dd")}
+                  />
+                </div>
+
+                {/* Service Center */}
+                <div className="space-y-2">
+                  <Label htmlFor="serviceCenter">Service Center</Label>
+                  <Select value={serviceCenter} onValueChange={setServiceCenter}>
+                    <SelectTrigger id="serviceCenter">
+                      <SelectValue placeholder="All Centers" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Centers</SelectItem>
+                      {serviceCenters.map((center) => (
+                        <SelectItem key={center.id} value={center.name}>
+                          {center.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Agent */}
+                <div className="space-y-2">
+                  <Label htmlFor="agent">Agent</Label>
+                  <Select value={agentName} onValueChange={setAgentName}>
+                    <SelectTrigger id="agent">
+                      <SelectValue placeholder="All Agents" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <SelectItem value="all">All Agents</SelectItem>
+                      {agents.map((agent) => (
+                        <SelectItem key={agent} value={agent}>
+                          {agent}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Quick Date Presets */}
+              <div className="flex gap-2 flex-wrap pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDateFrom(format(subMonths(new Date(), 1), "yyyy-MM-dd"));
+                    setDateTo(format(new Date(), "yyyy-MM-dd"));
+                  }}
+                >
+                  Last Month
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDateFrom(format(subMonths(new Date(), 3), "yyyy-MM-dd"));
+                    setDateTo(format(new Date(), "yyyy-MM-dd"));
+                  }}
+                >
+                  Last 3 Months
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDateFrom(format(subMonths(new Date(), 6), "yyyy-MM-dd"));
+                    setDateTo(format(new Date(), "yyyy-MM-dd"));
+                  }}
+                >
+                  Last 6 Months
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDateFrom("");
+                    setDateTo("");
+                  }}
+                >
+                  All Time
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

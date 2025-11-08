@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfWeek, endOfWeek, subWeeks, format } from "date-fns";
+import { startOfWeek, endOfWeek, subWeeks, format, isWithinInterval, parseISO } from "date-fns";
 
 interface PipelineStatsByCenter {
   service_center: string;
@@ -25,23 +25,60 @@ interface WeeklyPipelineTrend {
   tenants_converted: number;
 }
 
-export const usePipelineStats = () => {
+interface PipelineStatsFilters {
+  dateFrom?: string;
+  dateTo?: string;
+  serviceCenter?: string;
+  agentName?: string;
+}
+
+export const usePipelineStats = (filters?: PipelineStatsFilters) => {
   // Pipeline tenants by service center
   const { data: statsByCenter = [], isLoading: loadingByCenter } = useQuery({
-    queryKey: ["pipeline-stats-by-center"],
+    queryKey: ["pipeline-stats-by-center", filters],
     queryFn: async () => {
       // Get all pipeline tenants with service center
-      const { data: pipelineTenants, error: pipelineError } = await supabase
+      let query = supabase
         .from("tenants")
-        .select("id, service_center, status, created_at")
+        .select("id, service_center, status, created_at, agent_name")
         .eq("status", "pipeline");
+
+      if (filters?.dateFrom) {
+        query = query.gte("created_at", filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        query = query.lte("created_at", filters.dateTo);
+      }
+      if (filters?.serviceCenter && filters.serviceCenter !== "all") {
+        query = query.eq("service_center", filters.serviceCenter);
+      }
+      if (filters?.agentName && filters.agentName !== "all") {
+        query = query.eq("agent_name", filters.agentName);
+      }
+
+      const { data: pipelineTenants, error: pipelineError } = await query;
 
       if (pipelineError) throw pipelineError;
 
       // Get converted tenants (originally pipeline, now active)
-      const { data: allTenants, error: allError } = await supabase
+      let allQuery = supabase
         .from("tenants")
-        .select("id, service_center, status, created_at");
+        .select("id, service_center, status, created_at, updated_at, agent_name");
+
+      if (filters?.dateFrom) {
+        allQuery = allQuery.gte("created_at", filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        allQuery = allQuery.lte("created_at", filters.dateTo);
+      }
+      if (filters?.serviceCenter && filters.serviceCenter !== "all") {
+        allQuery = allQuery.eq("service_center", filters.serviceCenter);
+      }
+      if (filters?.agentName && filters.agentName !== "all") {
+        allQuery = allQuery.eq("agent_name", filters.agentName);
+      }
+
+      const { data: allTenants, error: allError } = await allQuery;
 
       if (allError) throw allError;
 
@@ -81,28 +118,70 @@ export const usePipelineStats = () => {
 
   // Agent pipeline performance
   const { data: agentStats = [], isLoading: loadingAgents } = useQuery({
-    queryKey: ["pipeline-agent-stats"],
+    queryKey: ["pipeline-agent-stats", filters],
     queryFn: async () => {
       // Get all pipeline tenants
-      const { data: pipelineTenants, error: pipelineError } = await supabase
+      let query = supabase
         .from("tenants")
-        .select("id, agent_name, agent_phone, status, created_at")
+        .select("id, agent_name, agent_phone, status, created_at, service_center")
         .eq("status", "pipeline");
+
+      if (filters?.dateFrom) {
+        query = query.gte("created_at", filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        query = query.lte("created_at", filters.dateTo);
+      }
+      if (filters?.serviceCenter && filters.serviceCenter !== "all") {
+        query = query.eq("service_center", filters.serviceCenter);
+      }
+      if (filters?.agentName && filters.agentName !== "all") {
+        query = query.eq("agent_name", filters.agentName);
+      }
+
+      const { data: pipelineTenants, error: pipelineError } = await query;
 
       if (pipelineError) throw pipelineError;
 
       // Get all active tenants that were converted from pipeline
-      const { data: allTenants, error: allError } = await supabase
+      let allQuery = supabase
         .from("tenants")
-        .select("id, agent_name, agent_phone, status");
+        .select("id, agent_name, agent_phone, status, created_at, service_center");
+
+      if (filters?.dateFrom) {
+        allQuery = allQuery.gte("created_at", filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        allQuery = allQuery.lte("created_at", filters.dateTo);
+      }
+      if (filters?.serviceCenter && filters.serviceCenter !== "all") {
+        allQuery = allQuery.eq("service_center", filters.serviceCenter);
+      }
+      if (filters?.agentName && filters.agentName !== "all") {
+        allQuery = allQuery.eq("agent_name", filters.agentName);
+      }
+
+      const { data: allTenants, error: allError } = await allQuery;
 
       if (allError) throw allError;
 
       // Get pipeline earnings
-      const { data: earnings, error: earningsError } = await supabase
+      let earningsQuery = supabase
         .from("agent_earnings")
-        .select("agent_name, agent_phone, amount")
+        .select("agent_name, agent_phone, amount, created_at")
         .eq("earning_type", "pipeline_bonus");
+
+      if (filters?.dateFrom) {
+        earningsQuery = earningsQuery.gte("created_at", filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        earningsQuery = earningsQuery.lte("created_at", filters.dateTo);
+      }
+      if (filters?.agentName && filters.agentName !== "all") {
+        earningsQuery = earningsQuery.eq("agent_name", filters.agentName);
+      }
+
+      const { data: earnings, error: earningsError } = await earningsQuery;
 
       if (earningsError) throw earningsError;
 
@@ -163,7 +242,7 @@ export const usePipelineStats = () => {
 
   // Weekly pipeline trends (last 8 weeks)
   const { data: weeklyTrends = [], isLoading: loadingTrends } = useQuery({
-    queryKey: ["pipeline-weekly-trends"],
+    queryKey: ["pipeline-weekly-trends", filters],
     queryFn: async () => {
       const weeks: WeeklyPipelineTrend[] = [];
       const today = new Date();
@@ -173,22 +252,40 @@ export const usePipelineStats = () => {
         const weekEnd = endOfWeek(subWeeks(today, i), { weekStartsOn: 1 });
 
         // Get pipeline tenants added this week
-        const { data: added, error: addedError } = await supabase
+        let addedQuery = supabase
           .from("tenants")
           .select("id")
           .eq("status", "pipeline")
           .gte("created_at", weekStart.toISOString())
           .lte("created_at", weekEnd.toISOString());
 
+        if (filters?.serviceCenter && filters.serviceCenter !== "all") {
+          addedQuery = addedQuery.eq("service_center", filters.serviceCenter);
+        }
+        if (filters?.agentName && filters.agentName !== "all") {
+          addedQuery = addedQuery.eq("agent_name", filters.agentName);
+        }
+
+        const { data: added, error: addedError } = await addedQuery;
+
         if (addedError) throw addedError;
 
         // Get tenants converted this week (updated_at changed to active)
-        const { data: converted, error: convertedError } = await supabase
+        let convertedQuery = supabase
           .from("tenants")
           .select("id")
           .eq("status", "active")
           .gte("updated_at", weekStart.toISOString())
           .lte("updated_at", weekEnd.toISOString());
+
+        if (filters?.serviceCenter && filters.serviceCenter !== "all") {
+          convertedQuery = convertedQuery.eq("service_center", filters.serviceCenter);
+        }
+        if (filters?.agentName && filters.agentName !== "all") {
+          convertedQuery = convertedQuery.eq("agent_name", filters.agentName);
+        }
+
+        const { data: converted, error: convertedError } = await convertedQuery;
 
         if (convertedError) throw convertedError;
 
@@ -206,19 +303,46 @@ export const usePipelineStats = () => {
 
   // Total pipeline summary
   const { data: summary, isLoading: loadingSummary } = useQuery({
-    queryKey: ["pipeline-summary"],
+    queryKey: ["pipeline-summary", filters],
     queryFn: async () => {
-      const { data: pipeline, error: pipelineError } = await supabase
+      let query = supabase
         .from("tenants")
-        .select("id, created_at")
+        .select("id, created_at, service_center, agent_name")
         .eq("status", "pipeline");
+
+      if (filters?.dateFrom) {
+        query = query.gte("created_at", filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        query = query.lte("created_at", filters.dateTo);
+      }
+      if (filters?.serviceCenter && filters.serviceCenter !== "all") {
+        query = query.eq("service_center", filters.serviceCenter);
+      }
+      if (filters?.agentName && filters.agentName !== "all") {
+        query = query.eq("agent_name", filters.agentName);
+      }
+
+      const { data: pipeline, error: pipelineError } = await query;
 
       if (pipelineError) throw pipelineError;
 
-      const { data: earnings, error: earningsError } = await supabase
+      let earningsQuery = supabase
         .from("agent_earnings")
-        .select("amount")
+        .select("amount, created_at, agent_name")
         .eq("earning_type", "pipeline_bonus");
+
+      if (filters?.dateFrom) {
+        earningsQuery = earningsQuery.gte("created_at", filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        earningsQuery = earningsQuery.lte("created_at", filters.dateTo);
+      }
+      if (filters?.agentName && filters.agentName !== "all") {
+        earningsQuery = earningsQuery.eq("agent_name", filters.agentName);
+      }
+
+      const { data: earnings, error: earningsError } = await earningsQuery;
 
       if (earningsError) throw earningsError;
 
