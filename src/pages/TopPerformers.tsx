@@ -2,6 +2,7 @@ import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { AgentLeaderboard } from "@/components/AgentLeaderboard";
 import { WeeklyRecordingLeaderboard } from "@/components/WeeklyRecordingLeaderboard";
 import { MonthlyRecordingLeaderboard } from "@/components/MonthlyRecordingLeaderboard";
@@ -9,6 +10,18 @@ import { RecordingActivityChart } from "@/components/RecordingActivityChart";
 
 const TopPerformers = () => {
   const navigate = useNavigate();
+
+  // Keyboard shortcut: Escape to go home
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,18 @@ export default function WithdrawalHistory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  // Keyboard shortcut: Escape to go home
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
 
   const filteredRequests = requests.filter((request) => {
     if (statusFilter !== "all" && request.status !== statusFilter) return false;

@@ -110,6 +110,18 @@ export default function RiskDashboard() {
   const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month");
   const navigate = useNavigate();
 
+  // Keyboard shortcut: Escape to go home
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
+
   const { data: allTenants, isLoading } = useQuery({
     queryKey: ["risk-dashboard-tenants"],
     queryFn: async () => {

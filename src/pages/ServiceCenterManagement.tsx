@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,6 +78,18 @@ export default function ServiceCenterManagement() {
   });
 
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof ServiceCenterFormData, string>>>({});
+
+  // Keyboard shortcut: Escape to go home
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
 
   // Fetch all service centers
   const { data: serviceCenters, isLoading } = useQuery({

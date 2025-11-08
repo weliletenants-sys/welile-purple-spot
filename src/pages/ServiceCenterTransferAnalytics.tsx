@@ -2,6 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useTransferAnalytics } from "@/hooks/useTransferAnalytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUpRight, ArrowDownRight, TrendingUp, ArrowLeftRight, Users, UserCheck, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +15,19 @@ const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'
 export default function ServiceCenterTransferAnalytics() {
   const [monthsBack, setMonthsBack] = useState(6);
   const { data: analytics, isLoading } = useTransferAnalytics(monthsBack);
+  const navigate = useNavigate();
+
+  // Keyboard shortcut: Escape to go home
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
 
   if (isLoading) {
     return (

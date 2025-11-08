@@ -86,6 +86,18 @@ export default function RecentlyAddedTenants() {
   const [serviceCenterFilter, setServiceCenterFilter] = useState<string>("all");
   const navigate = useNavigate();
 
+  // Keyboard shortcut: Escape to go home
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
+
   const { data: recentTenants, isLoading } = useQuery({
     queryKey: ["recently-added-tenants"],
     queryFn: async () => {

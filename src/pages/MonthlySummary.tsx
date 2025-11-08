@@ -22,6 +22,18 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted))"
 const MonthlySummary = () => {
   const navigate = useNavigate();
   const currentDate = new Date();
+
+  // Keyboard shortcut: Escape to go back
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate(-1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
   const [date, setDate] = useState<DateRange | undefined>({
     from: subMonths(currentDate, 1),
     to: currentDate,

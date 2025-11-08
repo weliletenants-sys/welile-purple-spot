@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Star, Download, Calendar as CalendarIcon, ArrowUpDown, Eye, CheckSquare, Square, X } from "lucide-react";
@@ -55,6 +55,18 @@ type SortOrder = "asc" | "desc";
 const RecordingActivity = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Keyboard shortcut: Escape to go home
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const [sortField, setSortField] = useState<SortField>("created_at");

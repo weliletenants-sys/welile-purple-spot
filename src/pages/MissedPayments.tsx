@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, AlertTriangle, User, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,18 @@ interface MissedPaymentTenant {
 
 const MissedPayments = () => {
   const navigate = useNavigate();
+
+  // Keyboard shortcut: Escape to go home
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
 
   const { data: missedTenants, isLoading } = useQuery({
     queryKey: ["missed-payments"],
