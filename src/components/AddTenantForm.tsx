@@ -23,7 +23,7 @@ interface TenantFormData {
   registrationFee: string;
   accessFee: string;
   repaymentDays: "30" | "60" | "90";
-  status: "active" | "pending" | "review";
+  status: "active" | "pending" | "review" | "pipeline";
   paymentStatus: "paid" | "pending";
   guarantor1Name: string;
   guarantor1Contact: string;
@@ -56,7 +56,7 @@ export const AddTenantForm = () => {
     registrationFee: "",
     accessFee: "",
     repaymentDays: "60",
-    status: "active",
+    status: "pipeline",
     paymentStatus: "pending",
     guarantor1Name: "",
     guarantor1Contact: "",
@@ -132,38 +132,40 @@ export const AddTenantForm = () => {
       return;
     }
 
+    const isPipeline = formData.status === "pipeline";
+
     try {
       await addTenant({
         name: formData.name.trim(),
         contact: formData.contact.trim(),
         address: formData.address.trim(),
-        landlord: formData.landlord.trim(),
-        landlordContact: formData.landlordContact.trim(),
+        landlord: isPipeline ? "TBD" : formData.landlord.trim(),
+        landlordContact: isPipeline ? "TBD" : formData.landlordContact.trim(),
         rentAmount: parseFloat(formData.rentAmount),
-        registrationFee: parseFloat(formData.registrationFee),
-        accessFee: parseFloat(formData.accessFee),
-        repaymentDays: parseInt(formData.repaymentDays) as 30 | 60 | 90,
-        status: formData.status,
+        registrationFee: isPipeline ? 0 : parseFloat(formData.registrationFee),
+        accessFee: isPipeline ? 0 : parseFloat(formData.accessFee),
+        repaymentDays: isPipeline ? 60 : (parseInt(formData.repaymentDays) as 30 | 60 | 90),
+        status: formData.status as any, // Cast to allow 'pipeline' until types are regenerated
         paymentStatus: formData.paymentStatus,
         performance: 80,
-        guarantor1: formData.guarantor1Name.trim() ? {
+        guarantor1: (!isPipeline && formData.guarantor1Name.trim()) ? {
           name: formData.guarantor1Name.trim(),
           contact: formData.guarantor1Contact.trim(),
         } : undefined,
-        guarantor2: formData.guarantor2Name.trim() ? {
+        guarantor2: (!isPipeline && formData.guarantor2Name.trim()) ? {
           name: formData.guarantor2Name.trim(),
           contact: formData.guarantor2Contact.trim(),
         } : undefined,
         location: {
-          country: formData.country.trim(),
-          county: formData.county.trim(),
-          district: formData.district.trim(),
-          subcountyOrWard: formData.subcountyOrWard.trim(),
-          cellOrVillage: formData.cellOrVillage.trim(),
+          country: isPipeline ? "" : formData.country.trim(),
+          county: isPipeline ? "" : formData.county.trim(),
+          district: isPipeline ? "" : formData.district.trim(),
+          subcountyOrWard: isPipeline ? "" : formData.subcountyOrWard.trim(),
+          cellOrVillage: isPipeline ? "" : formData.cellOrVillage.trim(),
         },
-        agentName: formData.agentName.trim(),
-        agentPhone: formData.agentPhone.trim(),
-        serviceCenter: formData.serviceCenter.trim(),
+        agentName: isPipeline ? "TBD" : formData.agentName.trim(),
+        agentPhone: isPipeline ? "" : formData.agentPhone.trim(),
+        serviceCenter: isPipeline ? "" : formData.serviceCenter.trim(),
       });
 
       toast({
@@ -182,7 +184,7 @@ export const AddTenantForm = () => {
         registrationFee: "",
         accessFee: "",
         repaymentDays: "60",
-        status: "active",
+        status: "pipeline",
         paymentStatus: "pending",
         guarantor1Name: "",
         guarantor1Contact: "",
@@ -246,6 +248,27 @@ export const AddTenantForm = () => {
             </Alert>
           )}
 
+          {/* Tenant Status Selection */}
+          <div className="space-y-4 p-4 bg-primary/5 rounded-lg border-2 border-primary/20">
+            <Label htmlFor="status" className="text-base font-semibold">Tenant Status *</Label>
+            <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
+              <SelectTrigger id="status" className="h-12 text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pipeline">Pipeline (Minimal Info)</SelectItem>
+                <SelectItem value="active">Active (Full Details)</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="review">Under Review</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              {formData.status === "pipeline" 
+                ? "Pipeline: Only basic info required (name, contact, address, rent)" 
+                : "Active: Full tenant details required"}
+            </p>
+          </div>
+
           {/* Personal Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">Personal Information</h3>
@@ -281,7 +304,8 @@ export const AddTenantForm = () => {
             </div>
           </div>
 
-          {/* Landlord Information */}
+          {/* Landlord Information - Hidden for Pipeline */}
+          {formData.status !== "pipeline" && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">Landlord Information</h3>
             
@@ -305,6 +329,7 @@ export const AddTenantForm = () => {
               />
             </div>
           </div>
+          )}
 
           {/* Payment Information */}
           <div className="space-y-4">
@@ -321,6 +346,8 @@ export const AddTenantForm = () => {
               />
             </div>
 
+            {formData.status !== "pipeline" && (
+            <>
             <div className="space-y-2">
               <Label htmlFor="repaymentDays">Repayment Period *</Label>
               <Select value={formData.repaymentDays} onValueChange={(value) => handleChange("repaymentDays", value)}>
@@ -386,22 +413,7 @@ export const AddTenantForm = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">Status *</Label>
-                <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
-                  <SelectTrigger id="status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="review">Under Review</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
+            <div className="space-y-2">
                 <Label htmlFor="paymentStatus">Payment Status *</Label>
                 <Select value={formData.paymentStatus} onValueChange={(value) => handleChange("paymentStatus", value)}>
                   <SelectTrigger id="paymentStatus">
@@ -413,10 +425,12 @@ export const AddTenantForm = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </>
+            )}
           </div>
 
-          {/* Guarantor Information */}
+          {/* Guarantor Information - Hidden for Pipeline */}
+          {formData.status !== "pipeline" && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">Guarantor Information</h3>
             
@@ -468,8 +482,10 @@ export const AddTenantForm = () => {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Location Information */}
+          {/* Location Information - Hidden for Pipeline */}
+          {formData.status !== "pipeline" && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">Location Details</h3>
             
@@ -538,8 +554,10 @@ export const AddTenantForm = () => {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Agent Information */}
+          {/* Agent Information - Hidden for Pipeline */}
+          {formData.status !== "pipeline" && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">Agent Information</h3>
             
@@ -573,6 +591,7 @@ export const AddTenantForm = () => {
               Agents earn UGX 5,000 for each tenant added and 5% commission on every rent payment received.
             </p>
           </div>
+          )}
 
           {/* Form Actions */}
           <div className="flex gap-3 pt-4">

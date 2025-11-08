@@ -91,26 +91,57 @@ export const usePayments = (tenantId: string) => {
       if (updates.paid === true && updates.paidAmount) {
         const { data: tenant, error: tenantError } = await supabase
           .from("tenants")
-          .select("agent_name, agent_phone")
+          .select("agent_name, agent_phone, status")
           .eq("id", tenantId)
           .single();
 
-        if (!tenantError && tenant?.agent_name && tenant?.agent_phone) {
-          const commission = Math.round(updates.paidAmount * 0.05); // 5% commission
-          
-          const { error: earningsError } = await supabase
-            .from("agent_earnings")
-            .insert({
-              agent_phone: tenant.agent_phone,
-              agent_name: tenant.agent_name,
-              tenant_id: tenantId,
-              payment_id: paymentId,
-              amount: commission,
-              earning_type: "commission",
-            });
+        if (!tenantError && tenant) {
+          // Reactivate dormant tenants when they make any payment
+          // Check if tenant is currently dormant (overdue > 40 days)
+          const today = new Date();
+          const dormantThreshold = new Date();
+          dormantThreshold.setDate(dormantThreshold.getDate() - 40);
 
-          if (earningsError) {
-            console.error("Error creating agent commission:", earningsError);
+          const { data: overduePayments } = await supabase
+            .from("daily_payments")
+            .select("date")
+            .eq("tenant_id", tenantId)
+            .eq("paid", false)
+            .lt("date", today.toISOString().split("T")[0]);
+
+          const oldestOverdue = overduePayments?.reduce((oldest: Date | null, p: any) => {
+            const date = new Date(p.date);
+            return !oldest || date < oldest ? date : oldest;
+          }, null);
+
+          const isDormant = oldestOverdue && oldestOverdue < dormantThreshold;
+
+          // If dormant and status is not already active, reactivate
+          if (isDormant && tenant.status !== "active") {
+            await supabase
+              .from("tenants")
+              .update({ status: "active" })
+              .eq("id", tenantId);
+          }
+
+          // Create agent commission if tenant is not in pipeline
+          if (tenant.status !== "pipeline" && tenant.agent_name && tenant.agent_phone) {
+            const commission = Math.round(updates.paidAmount * 0.05); // 5% commission
+            
+            const { error: earningsError } = await supabase
+              .from("agent_earnings")
+              .insert({
+                agent_phone: tenant.agent_phone,
+                agent_name: tenant.agent_name,
+                tenant_id: tenantId,
+                payment_id: paymentId,
+                amount: commission,
+                earning_type: "commission",
+              });
+
+            if (earningsError) {
+              console.error("Error creating agent commission:", earningsError);
+            }
           }
         }
 
