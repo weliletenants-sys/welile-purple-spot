@@ -59,18 +59,43 @@ export default function PipelineTenants() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-blue-500/10 rounded-lg">
-              <Hourglass className="h-8 w-8 text-blue-600" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-500/10 rounded-lg">
+                <Hourglass className="h-8 w-8 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">Pipeline Tenants</h1>
+                <p className="text-muted-foreground">
+                  Convert pipeline tenants to active status by collecting complete information
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold">Pipeline Tenants</h1>
-              <p className="text-muted-foreground">
-                Convert pipeline tenants to active status by collecting complete information
+            <Button
+              onClick={() => checkForAlerts.mutate()}
+              disabled={checkForAlerts.isPending}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <Bell className={`h-4 w-4 ${checkForAlerts.isPending ? 'animate-pulse' : ''}`} />
+              {checkForAlerts.isPending ? "Checking..." : "Check for Alerts Now"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Alert Info */}
+        <Card className="p-4 mb-6 bg-blue-500/5 border-blue-500/20">
+          <div className="flex items-center gap-3">
+            <Bell className="h-5 w-5 text-blue-600" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Automated Alert System Active</p>
+              <p className="text-xs text-muted-foreground">
+                Managers receive notifications daily at 9 AM for pipeline tenants waiting more than 70 days for conversion
               </p>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Stats */}
         <Card className="p-6 mb-6 bg-gradient-to-r from-blue-500/10 to-blue-600/10">
@@ -78,6 +103,14 @@ export default function PipelineTenants() {
             <div>
               <p className="text-sm text-muted-foreground">Total Pipeline Tenants</p>
               <p className="text-4xl font-bold text-blue-600">{pipelineTenants.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {pipelineTenants.filter(t => {
+                  const daysWaiting = Math.floor(
+                    (new Date().getTime() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24)
+                  );
+                  return daysWaiting > 70;
+                }).length} waiting over 70 days
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <Badge variant="secondary" className="text-lg px-4 py-2">
@@ -111,15 +144,27 @@ export default function PipelineTenants() {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {pipelineTenants.map((tenant) => (
-              <Card key={tenant.id} className="p-6 hover:shadow-lg transition-shadow">
+            {pipelineTenants.map((tenant) => {
+              const daysWaiting = Math.floor(
+                (new Date().getTime() - new Date(tenant.created_at).getTime()) / 
+                (1000 * 60 * 60 * 24)
+              );
+              const isOverdue = daysWaiting > 70;
+
+              return (
+              <Card key={tenant.id} className={`p-6 hover:shadow-lg transition-shadow ${isOverdue ? 'border-l-4 border-l-destructive' : ''}`}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
                       <h3 className="text-xl font-bold">{tenant.name}</h3>
                       <Badge variant="secondary" className="bg-blue-500/10 text-blue-700">
-                        Pipeline
+                        Pipeline - {daysWaiting} days
                       </Badge>
+                      {isOverdue && (
+                        <Badge variant="destructive" className="animate-pulse">
+                          Overdue Alert
+                        </Badge>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -151,7 +196,8 @@ export default function PipelineTenants() {
                   </Button>
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
