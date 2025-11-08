@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, subDays, parseISO } from "date-fns";
-import { ArrowLeft, UserPlus, DollarSign, TrendingUp, Calendar, CheckCircle, XCircle, Download, Filter, AlertCircle } from "lucide-react";
+import { format, subDays, parseISO, eachDayOfInterval } from "date-fns";
+import { ArrowLeft, UserPlus, DollarSign, TrendingUp, Calendar, CheckCircle, XCircle, Download, Filter, AlertCircle, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function RecentlyAddedTenants() {
   const oneWeekAgo = subDays(new Date(), 7);
@@ -37,7 +39,8 @@ export default function RecentlyAddedTenants() {
             .select("*")
             .eq("tenant_id", tenant.id)
             .gte("date", format(parseISO(tenant.created_at), "yyyy-MM-dd"))
-            .lte("date", format(new Date(), "yyyy-MM-dd"));
+            .lte("date", format(new Date(), "yyyy-MM-dd"))
+            .order("date", { ascending: true });
 
           const totalDue = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
           const totalPaid = payments?.filter(p => p.paid).reduce((sum, p) => sum + Number(p.paid_amount || 0), 0) || 0;
@@ -51,6 +54,7 @@ export default function RecentlyAddedTenants() {
             paidCount,
             totalCount,
             collectionRate: totalDue > 0 ? (totalPaid / totalDue) * 100 : 0,
+            payments: payments || [],
           };
         })
       );
@@ -117,6 +121,127 @@ export default function RecentlyAddedTenants() {
       ? filteredAndSortedTenants.reduce((sum, t) => sum + t.collectionRate, 0) / filteredAndSortedTenants.length 
       : 0,
   }), [filteredAndSortedTenants]);
+
+  // Agent performance comparison data
+  const agentComparisonData = useMemo(() => {
+    if (!filteredAndSortedTenants) return [];
+    
+    const agentStats = new Map();
+    
+    filteredAndSortedTenants.forEach(tenant => {
+      const agent = tenant.agent_name || "Unknown";
+      if (!agentStats.has(agent)) {
+        agentStats.set(agent, {
+          agent,
+          totalTenants: 0,
+          totalExpected: 0,
+          totalCollected: 0,
+          avgCollectionRate: 0,
+        });
+      }
+      
+      const stats = agentStats.get(agent);
+      stats.totalTenants += 1;
+      stats.totalExpected += tenant.totalDue;
+      stats.totalCollected += tenant.totalPaid;
+    });
+    
+    // Calculate average collection rates
+    return Array.from(agentStats.values()).map(stats => ({
+      ...stats,
+      avgCollectionRate: stats.totalExpected > 0 
+        ? ((stats.totalCollected / stats.totalExpected) * 100).toFixed(1)
+        : 0,
+    })).sort((a, b) => b.avgCollectionRate - a.avgCollectionRate);
+  }, [filteredAndSortedTenants]);
+
+  // Service center performance comparison data
+  const serviceCenterComparisonData = useMemo(() => {
+    if (!filteredAndSortedTenants) return [];
+    
+    const centerStats = new Map();
+    
+    filteredAndSortedTenants.forEach(tenant => {
+      const center = tenant.service_center || "Unknown";
+      if (!centerStats.has(center)) {
+        centerStats.set(center, {
+          center,
+          totalTenants: 0,
+          totalExpected: 0,
+          totalCollected: 0,
+          avgCollectionRate: 0,
+        });
+      }
+      
+      const stats = centerStats.get(center);
+      stats.totalTenants += 1;
+      stats.totalExpected += tenant.totalDue;
+      stats.totalCollected += tenant.totalPaid;
+    });
+    
+    // Calculate average collection rates
+    return Array.from(centerStats.values()).map(stats => ({
+      ...stats,
+      avgCollectionRate: stats.totalExpected > 0 
+        ? ((stats.totalCollected / stats.totalExpected) * 100).toFixed(1)
+        : 0,
+    })).sort((a, b) => b.avgCollectionRate - a.avgCollectionRate);
+  }, [filteredAndSortedTenants]);
+
+  // Daily progress timeline data
+  const dailyProgressData = useMemo(() => {
+    if (!filteredAndSortedTenants || filteredAndSortedTenants.length === 0) return [];
+    
+    // Get all dates in the range
+    const allDates = eachDayOfInterval({
+      start: oneWeekAgo,
+      end: new Date(),
+    });
+    
+    // Build daily stats
+    return allDates.map(date => {
+      const dateStr = format(date, "yyyy-MM-dd");
+      
+      let dailyExpected = 0;
+      let dailyCollected = 0;
+      let cumulativeExpected = 0;
+      let cumulativeCollected = 0;
+      
+      filteredAndSortedTenants.forEach(tenant => {
+        // Only include payments for tenants added on or before this date
+        if (parseISO(tenant.created_at) <= date) {
+          tenant.payments?.forEach((payment: any) => {
+            const paymentDate = format(parseISO(payment.date), "yyyy-MM-dd");
+            
+            if (paymentDate <= dateStr) {
+              cumulativeExpected += Number(payment.amount);
+              if (payment.paid) {
+                cumulativeCollected += Number(payment.paid_amount || 0);
+              }
+            }
+            
+            if (paymentDate === dateStr) {
+              dailyExpected += Number(payment.amount);
+              if (payment.paid) {
+                dailyCollected += Number(payment.paid_amount || 0);
+              }
+            }
+          });
+        }
+      });
+      
+      return {
+        date: format(date, "MMM dd"),
+        fullDate: dateStr,
+        dailyExpected: Math.round(dailyExpected),
+        dailyCollected: Math.round(dailyCollected),
+        cumulativeExpected: Math.round(cumulativeExpected),
+        cumulativeCollected: Math.round(cumulativeCollected),
+        dailyRate: dailyExpected > 0 ? ((dailyCollected / dailyExpected) * 100).toFixed(1) : 0,
+        cumulativeRate: cumulativeExpected > 0 ? ((cumulativeCollected / cumulativeExpected) * 100).toFixed(1) : 0,
+      };
+    });
+  }, [filteredAndSortedTenants, oneWeekAgo]);
 
   // Identify low performers (collection rate < 50%)
   const lowPerformers = useMemo(() => {
@@ -235,6 +360,219 @@ export default function RecentlyAddedTenants() {
             description="Performance metric"
           />
         </div>
+
+        {/* Performance Comparison Charts */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-foreground">Week 1 Performance Comparison</h2>
+          </div>
+          
+          <Tabs defaultValue="agents" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="agents">By Agent</TabsTrigger>
+              <TabsTrigger value="centers">By Service Center</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="agents" className="space-y-4">
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={agentComparisonData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="agent" 
+                      stroke="hsl(var(--foreground))"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--foreground))"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                      formatter={(value: any, name: string) => {
+                        if (name === "avgCollectionRate") return [`${value}%`, "Collection Rate"];
+                        if (name === "totalTenants") return [value, "Tenants"];
+                        if (name === "totalExpected") return [`UGX ${Number(value).toLocaleString()}`, "Expected"];
+                        if (name === "totalCollected") return [`UGX ${Number(value).toLocaleString()}`, "Collected"];
+                        return [value, name];
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="totalTenants" fill="hsl(var(--primary))" name="Tenants Added" />
+                    <Bar dataKey="avgCollectionRate" fill="hsl(var(--accent))" name="Collection Rate (%)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="centers" className="space-y-4">
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={serviceCenterComparisonData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="center" 
+                      stroke="hsl(var(--foreground))"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--foreground))"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                      formatter={(value: any, name: string) => {
+                        if (name === "avgCollectionRate") return [`${value}%`, "Collection Rate"];
+                        if (name === "totalTenants") return [value, "Tenants"];
+                        if (name === "totalExpected") return [`UGX ${Number(value).toLocaleString()}`, "Expected"];
+                        if (name === "totalCollected") return [`UGX ${Number(value).toLocaleString()}`, "Collected"];
+                        return [value, name];
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="totalTenants" fill="hsl(var(--primary))" name="Tenants Added" />
+                    <Bar dataKey="avgCollectionRate" fill="hsl(var(--accent))" name="Collection Rate (%)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </Card>
+
+        {/* Daily Progress Timeline */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Calendar className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-foreground">Daily Progress Timeline</h2>
+          </div>
+          
+          <Tabs defaultValue="cumulative" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="cumulative">Cumulative</TabsTrigger>
+              <TabsTrigger value="daily">Daily</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="cumulative" className="space-y-4">
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={dailyProgressData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="hsl(var(--foreground))"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--foreground))"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                      formatter={(value: any, name: string) => {
+                        if (name === "cumulativeRate") return [`${value}%`, "Collection Rate"];
+                        return [`UGX ${Number(value).toLocaleString()}`, name];
+                      }}
+                    />
+                    <Legend />
+                    <Area 
+                      type="monotone" 
+                      dataKey="cumulativeExpected" 
+                      stroke="hsl(var(--primary))" 
+                      fill="hsl(var(--primary) / 0.2)" 
+                      name="Expected"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="cumulativeCollected" 
+                      stroke="hsl(var(--accent))" 
+                      fill="hsl(var(--accent) / 0.2)" 
+                      name="Collected"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                {dailyProgressData.slice(-1).map(day => (
+                  <div key={day.fullDate} className="text-center p-4 bg-primary/5 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Current Rate</p>
+                    <p className="text-2xl font-bold text-primary">{day.cumulativeRate}%</p>
+                  </div>
+                ))}
+                <div className="text-center p-4 bg-accent/5 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Total Expected</p>
+                  <p className="text-2xl font-bold text-accent">
+                    {dailyProgressData.length > 0 ? dailyProgressData[dailyProgressData.length - 1].cumulativeExpected.toLocaleString() : 0}
+                  </p>
+                </div>
+                <div className="text-center p-4 bg-primary/5 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Total Collected</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {dailyProgressData.length > 0 ? dailyProgressData[dailyProgressData.length - 1].cumulativeCollected.toLocaleString() : 0}
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="daily" className="space-y-4">
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={dailyProgressData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="hsl(var(--foreground))"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--foreground))"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                      formatter={(value: any, name: string) => {
+                        if (name === "dailyRate") return [`${value}%`, "Collection Rate"];
+                        return [`UGX ${Number(value).toLocaleString()}`, name];
+                      }}
+                    />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="dailyExpected" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2}
+                      name="Expected"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="dailyCollected" 
+                      stroke="hsl(var(--accent))" 
+                      strokeWidth={2}
+                      name="Collected"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </Card>
 
         {/* Filters and Sorting */}
         <Card className="p-4">
