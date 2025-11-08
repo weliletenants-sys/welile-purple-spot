@@ -200,6 +200,13 @@ const Index = () => {
                     📋 RECENTLY ADDED
                   </DropdownMenuItem>
                   <DropdownMenuItem 
+                    className="cursor-pointer bg-destructive/10 text-destructive hover:bg-destructive/20 font-semibold"
+                    onClick={() => navigate("/risk-dashboard")}
+                  >
+                    <AlertTriangle className="w-4 h-4 mr-2" />
+                    🚨 RISK DASHBOARD
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     className="p-0"
                     onSelect={(e) => e.preventDefault()}
                   >
