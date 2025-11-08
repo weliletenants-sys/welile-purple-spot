@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
-import { useExecutiveStats } from "@/hooks/useExecutiveStats";
+import { useComprehensiveStats } from "@/hooks/useComprehensiveStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { StatsCard } from "@/components/StatsCard";
@@ -463,8 +463,8 @@ const RequestsSection = ({
 }) => {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   
-  // Fetch executive stats with date range
-  const stats = useExecutiveStats(
+  // Fetch comprehensive stats with date range
+  const stats = useComprehensiveStats(
     dateRange.from && dateRange.to
       ? {
           startDate: format(dateRange.from, "yyyy-MM-dd"),
@@ -660,7 +660,7 @@ const RequestsSection = ({
       </Card>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <StatsCard
           title="Outstanding Balance"
           value={`UGX ${(stats?.outstandingBalance || 0).toLocaleString()}`}
@@ -675,6 +675,42 @@ const RequestsSection = ({
           value={`UGX ${(dailyPayments?.total || 0).toLocaleString()}`}
           icon={DollarSign}
           description={`${dailyPayments?.count || 0} payments recorded`}
+        />
+        <StatsCard
+          title="Total Tenants"
+          value={stats?.numberOfTenants || 0}
+          icon={Users}
+          description={`${stats?.activeTenants || 0} active, ${stats?.pipelineTenants || 0} in pipeline`}
+        />
+        <StatsCard
+          title="Collection Rate"
+          value={`${stats?.collectionRate || 0}%`}
+          icon={Target}
+          description="Payment completion rate"
+        />
+        <StatsCard
+          title="Total Agents"
+          value={stats?.totalAgents || 0}
+          icon={UserCheck}
+          description={stats?.topAgent ? `Top: ${stats.topAgent.name}` : "Active agents"}
+        />
+        <StatsCard
+          title="Service Centers"
+          value={stats?.totalServiceCenters || 0}
+          icon={Building2}
+          description={stats?.topServiceCenter ? `${stats.topServiceCenter.tenants} tenants` : "Active centers"}
+        />
+        <StatsCard
+          title="Tenants At Risk"
+          value={stats?.tenantsAtRisk || 0}
+          icon={ArrowLeftRight}
+          description={`${stats?.defaultRate || 0}% default rate`}
+        />
+        <StatsCard
+          title="Pending Withdrawals"
+          value={stats?.pendingWithdrawals || 0}
+          icon={Clock}
+          description={`${stats?.approvedWithdrawals || 0} approved`}
         />
       </div>
 

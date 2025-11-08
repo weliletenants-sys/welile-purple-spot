@@ -3,10 +3,10 @@ import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { HomeSummaryWidget } from "@/components/HomeSummaryWidget";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload, Edit3, Award, FileText } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload, Edit3, Award, FileText, Activity, Building2, TrendingDown, Shield, UserCog, GitBranch, BarChart3, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { useExecutiveStats } from "@/hooks/useExecutiveStats";
+import { useComprehensiveStats } from "@/hooks/useComprehensiveStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format } from "date-fns";
@@ -59,7 +59,7 @@ const ExecutiveDashboard = () => {
     }
   }, [period]);
 
-  const stats = useExecutiveStats(dateRange);
+  const stats = useComprehensiveStats(dateRange);
 
   // Auto-refresh data every minute
   useEffect(() => {
@@ -234,17 +234,115 @@ const ExecutiveDashboard = () => {
           />
 
           <StatsCard
-            title="Data Entry Activities"
-            value={stats.totalDataEntryActivities}
-            icon={Edit3}
-            description="New tenants added"
+            title="Active Tenants"
+            value={stats.activeTenants}
+            icon={CheckCircle2}
+            description="Currently active"
+          />
+
+          <StatsCard
+            title="Pipeline Tenants"
+            value={stats.pipelineTenants}
+            icon={GitBranch}
+            description="In pipeline"
+          />
+
+          <StatsCard
+            title="Conversion Rate"
+            value={`${stats.conversionRate}%`}
+            icon={Target}
+            description="Pipeline to active"
+          />
+
+          <StatsCard
+            title="Total Agents"
+            value={stats.totalAgents}
+            icon={UserCog}
+            description={stats.topAgent ? `Top: ${stats.topAgent.name}` : "Active agents"}
+          />
+
+          <StatsCard
+            title="Total Commissions"
+            value={`UGX ${stats.totalCommissions.toLocaleString()}`}
+            icon={Award}
+            description="Agent commissions"
+          />
+
+          <StatsCard
+            title="Signup Bonuses"
+            value={`UGX ${stats.totalSignupBonuses.toLocaleString()}`}
+            icon={TrendingUp}
+            description="New tenant bonuses"
           />
 
           <StatsCard
             title="Data Entry Rewards"
             value={`UGX ${stats.totalDataEntryRewards.toLocaleString()}`}
-            icon={Award}
-            description="UGX 100 per tenant"
+            icon={Edit3}
+            description="Recording rewards"
+          />
+
+          <StatsCard
+            title="Recording Bonuses"
+            value={`UGX ${stats.totalRecordingBonuses.toLocaleString()}`}
+            icon={BarChart3}
+            description="Payment recording"
+          />
+
+          <StatsCard
+            title="Service Centers"
+            value={stats.totalServiceCenters}
+            icon={Building2}
+            description={stats.topServiceCenter ? `Top: ${stats.topServiceCenter.name}` : "Active centers"}
+          />
+
+          <StatsCard
+            title="Active Recorders"
+            value={stats.totalRecorders}
+            icon={Activity}
+            description={`${stats.recentRecordings} recent recordings`}
+          />
+
+          <StatsCard
+            title="Tenants At Risk"
+            value={stats.tenantsAtRisk}
+            icon={AlertCircle}
+            description="3+ missed payments"
+          />
+
+          <StatsCard
+            title="Default Rate"
+            value={`${stats.defaultRate}%`}
+            icon={TrendingDown}
+            description="At-risk percentage"
+          />
+
+          <StatsCard
+            title="Pending Withdrawals"
+            value={stats.pendingWithdrawals}
+            icon={Wallet}
+            description="Awaiting approval"
+          />
+
+          <StatsCard
+            title="Approved Withdrawals"
+            value={`UGX ${stats.totalWithdrawalRequests.toLocaleString()}`}
+            icon={DollarSign}
+            description={`${stats.approvedWithdrawals} approved`}
+          />
+
+          <StatsCard
+            title="Average Rent"
+            value={`UGX ${Math.round(stats.averageRentAmount).toLocaleString()}`}
+            icon={Home}
+            description="Per tenant"
+          />
+
+          <StatsCard
+            title="Average Payment"
+            value={`UGX ${Math.round(stats.averagePaymentAmount).toLocaleString()}`}
+            icon={DollarSign}
+            description="Per transaction"
           />
         </div>
 
