@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays, parseISO, eachDayOfInterval } from "date-fns";
-import { ArrowLeft, UserPlus, DollarSign, TrendingUp, Calendar, CheckCircle, XCircle, Download, Filter, AlertCircle, BarChart3, AlertTriangle, Shield, Award, Trophy, Star, Medal } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, UserPlus, DollarSign, TrendingUp, Calendar, CheckCircle, XCircle, Download, Filter, AlertCircle, BarChart3, AlertTriangle, Shield, Award, Trophy, Star, Medal, Home } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatsCard } from "@/components/StatsCard";
@@ -84,6 +84,7 @@ export default function RecentlyAddedTenants() {
   const [sortBy, setSortBy] = useState<string>("date");
   const [agentFilter, setAgentFilter] = useState<string>("all");
   const [serviceCenterFilter, setServiceCenterFilter] = useState<string>("all");
+  const navigate = useNavigate();
 
   const { data: recentTenants, isLoading } = useQuery({
     queryKey: ["recently-added-tenants"],
@@ -425,18 +426,21 @@ export default function RecentlyAddedTenants() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="mb-4 gap-2"
+        >
+          <Home className="h-4 w-4" />
+          Back to Home
+        </Button>
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="outline" size="icon">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Recently Added Tenants</h1>
-              <p className="text-muted-foreground">New tenants from the last 7 days</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Recently Added Tenants</h1>
+            <p className="text-muted-foreground">New tenants from the last 7 days</p>
           </div>
           <Button onClick={handleExport} className="gap-2">
             <Download className="h-4 w-4" />

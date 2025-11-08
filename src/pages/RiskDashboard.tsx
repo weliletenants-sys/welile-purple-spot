@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays, parseISO, startOfWeek, endOfWeek } from "date-fns";
-import { ArrowLeft, AlertTriangle, TrendingUp, TrendingDown, Shield, Users, DollarSign, Calendar, Download, CheckCircle, XCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, AlertTriangle, TrendingUp, TrendingDown, Shield, Users, DollarSign, Calendar, Download, CheckCircle, XCircle, Home } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatsCard } from "@/components/StatsCard";
@@ -108,6 +108,7 @@ const getRecommendedActions = (tenant: any) => {
 
 export default function RiskDashboard() {
   const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month");
+  const navigate = useNavigate();
 
   const { data: allTenants, isLoading } = useQuery({
     queryKey: ["risk-dashboard-tenants"],
@@ -327,18 +328,21 @@ export default function RiskDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-destructive/5 to-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="mb-4 gap-2"
+        >
+          <Home className="h-4 w-4" />
+          Back to Home
+        </Button>
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="outline" size="icon">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Risk Dashboard</h1>
-              <p className="text-muted-foreground">Monitor and manage payment risk across all tenants</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Risk Dashboard</h1>
+            <p className="text-muted-foreground">Monitor and manage payment risk across all tenants</p>
           </div>
           <div className="flex gap-2">
             <Button onClick={handleExportWeeklyReport} variant="outline" className="gap-2">
