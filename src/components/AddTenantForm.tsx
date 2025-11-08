@@ -163,9 +163,9 @@ export const AddTenantForm = () => {
           subcountyOrWard: isPipeline ? "" : formData.subcountyOrWard.trim(),
           cellOrVillage: isPipeline ? "" : formData.cellOrVillage.trim(),
         },
-        agentName: isPipeline ? "TBD" : formData.agentName.trim(),
-        agentPhone: isPipeline ? "" : formData.agentPhone.trim(),
-        serviceCenter: isPipeline ? "" : formData.serviceCenter.trim(),
+        agentName: formData.agentName.trim(),
+        agentPhone: formData.agentPhone.trim(),
+        serviceCenter: formData.serviceCenter.trim(),
       });
 
       toast({
@@ -264,9 +264,58 @@ export const AddTenantForm = () => {
             </Select>
             <p className="text-sm text-muted-foreground">
               {formData.status === "pipeline" 
-                ? "Pipeline: Only basic info required (name, contact, address, rent)" 
+                ? "Pipeline: Basic info required (name, contact, address, rent, agent, service center)" 
                 : "Active: Full tenant details required"}
             </p>
+          </div>
+
+          {/* Agent & Service Center Information - Required for all statuses */}
+          <div className="space-y-4 p-4 bg-secondary/10 rounded-lg border border-secondary/30">
+            <h3 className="text-lg font-semibold text-foreground border-b pb-2">Agent & Service Center *</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="agentName">Agent Name *</Label>
+                <Select value={formData.agentName} onValueChange={handleAgentChange}>
+                  <SelectTrigger id="agentName">
+                    <SelectValue placeholder="Select an agent" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {agents.map((agent) => (
+                      <SelectItem key={agent.name} value={agent.name}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="agentPhone">Agent Phone *</Label>
+                <Input
+                  id="agentPhone"
+                  value={formData.agentPhone}
+                  onChange={(e) => handleChange("agentPhone", e.target.value)}
+                  placeholder="e.g., 0700000000"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="serviceCenter">Service Center *</Label>
+              <Select value={formData.serviceCenter} onValueChange={(value) => handleChange("serviceCenter", value)}>
+                <SelectTrigger id="serviceCenter">
+                  <SelectValue placeholder="Select service center" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {serviceCenters?.map((center) => (
+                    <SelectItem key={center.id} value={center.name}>
+                      {center.name} ({center.district})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Personal Information */}
@@ -488,23 +537,6 @@ export const AddTenantForm = () => {
           {formData.status !== "pipeline" && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">Location Details</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="serviceCenter">Service Center *</Label>
-              <Select value={formData.serviceCenter} onValueChange={(value) => handleChange("serviceCenter", value)}>
-                <SelectTrigger id="serviceCenter">
-                  <SelectValue placeholder="Select service center" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {serviceCenters?.map((center) => (
-                    <SelectItem key={center.id} value={center.name}>
-                      {center.name} ({center.district})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Required: Select which service center registered this tenant</p>
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -556,46 +588,22 @@ export const AddTenantForm = () => {
           </div>
           )}
 
-          {/* Agent Information - Hidden for Pipeline */}
-          {formData.status !== "pipeline" && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b pb-2">Agent Information</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="agentName">Agent Name *</Label>
-                <Select value={formData.agentName} onValueChange={handleAgentChange}>
-                  <SelectTrigger id="agentName">
-                    <SelectValue placeholder="Select an agent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {agents.map((agent) => (
-                      <SelectItem key={agent.name} value={agent.name}>
-                        {agent.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="agentPhone">Agent Phone *</Label>
-                <Input
-                  id="agentPhone"
-                  value={formData.agentPhone}
-                  onChange={(e) => handleChange("agentPhone", e.target.value)}
-                  placeholder="e.g., 0700000000"
-                />
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Agents earn UGX 5,000 for each tenant added and 5% commission on every rent payment received.
-            </p>
-          </div>
-          )}
-
-          {/* Form Actions */}
+          {/* Submit Button */}
           <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1">
+            <Button 
+              type="submit" 
+              className="flex-1"
+              disabled={
+                !formData.name || 
+                !formData.contact || 
+                !formData.address || 
+                !formData.rentAmount ||
+                !formData.agentName ||
+                !formData.agentPhone ||
+                !formData.serviceCenter ||
+                (formData.status !== "pipeline" && (!formData.landlord || !formData.landlordContact))
+              }
+            >
               Add Tenant
             </Button>
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">

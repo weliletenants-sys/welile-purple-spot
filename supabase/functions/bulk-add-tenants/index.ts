@@ -7,12 +7,14 @@ interface TenantData {
   phone: string;
   district: string;
   location: string;
+  agent_name?: string;
+  service_center?: string;
 }
 
 const tenantsData: TenantData[] = [
-  { date: "1/7/25", name: "KAMUSIIME ZARIFAH NAHABWE", phone: "256782340404", district: "KAMPALA", location: "Nansana central" },
-  { date: "1/7/25", name: "TINDISEEGA RAPHAEL IAN", phone: "256785406748", district: "KAMPALA", location: "Nansana central" },
-  { date: "1/7/25", name: "MUJUNI IVY KIRSTEN", phone: "256783622700", district: "KAMPALA", location: "Nansana central" },
+  { date: "1/7/25", name: "KAMUSIIME ZARIFAH NAHABWE", phone: "256782340404", district: "KAMPALA", location: "Nansana central", agent_name: "ADEKE ANNET", service_center: "Nansana Central" },
+  { date: "1/7/25", name: "TINDISEEGA RAPHAEL IAN", phone: "256785406748", district: "KAMPALA", location: "Nansana central", agent_name: "ADEKE ANNET", service_center: "Nansana Central" },
+  { date: "1/7/25", name: "MUJUNI IVY KIRSTEN", phone: "256783622700", district: "KAMPALA", location: "Nansana central", agent_name: "ADEKE ANNET", service_center: "Nansana Central" },
   { date: "1/7/25", name: "TUKAMUSIIMA MACKLINE", phone: "256783622300", district: "KAMPALA", location: "Nansana central" },
   { date: "1/7/25", name: "TWINAMATSIKO DELICK", phone: "256788422638", district: "KAMPALA", location: "Nansana central" },
   { date: "1/7/25", name: "MWANIKA MARTIN", phone: "256784460722", district: "KAMPALA", location: "Nansana central" },
@@ -133,15 +135,16 @@ Deno.serve(async (req) => {
             landlord_contact: "Not provided",
             rent_amount: 0,
             repayment_days: 30,
-            agent_name: "ADEKE ANNET",
+            agent_name: tenant.agent_name || "ADEKE ANNET",
             agent_phone: "",
             registration_fee: 10000,
             access_fee: 0,
-            status: "active",
+            status: "pipeline",
             payment_status: "pending",
             performance: 80,
             location_district: tenant.district,
             location_cell_or_village: tenant.location,
+            service_center: tenant.service_center || "",
             edited_by: "Bulk Upload",
             edited_at: new Date().toISOString()
           })
@@ -166,13 +169,13 @@ Deno.serve(async (req) => {
 
         await supabase.from('daily_payments').insert(payments)
 
-        // Create agent earnings
+        // Create agent earnings (Pipeline bonus)
         await supabase.from('agent_earnings').insert({
-          agent_name: "ADEKE ANNET",
+          agent_name: tenant.agent_name || "ADEKE ANNET",
           agent_phone: "",
           tenant_id: newTenant.id,
-          earning_type: "signup_bonus",
-          amount: 5000
+          earning_type: "pipeline_bonus",
+          amount: 100
         })
 
         result.success++

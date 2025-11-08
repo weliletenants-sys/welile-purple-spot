@@ -24,6 +24,7 @@ interface ParsedTenant {
   repayment_days: number;
   agent_name: string;
   agent_phone: string;
+  service_center?: string;
   registration_fee?: number;
   access_fee?: number;
   guarantor1_name?: string;
@@ -167,6 +168,7 @@ export const BulkUploadTenants = () => {
             repayment_days: Number(get("repayment_days", "days")) || 30,
             agent_name: (get("agent_name", "agent") as string) || "ADEKE ANNET",
             agent_phone: (get("agent_phone", "agent_contact", "agent_phone_number") as string) || "",
+            service_center: (get("service_center", "center") as string) || "",
             registration_fee: Number(get("registration_fee", "reg_fee")) || 10000,
             access_fee: Number(get("access_fee")) || 0,
             guarantor1_name: get("guarantor1_name", "guarantor_name", "guarantor") as string | undefined,
@@ -427,7 +429,7 @@ export const BulkUploadTenants = () => {
               <li>name, contact (phone number)</li>
               <li>address, rent_amount, repayment_days</li>
               <li>landlord, landlord_contact</li>
-              <li>agent_name, agent_phone</li>
+              <li>agent_name, agent_phone, service_center</li>
               <li>registration_fee, access_fee</li>
               <li>guarantor1_name, guarantor1_contact, guarantor2_name, guarantor2_contact</li>
               <li>location fields (country, county, district, subcounty, cell/village)</li>
