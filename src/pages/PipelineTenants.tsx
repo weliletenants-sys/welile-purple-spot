@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Hourglass, ArrowRight, Phone, MapPin, DollarSign } from "lucide-react";
+import { Hourglass, ArrowRight, Phone, MapPin, DollarSign, Bell } from "lucide-react";
 import { PipelineConversionWizard } from "@/components/PipelineConversionWizard";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PipelineTenants() {
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
   const [showWizard, setShowWizard] = useState(false);
+  const { toast } = useToast();
 
   const { data: pipelineTenants = [], isLoading } = useQuery({
     queryKey: ["pipelineTenants"],
@@ -29,6 +31,28 @@ export default function PipelineTenants() {
     setSelectedTenant(tenant);
     setShowWizard(true);
   };
+
+  const checkForAlerts = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('check-pipeline-alerts');
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Alert Check Complete",
+        description: data?.message || "Successfully checked for pipeline alerts",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to check for alerts",
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
@@ -55,9 +79,20 @@ export default function PipelineTenants() {
               <p className="text-sm text-muted-foreground">Total Pipeline Tenants</p>
               <p className="text-4xl font-bold text-blue-600">{pipelineTenants.length}</p>
             </div>
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              Ready for Conversion
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                Ready for Conversion
+              </Badge>
+              <Button
+                onClick={() => checkForAlerts.mutate()}
+                disabled={checkForAlerts.isPending}
+                variant="outline"
+                className="gap-2"
+              >
+                <Bell className="h-4 w-4" />
+                {checkForAlerts.isPending ? "Checking..." : "Check for Alerts"}
+              </Button>
+            </div>
           </div>
         </Card>
 
