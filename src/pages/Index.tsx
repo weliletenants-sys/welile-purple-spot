@@ -194,6 +194,12 @@ const Index = () => {
                     ⭐ RECORDING ACTIVITY
                   </DropdownMenuItem>
                   <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => navigate("/recently-added")}
+                  >
+                    📋 RECENTLY ADDED
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     className="p-0"
                     onSelect={(e) => e.preventDefault()}
                   >
