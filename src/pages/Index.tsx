@@ -290,6 +290,13 @@ const Index = () => {
                     <Clock className="w-4 h-4" />
                     <span>⏳ Pipeline Conversion</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer bg-purple-50 dark:bg-purple-950/20 text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
+                    onClick={() => navigate("/pipeline-analytics")}
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    <span>📊 Pipeline Analytics</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     className="p-0 mt-2"
                     onSelect={(e) => e.preventDefault()}

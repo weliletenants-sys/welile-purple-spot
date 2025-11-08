@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Hourglass, ArrowRight, Phone, MapPin, DollarSign, Bell, Home } from "lucide-react";
+import { Hourglass, ArrowRight, Phone, MapPin, DollarSign, Bell, Home, BarChart3 } from "lucide-react";
 import { PipelineConversionWizard } from "@/components/PipelineConversionWizard";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -95,16 +95,27 @@ export default function PipelineTenants() {
                 </p>
               </div>
             </div>
-            <Button
-              onClick={() => checkForAlerts.mutate()}
-              disabled={checkForAlerts.isPending}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <Bell className={`h-4 w-4 ${checkForAlerts.isPending ? 'animate-pulse' : ''}`} />
-              {checkForAlerts.isPending ? "Checking..." : "Check for Alerts Now"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => navigate('/pipeline-analytics')}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <ArrowRight className="h-4 w-4" />
+                View Analytics
+              </Button>
+              <Button
+                onClick={() => checkForAlerts.mutate()}
+                disabled={checkForAlerts.isPending}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Bell className={`h-4 w-4 ${checkForAlerts.isPending ? 'animate-pulse' : ''}`} />
+                {checkForAlerts.isPending ? "Checking..." : "Check for Alerts Now"}
+              </Button>
+            </div>
           </div>
         </div>
 

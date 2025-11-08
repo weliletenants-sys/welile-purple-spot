@@ -154,6 +154,12 @@ const ExecutiveDashboard = () => {
               <FileText className="h-4 w-4 mr-2" />
               Monthly Summary
             </Button>
+
+            {/* Pipeline Analytics Button */}
+            <Button variant="outline" onClick={() => navigate('/pipeline-analytics')}>
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Pipeline Analytics
+            </Button>
             
             {/* Period Filter */}
             <Select value={period} onValueChange={setPeriod}>
