@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { TenantCard } from "@/components/TenantCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { ShareButton } from "@/components/ShareButton";
+import { NotificationBell } from "@/components/NotificationBell";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { useTenants } from "@/hooks/useTenants";
@@ -140,6 +141,7 @@ const Index = () => {
                 <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Total Tenants</span>
               </div>
               <ShareButton />
+              <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon">

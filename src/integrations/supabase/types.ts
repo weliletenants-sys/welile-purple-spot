@@ -214,6 +214,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          message: string
+          read: boolean
+          severity: string
+          tenant_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message: string
+          read?: boolean
+          severity?: string
+          tenant_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean
+          severity?: string
+          tenant_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       payment_forecasts: {
         Row: {
           collection_rate: number
