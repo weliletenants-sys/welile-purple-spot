@@ -127,6 +127,7 @@ export const FloatingQuickActionsPanel = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                data-tour="quick-actions"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className={cn(
                   "h-16 w-16 rounded-full shadow-2xl transition-all duration-300 bg-gradient-to-br from-primary to-accent hover:shadow-primary/50",

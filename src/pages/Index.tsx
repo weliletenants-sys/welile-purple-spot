@@ -9,9 +9,11 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Lazy load heavy components
@@ -42,6 +44,7 @@ import {
 const Index = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { showTour, completeTour, skipTour } = useOnboardingTour();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -120,10 +123,49 @@ const Index = () => {
     };
   }, [tenants, totalCount]);
 
+  const tourSteps = [
+    {
+      target: '[data-tour="stats"]',
+      title: 'Key Metrics at a Glance',
+      description: 'View your most important statistics here. Color-coded for quick understanding.',
+      position: 'bottom' as const,
+      icon: <BarChart3 className="h-5 w-5 text-primary" />
+    },
+    {
+      target: '[data-tour="navigation"]',
+      title: 'Main Navigation',
+      description: 'All major sections are accessible here. Click to explore different areas of the app.',
+      position: 'bottom' as const,
+      icon: <Menu className="h-5 w-5 text-primary" />
+    },
+    {
+      target: '[data-tour="search"]',
+      title: 'Search & Filter',
+      description: 'Quickly find any tenant using search and filters. Real-time results as you type.',
+      position: 'bottom' as const,
+      icon: <Search className="h-5 w-5 text-primary" />
+    },
+    {
+      target: '[data-tour="quick-actions"]',
+      title: 'Quick Actions Panel',
+      description: 'Access common features instantly from this floating panel. Always available while you browse.',
+      position: 'left' as const,
+      icon: <LayoutDashboard className="h-5 w-5 text-primary" />
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
+      <FloatingQuickActionsPanel />
       <InstallPrompt />
+      
+      {showTour && (
+        <OnboardingTour
+          steps={tourSteps}
+          onComplete={completeTour}
+          onSkip={skipTour}
+        />
+      )}
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">
@@ -146,7 +188,7 @@ const Index = () => {
               <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="hover-scale">
+                  <Button variant="outline" size="icon" className="hover-scale" data-tour="navigation">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -246,7 +288,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* PROMINENT SEARCH SECTION */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-accent to-primary p-6 md:p-12 shadow-xl border-2 border-primary/30">
+        <div data-tour="search" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-accent to-primary p-6 md:p-12 shadow-xl border-2 border-primary/30">
           <div className="absolute inset-0 opacity-10 bg-card"></div>
           
           <div className="relative z-10 space-y-6">
@@ -301,7 +343,7 @@ const Index = () => {
         </div>
 
         {/* Stats Section with enhanced visuals */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in">
+        <div data-tour="stats" className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
