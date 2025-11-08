@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays, parseISO, eachDayOfInterval } from "date-fns";
-import { ArrowLeft, UserPlus, DollarSign, TrendingUp, Calendar, CheckCircle, XCircle, Download, Filter, AlertCircle, BarChart3 } from "lucide-react";
+import { ArrowLeft, UserPlus, DollarSign, TrendingUp, Calendar, CheckCircle, XCircle, Download, Filter, AlertCircle, BarChart3, AlertTriangle, Shield, Award, Trophy, Star, Medal } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,6 +13,71 @@ import * as XLSX from "xlsx";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+
+// Risk scoring function
+const calculateRiskScore = (tenant: any) => {
+  const { collectionRate, paidCount, totalCount, payments } = tenant;
+  
+  let riskScore = 0;
+  const indicators: string[] = [];
+  
+  // Factor 1: Collection rate (0-40 points)
+  if (collectionRate < 30) {
+    riskScore += 40;
+    indicators.push("Very low collection rate");
+  } else if (collectionRate < 50) {
+    riskScore += 25;
+    indicators.push("Low collection rate");
+  } else if (collectionRate < 70) {
+    riskScore += 10;
+  }
+  
+  // Factor 2: Payment consistency (0-30 points)
+  const missedPayments = totalCount - paidCount;
+  const missedRate = totalCount > 0 ? missedPayments / totalCount : 0;
+  if (missedRate > 0.6) {
+    riskScore += 30;
+    indicators.push("High missed payments");
+  } else if (missedRate > 0.4) {
+    riskScore += 20;
+    indicators.push("Inconsistent payments");
+  } else if (missedRate > 0.2) {
+    riskScore += 10;
+  }
+  
+  // Factor 3: Payment trend (0-30 points)
+  if (payments && payments.length >= 3) {
+    const recentPayments = payments.slice(-3);
+    const paidRecent = recentPayments.filter((p: any) => p.paid).length;
+    if (paidRecent === 0) {
+      riskScore += 30;
+      indicators.push("No recent payments");
+    } else if (paidRecent === 1) {
+      riskScore += 15;
+      indicators.push("Declining payment trend");
+    }
+  }
+  
+  // Determine risk level
+  let riskLevel: "low" | "medium" | "high" = "low";
+  if (riskScore >= 60) {
+    riskLevel = "high";
+  } else if (riskScore >= 30) {
+    riskLevel = "medium";
+  }
+  
+  return {
+    score: riskScore,
+    level: riskLevel,
+    indicators,
+    prediction: riskLevel === "high" 
+      ? "High risk of payment default" 
+      : riskLevel === "medium"
+      ? "Moderate risk - needs monitoring"
+      : "Low risk - stable payments",
+  };
+};
 
 export default function RecentlyAddedTenants() {
   const oneWeekAgo = subDays(new Date(), 7);
@@ -248,6 +313,60 @@ export default function RecentlyAddedTenants() {
     return filteredAndSortedTenants?.filter(t => t.collectionRate < 50) || [];
   }, [filteredAndSortedTenants]);
 
+  // Calculate risk scores for all tenants
+  const tenantsWithRisk = useMemo(() => {
+    return filteredAndSortedTenants?.map(tenant => ({
+      ...tenant,
+      riskAnalysis: calculateRiskScore(tenant),
+    })) || [];
+  }, [filteredAndSortedTenants]);
+
+  // Identify high risk tenants
+  const highRiskTenants = useMemo(() => {
+    return tenantsWithRisk.filter(t => t.riskAnalysis.level === "high");
+  }, [tenantsWithRisk]);
+
+  // Agent performance badges
+  const agentBadges = useMemo(() => {
+    if (!recentTenants) return [];
+    
+    const agentPerf = new Map();
+    
+    recentTenants.forEach(tenant => {
+      const agent = tenant.agent_name || "Unknown";
+      if (!agentPerf.has(agent)) {
+        agentPerf.set(agent, {
+          agent,
+          tenants: [],
+          avgRate: 0,
+        });
+      }
+      agentPerf.get(agent).tenants.push(tenant);
+    });
+    
+    const badges = Array.from(agentPerf.values()).map(perf => {
+      const avgRate = perf.tenants.reduce((sum: number, t: any) => sum + t.collectionRate, 0) / perf.tenants.length;
+      perf.avgRate = avgRate;
+      
+      let badge = null;
+      if (avgRate >= 90) {
+        badge = { level: "platinum", icon: Trophy, label: "Platinum", color: "text-purple-500" };
+      } else if (avgRate >= 80) {
+        badge = { level: "gold", icon: Award, label: "Gold Star", color: "text-yellow-500" };
+      } else if (avgRate >= 70) {
+        badge = { level: "silver", icon: Medal, label: "Silver", color: "text-gray-400" };
+      }
+      
+      return {
+        ...perf,
+        badge,
+      };
+    }).filter(p => p.badge !== null)
+      .sort((a, b) => b.avgRate - a.avgRate);
+    
+    return badges;
+  }, [recentTenants]);
+
   // Show alert for low performers
   useEffect(() => {
     if (lowPerformers.length > 0) {
@@ -260,12 +379,12 @@ export default function RecentlyAddedTenants() {
 
   // Export to Excel
   const handleExport = () => {
-    if (!filteredAndSortedTenants || filteredAndSortedTenants.length === 0) {
+    if (!tenantsWithRisk || tenantsWithRisk.length === 0) {
       toast.error("No data to export");
       return;
     }
 
-    const exportData = filteredAndSortedTenants.map(tenant => ({
+    const exportData = tenantsWithRisk.map(tenant => ({
       "Tenant Name": tenant.name,
       "Contact": tenant.contact,
       "Address": tenant.address,
@@ -277,6 +396,10 @@ export default function RecentlyAddedTenants() {
       "Collection Rate (%)": tenant.collectionRate.toFixed(2),
       "Paid Payments": tenant.paidCount,
       "Total Payments": tenant.totalCount,
+      "Risk Level": tenant.riskAnalysis.level.toUpperCase(),
+      "Risk Score": tenant.riskAnalysis.score,
+      "Risk Prediction": tenant.riskAnalysis.prediction,
+      "Risk Indicators": tenant.riskAnalysis.indicators.join("; "),
       "Performance": tenant.collectionRate >= 80 ? "Excellent" : tenant.collectionRate >= 50 ? "Good" : "Needs Attention",
     }));
 
@@ -321,6 +444,18 @@ export default function RecentlyAddedTenants() {
           </Button>
         </div>
 
+        {/* High Risk Alert */}
+        {highRiskTenants.length > 0 && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>⚠️ {highRiskTenants.length} tenant(s)</strong> identified as high risk for payment default based on first week patterns. 
+              Immediate action recommended for agents: {highRiskTenants.slice(0, 3).map(t => t.agent_name).filter((v, i, a) => a.indexOf(v) === i).join(", ")}
+              {highRiskTenants.length > 3 && " and others"}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Low Performance Alert */}
         {lowPerformers.length > 0 && (
           <Alert variant="destructive">
@@ -331,6 +466,35 @@ export default function RecentlyAddedTenants() {
               {lowPerformers.length > 3 && " and others"}
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Agent Performance Badges */}
+        {agentBadges.length > 0 && (
+          <Card className="p-6 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold text-foreground">Top Performing Agents</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {agentBadges.map((agent) => {
+                const BadgeIcon = agent.badge.icon;
+                return (
+                  <div key={agent.agent} className="flex items-center gap-3 p-4 bg-card rounded-lg border border-border hover:shadow-md transition-shadow">
+                    <BadgeIcon className={`h-8 w-8 ${agent.badge.color}`} />
+                    <div className="flex-1">
+                      <p className="font-semibold text-foreground">{agent.agent}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {agent.tenants.length} tenant{agent.tenants.length !== 1 ? 's' : ''} • {agent.avgRate.toFixed(1)}% avg rate
+                      </p>
+                    </div>
+                    <Badge className={agent.badge.color}>
+                      {agent.badge.label}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
         )}
 
         {/* Summary Stats */}
@@ -650,11 +814,43 @@ export default function RecentlyAddedTenants() {
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               <p className="mt-4 text-muted-foreground">Loading tenants...</p>
             </div>
-          ) : filteredAndSortedTenants && filteredAndSortedTenants.length > 0 ? (
+          ) : tenantsWithRisk && tenantsWithRisk.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredAndSortedTenants.map((tenant) => (
-                <Card key={tenant.id} className="p-6 hover:shadow-lg transition-shadow">
+              {tenantsWithRisk.map((tenant) => (
+                <Card key={tenant.id} className={`p-6 hover:shadow-lg transition-shadow ${
+                  tenant.riskAnalysis.level === "high" ? "border-destructive border-2" : ""
+                }`}>
                   <div className="space-y-4">
+                    {/* Risk Indicator Banner */}
+                    {tenant.riskAnalysis.level !== "low" && (
+                      <div className={`p-3 rounded-lg flex items-start gap-3 ${
+                        tenant.riskAnalysis.level === "high" 
+                          ? "bg-destructive/10 border border-destructive/20" 
+                          : "bg-yellow-500/10 border border-yellow-500/20"
+                      }`}>
+                        <AlertTriangle className={`h-5 w-5 mt-0.5 ${
+                          tenant.riskAnalysis.level === "high" ? "text-destructive" : "text-yellow-600"
+                        }`} />
+                        <div className="flex-1">
+                          <p className={`text-sm font-semibold ${
+                            tenant.riskAnalysis.level === "high" ? "text-destructive" : "text-yellow-700"
+                          }`}>
+                            {tenant.riskAnalysis.prediction}
+                          </p>
+                          {tenant.riskAnalysis.indicators.length > 0 && (
+                            <ul className="text-xs mt-1 space-y-1">
+                              {tenant.riskAnalysis.indicators.map((indicator, i) => (
+                                <li key={i} className="text-muted-foreground">• {indicator}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        <Badge variant={tenant.riskAnalysis.level === "high" ? "destructive" : "outline"} className="text-xs">
+                          Risk: {tenant.riskAnalysis.score}/100
+                        </Badge>
+                      </div>
+                    )}
+
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-lg font-semibold text-foreground">{tenant.name}</h3>
