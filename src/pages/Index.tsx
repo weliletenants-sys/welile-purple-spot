@@ -8,7 +8,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { useTenants } from "@/hooks/useTenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Lazy load heavy components
@@ -207,6 +207,13 @@ const Index = () => {
                     🚨 RISK DASHBOARD
                   </DropdownMenuItem>
                   <DropdownMenuItem 
+                    className="cursor-pointer bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 font-semibold"
+                    onClick={() => navigate("/pipeline-tenants")}
+                  >
+                    <Hourglass className="w-4 h-4 mr-2" />
+                    ⏳ PIPELINE CONVERSION
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     className="p-0"
                     onSelect={(e) => e.preventDefault()}
                   >
