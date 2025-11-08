@@ -13,6 +13,8 @@ import { Progress } from "@/components/ui/progress";
 import { Trophy, Star, Target, Zap } from "lucide-react";
 import { useAchievements } from "@/hooks/useAchievements";
 import { AchievementBadge } from "@/components/AchievementBadge";
+import { ShareButton } from "./ShareButton";
+import { ShareCard } from "./ShareCard";
 
 interface AchievementsModalProps {
   open: boolean;
@@ -59,7 +61,22 @@ export const AchievementsModal = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <>
+      {/* Hidden share card for image generation */}
+      <div id="achievements-share-card" className="fixed -left-[9999px] top-0">
+        <ShareCard
+          type="achievement"
+          data={{
+            title: "Achievement Unlocked!",
+            subtitle: `${earnedBadges.length} Badges Earned`,
+            points: totalPoints,
+            badgeCount: earnedBadges.length,
+            userName: userIdentifier || "Player",
+          }}
+        />
+      </div>
+
+      <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <div className="flex items-center gap-3">
@@ -184,5 +201,6 @@ export const AchievementsModal = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };

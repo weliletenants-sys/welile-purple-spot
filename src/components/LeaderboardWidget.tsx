@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Crown, Medal, ArrowRight } from "lucide-react";
-import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { useLeaderboard, useUserRank } from "@/hooks/useLeaderboard";
+import { ShareButton } from "./ShareButton";
+import { ShareCard } from "./ShareCard";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardWidgetProps {
@@ -18,6 +20,7 @@ export const LeaderboardWidget = ({
 }: LeaderboardWidgetProps) => {
   const { data: leaderboard = [], isLoading } = useLeaderboard("monthly");
   const topEntries = leaderboard.slice(0, limit);
+  const { rank, totalPoints, badgeCount } = useUserRank(userIdentifier || "", "monthly");
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -33,16 +36,45 @@ export const LeaderboardWidget = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
-            <CardTitle className="text-lg">Top Performers</CardTitle>
-          </div>
-          <Badge variant="secondary">This Month</Badge>
+    <>
+      {/* Hidden share card for image generation */}
+      {userIdentifier && rank && (
+        <div id="leaderboard-share-card" className="fixed -left-[9999px] top-0">
+          <ShareCard
+            type="leaderboard"
+            data={{
+              title: `Ranked #${rank}`,
+              subtitle: "Monthly Leaderboard",
+              rank,
+              points: totalPoints,
+              badgeCount,
+              userName: userIdentifier,
+            }}
+          />
         </div>
-      </CardHeader>
+      )}
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-500" />
+              <CardTitle className="text-lg">Top Performers</CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">This Month</Badge>
+              {userIdentifier && rank && (
+                <ShareButton
+                  title="My Leaderboard Position"
+                  text={`I'm ranked #${rank} with ${totalPoints} points on Welile Tenants Hub!`}
+                  shareCardId="leaderboard-share-card"
+                  variant="ghost"
+                  size="sm"
+                />
+              )}
+            </div>
+          </div>
+        </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="text-center py-4 text-sm text-muted-foreground">
@@ -109,5 +141,6 @@ export const LeaderboardWidget = ({
         </Button>
       </CardContent>
     </Card>
+    </>
   );
 };

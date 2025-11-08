@@ -1,20 +1,35 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Share2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Share2, Download, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { generateShareImage } from "./ShareCard";
 
 interface ShareButtonProps {
   title?: string;
   text?: string;
   url?: string;
+  shareCardId?: string;
+  variant?: "default" | "outline" | "ghost";
+  size?: "sm" | "default" | "lg";
 }
 
-export const ShareButton = ({ 
+export const ShareButton = ({
   title = "Welile Tenants Hub",
   text = "Check out the Welile Tenants Hub",
-  url = window.location.origin
+  url = window.location.origin,
+  shareCardId,
+  variant = "outline",
+  size = "sm",
 }: ShareButtonProps) => {
-  const handleShare = async () => {
-    // Check if Web Share API is supported
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleWebShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
@@ -24,33 +39,71 @@ export const ShareButton = ({
         });
         toast.success("Shared successfully!");
       } catch (error: any) {
-        // User cancelled the share
-        if (error.name !== 'AbortError') {
+        if (error.name !== "AbortError") {
           console.error("Error sharing:", error);
-          fallbackToWhatsApp();
+          toast.error("Failed to share");
         }
       }
     } else {
-      // Fallback to WhatsApp direct link
-      fallbackToWhatsApp();
+      toast.error("Sharing not supported on this device");
     }
   };
 
-  const fallbackToWhatsApp = () => {
+  const handleDownloadImage = async () => {
+    if (!shareCardId) {
+      toast.error("Share card not available");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const imageUrl = await generateShareImage(shareCardId, "achievement");
+      
+      // Download the image
+      const link = document.createElement("a");
+      link.download = `welile-achievement-${Date.now()}.png`;
+      link.href = imageUrl;
+      link.click();
+      
+      toast.success("Image downloaded!");
+    } catch (error) {
+      console.error("Error generating image:", error);
+      toast.error("Failed to generate image");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleWhatsAppShare = () => {
     const message = encodeURIComponent(`${text} ${url}`);
     const whatsappUrl = `https://wa.me/?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, "_blank");
   };
 
   return (
-    <Button
-      onClick={handleShare}
-      variant="outline"
-      size="sm"
-      className="gap-2"
-    >
-      <Share2 className="h-4 w-4" />
-      Share
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant={variant} size={size} className="gap-2">
+          <Share2 className="h-4 w-4" />
+          Share
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleWebShare}>
+          <Share2 className="h-4 w-4 mr-2" />
+          Share via...
+        </DropdownMenuItem>
+        {shareCardId && (
+          <DropdownMenuItem onClick={handleDownloadImage} disabled={isGenerating}>
+            <Download className="h-4 w-4 mr-2" />
+            {isGenerating ? "Generating..." : "Download Image"}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={handleWhatsAppShare}>
+          <MessageCircle className="h-4 w-4 mr-2" />
+          Share on WhatsApp
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

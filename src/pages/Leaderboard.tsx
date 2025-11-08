@@ -4,15 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Crown, Medal, ArrowLeft, Star, TrendingUp } from "lucide-react";
+import { Trophy, Crown, Medal, ArrowLeft, Star, TrendingUp, Users } from "lucide-react";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { LeaderboardWidget } from "@/components/LeaderboardWidget";
+import { TeamLeaderboard } from "@/components/TeamLeaderboard";
+import { MonthlyChallenges } from "@/components/MonthlyChallenges";
+import { CreateTeamDialog } from "@/components/CreateTeamDialog";
+import { useUserTeam } from "@/hooks/useTeams";
 import { cn } from "@/lib/utils";
 
 const Leaderboard = () => {
   const navigate = useNavigate();
+  const [viewTab, setViewTab] = useState<"individual" | "teams" | "challenges">("individual");
   const [period, setPeriod] = useState<"all" | "monthly" | "weekly">("monthly");
   const { data: leaderboard = [], isLoading } = useLeaderboard(period);
+  
+  // Get current user identifier from localStorage (agent context)
+  const userIdentifier = localStorage.getItem("agentPhone") || "guest";
+  const { data: userTeamData } = useUserTeam(userIdentifier);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -56,35 +64,55 @@ const Leaderboard = () => {
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/")}
-              className="hover-scale"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600">
-                <Trophy className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">Leaderboard</h1>
-                <p className="text-muted-foreground text-sm">
-                  Top performers ranked by achievement points
-                </p>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/")}
+                className="hover-scale"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600">
+                  <Trophy className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold">Leaderboard</h1>
+                  <p className="text-muted-foreground text-sm">
+                    Compete with others and climb the ranks!
+                  </p>
+                </div>
               </div>
             </div>
+            <CreateTeamDialog
+              userIdentifier={userIdentifier}
+              trigger={
+                <Button variant="outline">
+                  <Users className="h-4 w-4 mr-2" />
+                  {userTeamData ? "Manage Team" : "Create Team"}
+                </Button>
+              }
+            />
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Leaderboard */}
-          <div className="lg:col-span-2">
-            <Card>
+        {/* Main Tabs */}
+        <Tabs value={viewTab} onValueChange={(v) => setViewTab(v as any)} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto">
+            <TabsTrigger value="individual">Individual</TabsTrigger>
+            <TabsTrigger value="teams">Teams</TabsTrigger>
+            <TabsTrigger value="challenges">Challenges</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="individual">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Leaderboard */}
+              <div className="lg:col-span-2">
+                <Card>
               <CardHeader>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <CardTitle className="flex items-center gap-2">
@@ -172,12 +200,12 @@ const Leaderboard = () => {
                     )}
                   </div>
                 </Tabs>
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Sidebar Stats */}
-          <div className="space-y-6">
+            {/* Sidebar Stats */}
+            <div className="space-y-6">
             {/* Top 3 Podium */}
             {leaderboard.length >= 3 && (
               <Card>
@@ -259,10 +287,46 @@ const Leaderboard = () => {
                       : 0}
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
+        </TabsContent>
+
+        <TabsContent value="teams">
+          <div className="grid gap-6 md:grid-cols-2">
+            <TeamLeaderboard userTeamId={userTeamData?.teams?.id} limit={20} />
+            {userTeamData && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Team</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-2xl font-bold">{userTeamData.teams.name}</h3>
+                      {userTeamData.teams.description && (
+                        <p className="text-muted-foreground mt-2">
+                          {userTeamData.teams.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={userTeamData.role === "leader" ? "default" : "secondary"}>
+                        {userTeamData.role}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="challenges">
+          <MonthlyChallenges userIdentifier={userIdentifier} />
+        </TabsContent>
+      </Tabs>
       </main>
     </div>
   );

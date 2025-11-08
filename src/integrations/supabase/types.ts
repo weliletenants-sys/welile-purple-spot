@@ -194,6 +194,47 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_progress: {
+        Row: {
+          challenge_id: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          current_value: number
+          id: string
+          updated_at: string
+          user_identifier: string
+        }
+        Insert: {
+          challenge_id: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_value?: number
+          id?: string
+          updated_at?: string
+          user_identifier: string
+        }
+        Update: {
+          challenge_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_value?: number
+          id?: string
+          updated_at?: string
+          user_identifier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_payments: {
         Row: {
           amount: number
@@ -246,6 +287,56 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_challenges: {
+        Row: {
+          badge_reward: string | null
+          challenge_type: string
+          created_at: string
+          description: string
+          end_date: string
+          id: string
+          is_active: boolean
+          points_reward: number
+          start_date: string
+          target_value: number
+          title: string
+        }
+        Insert: {
+          badge_reward?: string | null
+          challenge_type: string
+          created_at?: string
+          description: string
+          end_date: string
+          id?: string
+          is_active?: boolean
+          points_reward?: number
+          start_date: string
+          target_value: number
+          title: string
+        }
+        Update: {
+          badge_reward?: string | null
+          challenge_type?: string
+          created_at?: string
+          description?: string
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          points_reward?: number
+          start_date?: string
+          target_value?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_challenges_badge_reward_fkey"
+            columns: ["badge_reward"]
+            isOneToOne: false
+            referencedRelation: "badges"
             referencedColumns: ["id"]
           },
         ]
@@ -465,6 +556,68 @@ export type Database = {
           is_active?: boolean
           name?: string
           region?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          id: string
+          joined_at: string
+          role: string
+          team_id: string
+          user_identifier: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          role?: string
+          team_id: string
+          user_identifier: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          role?: string
+          team_id?: string
+          user_identifier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []
