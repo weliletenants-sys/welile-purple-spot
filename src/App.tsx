@@ -7,6 +7,8 @@ import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { InstallBanner } from "@/components/InstallBanner";
 import { HelpChatbot } from "@/components/HelpChatbot";
+import { WhatsNewModal } from "@/components/WhatsNewModal";
+import { useWhatsNew } from "@/hooks/useWhatsNew";
 import Index from "./pages/Index";
 import RepaymentSchedule from "./pages/RepaymentSchedule";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
@@ -33,12 +35,19 @@ import PipelineTenants from "./pages/PipelineTenants";
 const queryClient = new QueryClient();
 
 const App = () => {
+  const { showWhatsNew, markAsSeen, currentVersion } = useWhatsNew();
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <UpdatePrompt />
         <InstallPrompt />
         <HelpChatbot />
+        <WhatsNewModal 
+          open={showWhatsNew} 
+          onClose={markAsSeen} 
+          version={currentVersion}
+        />
         <Toaster />
         <Sonner />
         <BrowserRouter>

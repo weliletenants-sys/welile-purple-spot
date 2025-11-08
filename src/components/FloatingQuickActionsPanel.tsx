@@ -13,15 +13,28 @@ import {
   X,
   Menu,
   Clock,
-  Target
+  Target,
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWhatsNew } from "@/hooks/useWhatsNew";
 
 export const FloatingQuickActionsPanel = () => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
+  const { reopenWhatsNew } = useWhatsNew();
 
   const quickActions = [
+    {
+      icon: Sparkles,
+      label: "What's New",
+      color: 'bg-gradient-to-br from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700',
+      action: () => {
+        reopenWhatsNew();
+        setIsExpanded(false);
+      },
+      priority: 'new'
+    },
     {
       icon: AlertTriangle,
       label: 'Missed Payments',
@@ -91,14 +104,18 @@ export const FloatingQuickActionsPanel = () => {
               isExpanded ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4 pointer-events-none"
             )}
           >
-            {quickActions.map((action) => (
-              <Tooltip key={action.path}>
+            {quickActions.map((action, index) => (
+              <Tooltip key={action.path || index}>
                 <TooltipTrigger asChild>
                   <div className="relative">
                     <Button
                       onClick={() => {
-                        navigate(action.path);
-                        setIsExpanded(false);
+                        if (action.action) {
+                          action.action();
+                        } else if (action.path) {
+                          navigate(action.path);
+                          setIsExpanded(false);
+                        }
                       }}
                       className={cn(
                         "h-14 w-14 rounded-full shadow-lg transition-all duration-200 hover-scale text-white",
@@ -113,6 +130,11 @@ export const FloatingQuickActionsPanel = () => {
                     )}
                     {action.priority === 'medium' && (
                       <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-yellow-600 border-2 border-white" />
+                    )}
+                    {action.priority === 'new' && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white animate-pulse flex items-center justify-center">
+                        <Sparkles className="h-3 w-3 text-white" />
+                      </span>
                     )}
                   </div>
                 </TooltipTrigger>
