@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Download, TrendingUp, Clock, CheckCircle, XCircle, FileText, Award } from "lucide-react";
+import { ArrowLeft, Download, TrendingUp, Clock, CheckCircle, XCircle, FileText, Award, Home } from "lucide-react";
 import { format, startOfDay, parseISO } from "date-fns";
 import * as XLSX from "xlsx";
 import { toast } from "@/hooks/use-toast";
@@ -174,8 +174,9 @@ export default function WithdrawalHistory() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-5 w-5" />
+            <Button variant="ghost" onClick={() => navigate("/")} className="gap-2">
+              <Home className="h-5 w-5" />
+              Back to Home
             </Button>
             <h1 className="text-3xl font-bold">Withdrawal History</h1>
           </div>

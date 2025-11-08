@@ -16,7 +16,8 @@ import {
   Building2,
   CheckCircle2,
   XCircle,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Home
 } from "lucide-react";
 import {
   Dialog,
@@ -269,9 +270,9 @@ export default function ServiceCenterManagement() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                Back
+              <Button variant="ghost" onClick={() => navigate("/")} className="gap-2">
+                <Home className="w-4 h-4" />
+                Back to Home
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">

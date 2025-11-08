@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X, Trash2, Wallet } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X, Trash2, Wallet, Home } from "lucide-react";
 import { WelileLogo } from "@/components/WelileLogo";
 import { useToast } from "@/hooks/use-toast";
 import { usePayments } from "@/hooks/usePayments";
@@ -371,8 +371,8 @@ export default function RepaymentSchedule() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => navigate("/")} className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back
+              <Home className="w-4 h-4" />
+              Back to Home
             </Button>
             <WelileLogo />
           </div>
