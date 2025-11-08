@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { HomeSummaryWidget } from "@/components/HomeSummaryWidget";
+import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload, Edit3, Award, FileText, Activity, Building2, TrendingDown, Shield, UserCog, GitBranch, BarChart3, CheckCircle2, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -494,6 +495,9 @@ const ExecutiveDashboard = () => {
           <p className="mt-1">Data updates in real-time</p>
         </div>
       </div>
+
+      {/* Floating Quick Actions Panel */}
+      <FloatingQuickActionsPanel />
     </div>
   );
 };

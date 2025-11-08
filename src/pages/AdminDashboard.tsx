@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { useComprehensiveStats } from "@/hooks/useComprehensiveStats";
 import { useQuery } from "@tanstack/react-query";
@@ -225,6 +226,9 @@ const AdminDashboard = () => {
           </main>
         </div>
       </div>
+
+      {/* Floating Quick Actions Panel */}
+      <FloatingQuickActionsPanel />
     </SidebarProvider>
   );
 };

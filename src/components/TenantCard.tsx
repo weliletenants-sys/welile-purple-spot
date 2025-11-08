@@ -16,6 +16,7 @@ import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TransferTenantDialog } from "./TransferTenantDialog";
 import { TenantTransferHistory } from "./TenantTransferHistory";
+import { PriorityIndicator, PriorityLevel } from "@/components/PriorityIndicator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -91,6 +92,17 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
     if (performance >= 75) return 'text-primary';
     return 'text-amber-600 dark:text-amber-400';
   };
+
+  // Determine priority level based on payment status and performance
+  const getPriorityLevel = (): PriorityLevel => {
+    if (tenant.paymentStatus === 'overdue') return 'critical';
+    if (tenant.paymentStatus === 'pending' && tenant.performance < 60) return 'high';
+    if (tenant.performance < 70) return 'medium';
+    if (tenant.status === 'pending') return 'medium';
+    return 'low';
+  };
+
+  const priorityLevel = getPriorityLevel();
 
   return (
     <Card 
@@ -176,8 +188,19 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
           </div>
         </div>
 
-        {/* Status Badges */}
-        <div className="flex gap-2 flex-wrap">
+        {/* Status Badges with Priority Indicator */}
+        <div className="flex gap-2 flex-wrap items-center">
+          <PriorityIndicator 
+            priority={priorityLevel} 
+            size="sm"
+            animate={priorityLevel === 'critical'}
+            tooltip={
+              priorityLevel === 'critical' ? 'Urgent attention required!' :
+              priorityLevel === 'high' ? 'Needs attention soon' :
+              priorityLevel === 'medium' ? 'Monitor closely' :
+              'On track'
+            }
+          />
           <Badge variant="outline" className={getStatusColor(tenant.status)}>
             {tenant.status}
           </Badge>

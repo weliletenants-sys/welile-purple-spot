@@ -8,6 +8,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
+import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus } from "lucide-react";
@@ -492,6 +493,9 @@ const Index = () => {
           <p className="text-sm mt-2">Powered by Lovable Cloud</p>
         </div>
       </footer>
+
+      {/* Floating Quick Actions Panel */}
+      <FloatingQuickActionsPanel />
     </div>
   );
 };
