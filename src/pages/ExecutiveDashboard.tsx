@@ -3,13 +3,18 @@ import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { HomeSummaryWidget } from "@/components/HomeSummaryWidget";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload, Edit3, Award, FileText, Activity, Building2, TrendingDown, Shield, UserCog, GitBranch, BarChart3, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, AlertCircle, Target, Percent, Wallet, Home, Calendar, UserCheck, Upload, Edit3, Award, FileText, Activity, Building2, TrendingDown, Shield, UserCog, GitBranch, BarChart3, CheckCircle2, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useComprehensiveStats } from "@/hooks/useComprehensiveStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format } from "date-fns";
+import { TrendChart, DistributionPieChart, MultiLineTrendChart, ComparisonBarChart } from "@/components/DashboardCharts";
+import { ExportButtons } from "@/components/DashboardExport";
+import { useTrendData, useDistributionData } from "@/hooks/useTrendData";
+import { useDashboardWidgets, WidgetCustomizer } from "@/components/DashboardWidgets";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ADMIN_ACCESS_CODE = "Mypart@welile";
 
@@ -60,6 +65,17 @@ const ExecutiveDashboard = () => {
   }, [period]);
 
   const stats = useComprehensiveStats(dateRange);
+  const { data: trendData } = useTrendData(30);
+  const { data: distributionData } = useDistributionData();
+
+  // Dashboard widgets
+  const { widgets, visibleWidgets, toggleWidget } = useDashboardWidgets([
+    { id: "payment-trends", title: "Payment Trends", component: null },
+    { id: "tenant-growth", title: "Tenant Growth", component: null },
+    { id: "status-distribution", title: "Status Distribution", component: null },
+    { id: "source-breakdown", title: "Source Breakdown", component: null },
+    { id: "service-centers", title: "Top Service Centers", component: null },
+  ]);
 
   // Auto-refresh data every minute
   useEffect(() => {
@@ -108,6 +124,30 @@ const ExecutiveDashboard = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-2">
+            {/* Export Button */}
+            <ExportButtons
+              data={{
+                title: "Executive Dashboard Report",
+                timestamp: new Date().toLocaleString(),
+                stats: [
+                  { label: "Total Tenants", value: stats.numberOfTenants },
+                  { label: "Outstanding Balance", value: `UGX ${stats.outstandingBalance.toLocaleString()}` },
+                  { label: "Collection Rate", value: `${stats.collectionRate}%` },
+                  { label: "Total Rent Paid", value: `UGX ${stats.totalRentPaid.toLocaleString()}` },
+                  { label: "Active Tenants", value: stats.activeTenants },
+                  { label: "Pipeline Tenants", value: stats.pipelineTenants },
+                  { label: "Total Agents", value: stats.totalAgents },
+                  { label: "Total Commissions", value: `UGX ${stats.totalCommissions.toLocaleString()}` },
+                ],
+              }}
+            />
+
+            {/* Customize Widgets */}
+            <WidgetCustomizer
+              widgets={widgets}
+              onToggleWidget={toggleWidget}
+            />
+
             {/* Monthly Summary Button */}
             <Button variant="outline" onClick={() => navigate('/monthly-summary')}>
               <FileText className="h-4 w-4 mr-2" />
@@ -134,6 +174,108 @@ const ExecutiveDashboard = () => {
 
         {/* Quick Summary Widget */}
         <HomeSummaryWidget />
+
+        {/* Visual Analytics Section */}
+        <Tabs defaultValue="trends" className="mb-6">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3">
+            <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="distribution">Distribution</TabsTrigger>
+            <TabsTrigger value="comparison">Comparison</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="trends" className="space-y-4 mt-4">
+            {trendData && (
+              <div className="grid gap-6 md:grid-cols-2">
+                {visibleWidgets.find(w => w.id === "payment-trends") && (
+                  <MultiLineTrendChart
+                    data={trendData.paymentTrend}
+                    title="Payment Collection Trends (30 Days)"
+                    description="Track daily payment collections vs expected"
+                    lines={[
+                      { dataKey: "paid", name: "Collected", color: "hsl(var(--primary))" },
+                      { dataKey: "expected", name: "Expected", color: "hsl(var(--accent))" },
+                    ]}
+                  />
+                )}
+                {visibleWidgets.find(w => w.id === "tenant-growth") && (
+                  <MultiLineTrendChart
+                    data={trendData.tenantTrend}
+                    title="Tenant Growth (30 Days)"
+                    description="New tenant registrations by status"
+                    lines={[
+                      { dataKey: "active", name: "Active", color: "hsl(var(--primary))" },
+                      { dataKey: "pipeline", name: "Pipeline", color: "hsl(var(--accent))" },
+                    ]}
+                  />
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="distribution" className="space-y-4 mt-4">
+            {distributionData && (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {visibleWidgets.find(w => w.id === "status-distribution") && (
+                  <DistributionPieChart
+                    data={distributionData.statusDistribution}
+                    title="Tenant Status Distribution"
+                    description="Breakdown by tenant status"
+                  />
+                )}
+                {visibleWidgets.find(w => w.id === "source-breakdown") && (
+                  <DistributionPieChart
+                    data={distributionData.sourceDistribution}
+                    title="Tenant Source Breakdown"
+                    description="How tenants were added"
+                  />
+                )}
+                {visibleWidgets.find(w => w.id === "service-centers") && (
+                  <ComparisonBarChart
+                    data={distributionData.serviceCenterDistribution.map(sc => ({
+                      name: sc.name,
+                      tenants: sc.value,
+                    }))}
+                    title="Top Service Centers"
+                    description="By tenant count"
+                    bars={[
+                      { dataKey: "tenants", name: "Tenants", color: "hsl(var(--primary))" },
+                    ]}
+                  />
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="comparison" className="space-y-4 mt-4">
+            {stats && (
+              <div className="grid gap-6 md:grid-cols-2">
+                <ComparisonBarChart
+                  data={[
+                    { name: "Active", count: stats.activeTenants },
+                    { name: "Pipeline", count: stats.pipelineTenants },
+                    { name: "Inactive", count: stats.inactiveTenants || 0 },
+                  ]}
+                  title="Tenant Status Comparison"
+                  description="Current tenant distribution"
+                  bars={[
+                    { dataKey: "count", name: "Count", color: "hsl(var(--primary))" },
+                  ]}
+                />
+                <ComparisonBarChart
+                  data={[
+                    { name: "Manual", count: stats.manualTenants },
+                    { name: "Bulk Upload", count: stats.bulkUploadedTenants },
+                  ]}
+                  title="Tenant Source Comparison"
+                  description="How tenants were added"
+                  bars={[
+                    { dataKey: "count", name: "Count", color: "hsl(var(--accent))" },
+                  ]}
+                />
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Outstanding Balance - Prominent Card */}
         <div className="mb-6">

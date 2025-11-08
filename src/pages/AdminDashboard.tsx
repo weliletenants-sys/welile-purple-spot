@@ -37,7 +37,12 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight, DollarSign, TrendingUp, Calendar as CalendarIcon, BarChart3 } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight, DollarSign, TrendingUp, Calendar as CalendarIcon, BarChart3, Download } from "lucide-react";
+import { TrendChart, DistributionPieChart, MultiLineTrendChart, ComparisonBarChart } from "@/components/DashboardCharts";
+import { ExportButtons } from "@/components/DashboardExport";
+import { useTrendData, useDistributionData } from "@/hooks/useTrendData";
+import { useDashboardWidgets, WidgetCustomizer } from "@/components/DashboardWidgets";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -472,6 +477,17 @@ const RequestsSection = ({
         }
       : undefined
   );
+
+  const { data: trendData } = useTrendData(30);
+  const { data: distributionData } = useDistributionData();
+
+  // Dashboard widgets
+  const { widgets, visibleWidgets, toggleWidget } = useDashboardWidgets([
+    { id: "payment-trends", title: "Payment Trends Chart", component: null },
+    { id: "tenant-growth", title: "Tenant Growth Chart", component: null },
+    { id: "status-distribution", title: "Status Distribution", component: null },
+    { id: "service-center-breakdown", title: "Service Center Performance", component: null },
+  ]);
   
   // Fetch payments with date range
   const { data: dailyPayments } = useQuery({
@@ -603,14 +619,40 @@ const RequestsSection = ({
 
   return (
     <div className="space-y-6">
-      {/* Date Range Filter */}
+      {/* Date Range Filter & Export */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5" />
-            Date Range Filter
-          </CardTitle>
-          <CardDescription>Filter statistics by date range</CardDescription>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarIcon className="h-5 w-5" />
+                Date Range Filter
+              </CardTitle>
+              <CardDescription>Filter statistics by date range</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <WidgetCustomizer
+                widgets={widgets}
+                onToggleWidget={toggleWidget}
+              />
+              <ExportButtons
+                data={{
+                  title: "Admin Dashboard Report",
+                  timestamp: new Date().toLocaleString(),
+                  stats: [
+                    { label: "Outstanding Balance", value: `UGX ${(stats?.outstandingBalance || 0).toLocaleString()}` },
+                    { label: "Period Payments", value: `UGX ${(dailyPayments?.total || 0).toLocaleString()}` },
+                    { label: "Total Tenants", value: stats?.numberOfTenants || 0 },
+                    { label: "Collection Rate", value: `${stats?.collectionRate || 0}%` },
+                    { label: "Total Agents", value: stats?.totalAgents || 0 },
+                    { label: "Service Centers", value: stats?.totalServiceCenters || 0 },
+                    { label: "Tenants At Risk", value: stats?.tenantsAtRisk || 0 },
+                    { label: "Pending Withdrawals", value: stats?.pendingWithdrawals || 0 },
+                  ],
+                }}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4 items-center">
@@ -714,31 +756,104 @@ const RequestsSection = ({
         />
       </div>
 
-      {/* Payment Trends Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Payment Trends
-          </CardTitle>
-          <CardDescription>Daily payment collection vs expected amounts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={paymentTrends || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip 
-                formatter={(value: number) => `UGX ${value.toLocaleString()}`}
+      {/* Visual Analytics Section */}
+      <Tabs defaultValue="trends" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3">
+          <TabsTrigger value="trends">Trends</TabsTrigger>
+          <TabsTrigger value="distribution">Distribution</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="trends" className="space-y-4">
+          {trendData && (
+            <div className="grid gap-6 md:grid-cols-2">
+              {visibleWidgets.find(w => w.id === "payment-trends") && (
+                <MultiLineTrendChart
+                  data={trendData.paymentTrend}
+                  title="Payment Collection Trends (30 Days)"
+                  description="Track daily payment collections vs expected"
+                  lines={[
+                    { dataKey: "paid", name: "Collected", color: "hsl(var(--primary))" },
+                    { dataKey: "expected", name: "Expected", color: "hsl(var(--accent))" },
+                  ]}
+                />
+              )}
+              {visibleWidgets.find(w => w.id === "tenant-growth") && (
+                <MultiLineTrendChart
+                  data={trendData.tenantTrend}
+                  title="Tenant Growth (30 Days)"
+                  description="New tenant registrations by status"
+                  lines={[
+                    { dataKey: "active", name: "Active", color: "hsl(var(--primary))" },
+                    { dataKey: "pipeline", name: "Pipeline", color: "hsl(var(--accent))" },
+                  ]}
+                />
+              )}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="distribution" className="space-y-4">
+          {distributionData && (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {visibleWidgets.find(w => w.id === "status-distribution") && (
+                <DistributionPieChart
+                  data={distributionData.statusDistribution}
+                  title="Tenant Status Distribution"
+                  description="Breakdown by tenant status"
+                />
+              )}
+              {visibleWidgets.find(w => w.id === "service-center-breakdown") && (
+                <ComparisonBarChart
+                  data={distributionData.serviceCenterDistribution.map(sc => ({
+                    name: sc.name,
+                    tenants: sc.value,
+                  }))}
+                  title="Top Service Centers"
+                  description="By tenant count"
+                  bars={[
+                    { dataKey: "tenants", name: "Tenants", color: "hsl(var(--primary))" },
+                  ]}
+                />
+              )}
+              <DistributionPieChart
+                data={distributionData.sourceDistribution}
+                title="Tenant Source Breakdown"
+                description="How tenants were added"
               />
-              <Legend />
-              <Bar dataKey="expected" fill="hsl(var(--muted))" name="Expected" />
-              <Bar dataKey="paid" fill="hsl(var(--primary))" name="Paid" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-4">
+          {paymentTrends && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Payment Performance Overview
+                </CardTitle>
+                <CardDescription>Daily payment collection vs expected amounts</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={paymentTrends || []}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip 
+                      formatter={(value: number) => `UGX ${value.toLocaleString()}`}
+                    />
+                    <Legend />
+                    <Bar dataKey="expected" fill="hsl(var(--muted))" name="Expected" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="paid" fill="hsl(var(--primary))" name="Paid" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Predictive Analytics */}
       <PredictiveAnalytics />
