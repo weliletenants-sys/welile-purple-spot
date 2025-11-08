@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { InstallBanner } from "@/components/InstallBanner";
+import { HelpChatbot } from "@/components/HelpChatbot";
 import Index from "./pages/Index";
 import RepaymentSchedule from "./pages/RepaymentSchedule";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
@@ -37,6 +38,7 @@ const App = () => {
       <TooltipProvider>
         <UpdatePrompt />
         <InstallPrompt />
+        <HelpChatbot />
         <Toaster />
         <Sonner />
         <BrowserRouter>
