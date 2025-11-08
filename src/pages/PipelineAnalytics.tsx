@@ -8,6 +8,8 @@ import { StatsCard } from "@/components/StatsCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PipelineForecast } from "@/components/PipelineForecast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths } from "date-fns";
@@ -294,7 +296,15 @@ export default function PipelineAnalytics() {
           />
         </div>
 
-        {/* Charts Row 1 */}
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="analytics" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="analytics">Analytics & Reports</TabsTrigger>
+            <TabsTrigger value="forecast">AI Forecast</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analytics" className="space-y-6">
+            {/* Charts Row 1 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Weekly Trends */}
           <Card>
@@ -514,6 +524,19 @@ export default function PipelineAnalytics() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="forecast" className="space-y-6">
+            <PipelineForecast
+              filters={{
+                dateFrom: dateFrom || undefined,
+                dateTo: dateTo || undefined,
+                serviceCenter: serviceCenter !== "all" ? serviceCenter : undefined,
+                agentName: agentName !== "all" ? agentName : undefined,
+              }}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

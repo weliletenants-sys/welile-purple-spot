@@ -8,3 +8,7 @@ verify_jwt = false
 
 [functions.generate-daily-forecast]
 verify_jwt = false
+
+[functions.pipeline-forecast]
+verify_jwt = false
+
