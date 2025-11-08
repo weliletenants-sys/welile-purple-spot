@@ -4,14 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Hourglass, ArrowRight, Phone, MapPin, DollarSign, Bell } from "lucide-react";
+import { Hourglass, ArrowRight, Phone, MapPin, DollarSign, Bell, Home } from "lucide-react";
 import { PipelineConversionWizard } from "@/components/PipelineConversionWizard";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function PipelineTenants() {
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
   const [showWizard, setShowWizard] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { data: pipelineTenants = [], isLoading } = useQuery({
     queryKey: ["pipelineTenants"],
@@ -57,6 +59,16 @@ export default function PipelineTenants() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="mb-4 gap-2"
+        >
+          <Home className="h-4 w-4" />
+          Back to Home
+        </Button>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
