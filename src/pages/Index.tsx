@@ -117,6 +117,7 @@ const Index = () => {
   const [feeFilter, setFeeFilter] = useState<string>("all");
   const [agentFilter, setAgentFilter] = useState<string>("");
   const [agentSearchTerm, setAgentSearchTerm] = useState("");
+  const [agentSortBy, setAgentSortBy] = useState<"name" | "tenants" | "collections">("name");
   const pageSize = 10;
 
   // Handle URL parameters for filtering
@@ -483,32 +484,59 @@ const Index = () => {
                     </Button>
                   </Link>
                 </div>
-                {/* Agent Search Bar */}
-                <div className="relative mt-4">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search agents by name or phone..."
-                    value={agentSearchTerm}
-                    onChange={(e) => setAgentSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+                {/* Agent Search Bar and Sort */}
+                <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search agents by name or phone..."
+                      value={agentSearchTerm}
+                      onChange={(e) => setAgentSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select value={agentSortBy} onValueChange={(value: any) => setAgentSortBy(value)}>
+                    <SelectTrigger className="w-full sm:w-[200px]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Name (A-Z)</SelectItem>
+                      <SelectItem value="tenants">Most Active Tenants</SelectItem>
+                      <SelectItem value="collections">Highest Collections</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {agents && agents.length > 0 ? (
                     (() => {
-                      const filteredAgents = agents.filter((agent) => {
-                        const searchLower = agentSearchTerm.toLowerCase();
-                        return (
-                          agent.name.toLowerCase().includes(searchLower) ||
-                          agent.phone.toLowerCase().includes(searchLower)
-                        );
-                      }).slice(0, 9);
+                      const filteredAndSortedAgents = agents
+                        .filter((agent) => {
+                          const searchLower = agentSearchTerm.toLowerCase();
+                          return (
+                            agent.name.toLowerCase().includes(searchLower) ||
+                            agent.phone.toLowerCase().includes(searchLower)
+                          );
+                        })
+                        .sort((a, b) => {
+                          const aStats = agentStats[a.phone] || { activeTenants: 0, totalCollected: 0 };
+                          const bStats = agentStats[b.phone] || { activeTenants: 0, totalCollected: 0 };
+                          
+                          if (agentSortBy === "name") {
+                            return a.name.localeCompare(b.name);
+                          } else if (agentSortBy === "tenants") {
+                            return bStats.activeTenants - aStats.activeTenants;
+                          } else if (agentSortBy === "collections") {
+                            return bStats.totalCollected - aStats.totalCollected;
+                          }
+                          return 0;
+                        })
+                        .slice(0, 9);
 
-                      return filteredAgents.length > 0 ? (
-                        filteredAgents.map((agent) => {
+                      return filteredAndSortedAgents.length > 0 ? (
+                        filteredAndSortedAgents.map((agent) => {
                           const stats = agentStats[agent.phone] || { activeTenants: 0, totalCollected: 0 };
                           return (
                             <Card key={agent.id} className="hover:shadow-lg transition-shadow">
