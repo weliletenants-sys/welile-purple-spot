@@ -21,6 +21,8 @@ import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard, Building2, Phone, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +58,56 @@ const Index = () => {
   const { showTour, completeTour, skipTour } = useOnboardingTour();
   const { isAdmin } = useAdminRole();
   const { data: agents, refetch: refetchAgents } = useAgents();
+  
+  // Fetch all tenants and payments for agent stats
+  const { data: allTenants } = useQuery({
+    queryKey: ["all-tenants-for-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tenants")
+        .select("id, agent_phone, status");
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
+  const { data: allPayments } = useQuery({
+    queryKey: ["all-payments-for-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("daily_payments")
+        .select("tenant_id, paid, paid_amount, amount")
+        .eq("paid", true);
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
+  // Calculate agent stats
+  const agentStats = useMemo(() => {
+    if (!agents || !allTenants || !allPayments) return {};
+    
+    const statsMap: Record<string, { activeTenants: number; totalCollected: number }> = {};
+    
+    agents.forEach((agent) => {
+      const agentTenants = allTenants.filter((t) => t.agent_phone === agent.phone);
+      const activeTenants = agentTenants.filter(
+        (t) => t.status === "active" || t.status === "pending"
+      ).length;
+      
+      const tenantIds = agentTenants.map((t) => t.id);
+      const totalCollected = allPayments
+        .filter((p) => tenantIds.includes(p.tenant_id))
+        .reduce((sum, p) => sum + (Number(p.paid_amount) || Number(p.amount) || 0), 0);
+      
+      statsMap[agent.phone] = { activeTenants, totalCollected };
+    });
+    
+    return statsMap;
+  }, [agents, allTenants, allPayments]);
+
   const [showAchievements, setShowAchievements] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -429,37 +481,60 @@ const Index = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {agents && agents.length > 0 ? (
-                    agents.slice(0, 9).map((agent) => (
-                      <Card key={agent.id} className="hover:shadow-lg transition-shadow">
-                        <CardContent className="pt-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-lg mb-2">{agent.name}</h3>
-                              {agent.phone && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Phone className="h-4 w-4" />
-                                  <span>{agent.phone}</span>
+                    agents.slice(0, 9).map((agent) => {
+                      const stats = agentStats[agent.phone] || { activeTenants: 0, totalCollected: 0 };
+                      return (
+                        <Card key={agent.id} className="hover:shadow-lg transition-shadow">
+                          <CardContent className="pt-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-lg mb-2">{agent.name}</h3>
+                                {agent.phone && (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                                    <Phone className="h-4 w-4" />
+                                    <span>{agent.phone}</span>
+                                  </div>
+                                )}
+                                
+                                {/* Agent Stats */}
+                                <div className="space-y-2 mt-3 pt-3 border-t">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground flex items-center gap-1">
+                                      <Users className="h-3 w-3" />
+                                      Active Tenants
+                                    </span>
+                                    <span className="font-semibold">{stats.activeTenants}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground flex items-center gap-1">
+                                      <DollarSign className="h-3 w-3" />
+                                      Total Collected
+                                    </span>
+                                    <span className="font-semibold text-green-600">
+                                      UGX {stats.totalCollected.toLocaleString()}
+                                    </span>
+                                  </div>
                                 </div>
-                              )}
+                              </div>
+                              <EditAgentDialog 
+                                agent={{ 
+                                  id: agent.id, 
+                                  name: agent.name, 
+                                  phone: agent.phone, 
+                                  is_active: true 
+                                }} 
+                                onSuccess={refetchAgents} 
+                              />
                             </div>
-                            <EditAgentDialog 
-                              agent={{ 
-                                id: agent.id, 
-                                name: agent.name, 
-                                phone: agent.phone, 
-                                is_active: true 
-                              }} 
-                              onSuccess={refetchAgents} 
-                            />
-                          </div>
-                          <Link to={`/agent/${agent.phone}`}>
-                            <Button variant="outline" size="sm" className="w-full">
-                              View Performance
-                            </Button>
-                          </Link>
-                        </CardContent>
-                      </Card>
-                    ))
+                            <Link to={`/agent/${agent.phone}`}>
+                              <Button variant="outline" size="sm" className="w-full mt-2">
+                                View Performance
+                              </Button>
+                            </Link>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
                   ) : (
                     <div className="col-span-full text-center py-8 text-muted-foreground">
                       No agents found. Add your first agent above!
