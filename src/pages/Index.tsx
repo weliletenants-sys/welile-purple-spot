@@ -116,6 +116,7 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [feeFilter, setFeeFilter] = useState<string>("all");
   const [agentFilter, setAgentFilter] = useState<string>("");
+  const [agentSearchTerm, setAgentSearchTerm] = useState("");
   const pageSize = 10;
 
   // Handle URL parameters for filtering
@@ -471,75 +472,102 @@ const Index = () => {
             {/* Agent Cards Grid */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl flex items-center justify-between">
-                  <span className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <CardTitle className="text-2xl flex items-center gap-2">
                     <UserCog className="h-6 w-6" />
                     Active Agents ({agents?.length || 0})
-                  </span>
+                  </CardTitle>
                   <Link to="/agent-management">
                     <Button variant="outline" size="sm">
                       View All
                     </Button>
                   </Link>
-                </CardTitle>
+                </div>
+                {/* Agent Search Bar */}
+                <div className="relative mt-4">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search agents by name or phone..."
+                    value={agentSearchTerm}
+                    onChange={(e) => setAgentSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {agents && agents.length > 0 ? (
-                    agents.slice(0, 9).map((agent) => {
-                      const stats = agentStats[agent.phone] || { activeTenants: 0, totalCollected: 0 };
-                      return (
-                        <Card key={agent.id} className="hover:shadow-lg transition-shadow">
-                          <CardContent className="pt-6">
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-lg mb-2">{agent.name}</h3>
-                                {agent.phone && (
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                                    <Phone className="h-4 w-4" />
-                                    <span>{agent.phone}</span>
+                    (() => {
+                      const filteredAgents = agents.filter((agent) => {
+                        const searchLower = agentSearchTerm.toLowerCase();
+                        return (
+                          agent.name.toLowerCase().includes(searchLower) ||
+                          agent.phone.toLowerCase().includes(searchLower)
+                        );
+                      }).slice(0, 9);
+
+                      return filteredAgents.length > 0 ? (
+                        filteredAgents.map((agent) => {
+                          const stats = agentStats[agent.phone] || { activeTenants: 0, totalCollected: 0 };
+                          return (
+                            <Card key={agent.id} className="hover:shadow-lg transition-shadow">
+                              <CardContent className="pt-6">
+                                <div className="flex items-start justify-between mb-4">
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-lg mb-2">{agent.name}</h3>
+                                    {agent.phone && (
+                                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                                        <Phone className="h-4 w-4" />
+                                        <span>{agent.phone}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Agent Stats */}
+                                    <div className="space-y-2 mt-3 pt-3 border-t">
+                                      <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground flex items-center gap-1">
+                                          <Users className="h-3 w-3" />
+                                          Active Tenants
+                                        </span>
+                                        <span className="font-semibold">{stats.activeTenants}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground flex items-center gap-1">
+                                          <DollarSign className="h-3 w-3" />
+                                          Total Collected
+                                        </span>
+                                        <span className="font-semibold text-green-600">
+                                          UGX {stats.totalCollected.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
-                                )}
-                                
-                                {/* Agent Stats */}
-                                <div className="space-y-2 mt-3 pt-3 border-t">
-                                  <div className="flex items-center justify-between text-sm">
-                                    <span className="text-muted-foreground flex items-center gap-1">
-                                      <Users className="h-3 w-3" />
-                                      Active Tenants
-                                    </span>
-                                    <span className="font-semibold">{stats.activeTenants}</span>
-                                  </div>
-                                  <div className="flex items-center justify-between text-sm">
-                                    <span className="text-muted-foreground flex items-center gap-1">
-                                      <DollarSign className="h-3 w-3" />
-                                      Total Collected
-                                    </span>
-                                    <span className="font-semibold text-green-600">
-                                      UGX {stats.totalCollected.toLocaleString()}
-                                    </span>
-                                  </div>
+                                  <EditAgentDialog 
+                                    agent={{ 
+                                      id: agent.id, 
+                                      name: agent.name, 
+                                      phone: agent.phone, 
+                                      is_active: true 
+                                    }} 
+                                    onSuccess={refetchAgents} 
+                                  />
                                 </div>
-                              </div>
-                              <EditAgentDialog 
-                                agent={{ 
-                                  id: agent.id, 
-                                  name: agent.name, 
-                                  phone: agent.phone, 
-                                  is_active: true 
-                                }} 
-                                onSuccess={refetchAgents} 
-                              />
-                            </div>
-                            <Link to={`/agent/${agent.phone}`}>
-                              <Button variant="outline" size="sm" className="w-full mt-2">
-                                View Performance
-                              </Button>
-                            </Link>
-                          </CardContent>
-                        </Card>
+                                <Link to={`/agent/${agent.phone}`}>
+                                  <Button variant="outline" size="sm" className="w-full mt-2">
+                                    View Performance
+                                  </Button>
+                                </Link>
+                              </CardContent>
+                            </Card>
+                          );
+                        })
+                      ) : (
+                        <div className="col-span-full text-center py-8 text-muted-foreground">
+                          {agentSearchTerm ? 'No agents match your search.' : 'No agents found. Add your first agent above!'}
+                        </div>
                       );
-                    })
+                    })()
                   ) : (
                     <div className="col-span-full text-center py-8 text-muted-foreground">
                       No agents found. Add your first agent above!
