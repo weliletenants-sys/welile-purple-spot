@@ -39,9 +39,10 @@ interface Agent {
 interface EditAgentDialogProps {
   agent: Agent;
   onSuccess?: () => void;
+  children?: React.ReactNode;
 }
 
-export const EditAgentDialog = ({ agent, onSuccess }: EditAgentDialogProps) => {
+export const EditAgentDialog = ({ agent, onSuccess, children }: EditAgentDialogProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(agent.name);
   const [phone, setPhone] = useState(agent.phone || "");
@@ -129,9 +130,11 @@ export const EditAgentDialog = ({ agent, onSuccess }: EditAgentDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Pencil className="h-4 w-4" />
-        </Button>
+        {children || (
+          <Button variant="ghost" size="icon">
+            <Pencil className="h-4 w-4" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

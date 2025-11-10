@@ -31,9 +31,10 @@ const agentSchema = z.object({
 
 interface AddAgentDialogProps {
   onSuccess?: () => void;
+  children?: React.ReactNode;
 }
 
-export const AddAgentDialog = ({ onSuccess }: AddAgentDialogProps) => {
+export const AddAgentDialog = ({ onSuccess, children }: AddAgentDialogProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -119,10 +120,12 @@ export const AddAgentDialog = ({ onSuccess }: AddAgentDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold px-12 py-8 text-xl shadow-2xl hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all hover:scale-110 animate-pulse-subtle">
-          <UserPlus className="mr-3 h-7 w-7" />
-          Add New Agent
-        </Button>
+        {children || (
+          <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold px-12 py-8 text-xl shadow-2xl hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all hover:scale-110 animate-pulse-subtle">
+            <UserPlus className="mr-3 h-7 w-7" />
+            Add New Agent
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

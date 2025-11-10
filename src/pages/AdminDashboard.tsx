@@ -40,7 +40,13 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight, DollarSign, TrendingUp, Calendar as CalendarIcon, BarChart3, Download } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight, DollarSign, TrendingUp, Calendar as CalendarIcon, BarChart3, Download, UserPlus, Search, Pencil, Trash2 } from "lucide-react";
+import { AddAgentDialog } from "@/components/AddAgentDialog";
+import { EditAgentDialog } from "@/components/EditAgentDialog";
+import { useAgents } from "@/hooks/useAgents";
+import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import { TrendChart, DistributionPieChart, MultiLineTrendChart, ComparisonBarChart } from "@/components/DashboardCharts";
 import { ExportButtons } from "@/components/DashboardExport";
 import { useTrendData, useDistributionData } from "@/hooks/useTrendData";
@@ -211,6 +217,7 @@ const AdminDashboard = () => {
                 handleApprove={handleApprove}
                 handleReject={handleReject}
               />}
+              {activeSection === 'agents' && <AgentManagementSection />}
               {activeSection === 'recorders' && <AuthorizedRecordersManager />}
               {activeSection === 'recorder-performance' && <RecorderPerformanceComparison />}
               {activeSection === 'reports' && <ReportsSection />}
@@ -234,7 +241,7 @@ const AdminDashboard = () => {
 };
 
 // Types
-type SectionId = 'withdrawal' | 'recording' | 'reports' | 'analytics';
+type SectionId = 'withdrawal' | 'recording' | 'reports' | 'analytics' | 'agents';
 
 interface Section {
   id: SectionId;
@@ -244,6 +251,7 @@ interface Section {
 
 const DEFAULT_SECTIONS: Section[] = [
   { id: 'withdrawal', label: 'Withdrawal Management', defaultOpen: true },
+  { id: 'agents', label: 'Agent Management', defaultOpen: false },
   { id: 'recording', label: 'Recording Management', defaultOpen: false },
   { id: 'reports', label: 'Reports & Analytics', defaultOpen: false },
   { id: 'analytics', label: 'Location Analytics', defaultOpen: false }
@@ -379,6 +387,9 @@ const AdminSidebar = ({
     withdrawal: [
       { id: 'requests', label: 'Requests', icon: Clock, shortcut: 'Alt+1' }
     ],
+    agents: [
+      { id: 'agents', label: 'Manage Agents', icon: Users, shortcut: 'Alt+A' }
+    ],
     recording: [
       { id: 'recorders', label: 'Authorized Recorders', icon: UserCheck, shortcut: 'Alt+2' },
       { id: 'recorder-performance', label: 'Performance', icon: Trophy, shortcut: 'Alt+3' }
@@ -453,6 +464,153 @@ const AdminSidebar = ({
         </DndContext>
       </SidebarContent>
     </Sidebar>
+  );
+};
+
+// Agent Management Section Component
+const AgentManagementSection = () => {
+  // Fetch agents with is_active field from database
+  const { data: agents, isLoading, refetch } = useQuery({
+    queryKey: ["agents-full"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agents")
+        .select("id, name, phone, is_active")
+        .eq("is_active", true)
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const filteredAgents = agents?.filter((agent) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      agent.name.toLowerCase().includes(searchLower) ||
+      agent.phone.toLowerCase().includes(searchLower)
+    );
+  }) || [];
+
+  const handleDelete = async () => {
+    if (!agentToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("agents")
+        .update({ is_active: false })
+        .eq("id", agentToDelete.id);
+
+      if (error) throw error;
+
+      toast.success(`Agent ${agentToDelete.name} has been deactivated`);
+      refetch();
+      setDeleteDialogOpen(false);
+      setAgentToDelete(null);
+    } catch (error) {
+      console.error("Error deactivating agent:", error);
+      toast.error("Failed to deactivate agent");
+    }
+  };
+
+  const openDeleteDialog = (agent: { id: string; name: string }) => {
+    setAgentToDelete(agent);
+    setDeleteDialogOpen(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Agent Management</CardTitle>
+              <CardDescription>Add, edit, and manage agents</CardDescription>
+            </div>
+            <AddAgentDialog onSuccess={refetch}>
+              <Button className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                Add New Agent
+              </Button>
+            </AddAgentDialog>
+          </div>
+          <div className="relative mt-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search agents by name or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8">Loading agents...</div>
+          ) : filteredAgents.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {searchTerm ? "No agents found matching your search" : "No agents found"}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left p-4 font-medium">Name</th>
+                    <th className="text-left p-4 font-medium">Phone</th>
+                    <th className="text-right p-4 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAgents.map((agent) => (
+                    <tr key={agent.id} className="border-b last:border-0 hover:bg-muted/50">
+                      <td className="p-4 font-medium">{agent.name}</td>
+                      <td className="p-4">{agent.phone}</td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <EditAgentDialog agent={agent} onSuccess={refetch}>
+                            <Button variant="ghost" size="sm">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </EditAgentDialog>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeleteDialog(agent)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate Agent</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to deactivate {agentToDelete?.name}? This action can be reversed later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Deactivate</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 };
 
