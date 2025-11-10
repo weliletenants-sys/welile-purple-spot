@@ -74,6 +74,15 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
     guarantor2Name: 100,
   } as const;
 
+  // Phone validation state
+  const [phoneValidation, setPhoneValidation] = useState({
+    contact: { isValid: true, message: "" },
+    agentPhone: { isValid: true, message: "" },
+    landlordContact: { isValid: true, message: "" },
+    guarantor1Contact: { isValid: true, message: "" },
+    guarantor2Contact: { isValid: true, message: "" },
+  });
+
   // Check if tenant's agent is in the approved list, if not default to MUHWEZI MARTIN
   const isAgentValid = agents.some(agent => agent.name === tenant.agentName);
   const validAgentName = isAgentValid ? tenant.agentName : "MUHWEZI MARTIN";
@@ -122,6 +131,49 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
     }
     return null;
   }, [formData.rentAmount, formData.repaymentDays]);
+
+  // Phone validation function
+  const validatePhoneNumber = (phone: string): { isValid: boolean; message: string } => {
+    if (!phone.trim()) {
+      return { isValid: true, message: "" }; // Empty is ok, required validation handles this
+    }
+    
+    if (phone.length < 10) {
+      return { isValid: false, message: "Phone number must be 10 digits" };
+    }
+    
+    if (phone.length > 10) {
+      return { isValid: false, message: "Phone number cannot exceed 10 digits" };
+    }
+    
+    if (!phone.startsWith("0")) {
+      return { isValid: false, message: "Phone number must start with 0" };
+    }
+    
+    if (!/^\d+$/.test(phone)) {
+      return { isValid: false, message: "Phone number must contain only digits" };
+    }
+    
+    return { isValid: true, message: "" };
+  };
+
+  // Check if any required phone field is invalid
+  const hasInvalidPhoneNumber = () => {
+    // Contact is always required
+    if (!phoneValidation.contact.isValid && formData.contact.trim()) return true;
+    
+    // Agent phone is required
+    if (!phoneValidation.agentPhone.isValid && formData.agentPhone.trim()) return true;
+    
+    // Landlord contact is required
+    if (!phoneValidation.landlordContact.isValid && formData.landlordContact.trim()) return true;
+    
+    // Guarantor contacts are optional but must be valid if provided
+    if (formData.guarantor1Contact.trim() && !phoneValidation.guarantor1Contact.isValid) return true;
+    if (formData.guarantor2Contact.trim() && !phoneValidation.guarantor2Contact.isValid) return true;
+    
+    return false;
+  };
 
 
   const checkForDuplicates = async () => {
@@ -275,6 +327,17 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
     }
     
     setFormData((prev) => ({ ...prev, [field]: finalValue }));
+    
+    // Validate phone number fields in real-time
+    const phoneFields = ["contact", "agentPhone", "landlordContact", "guarantor1Contact", "guarantor2Contact"];
+    if (phoneFields.includes(field)) {
+      const validation = validatePhoneNumber(finalValue);
+      setPhoneValidation(prev => ({
+        ...prev,
+        [field]: validation
+      }));
+    }
+    
     // Clear duplicate warning when user changes contact or name
     if ((field === "contact" || field === "name") && duplicateWarning) {
       setDuplicateWarning(null);
@@ -355,7 +418,21 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="contact"
                   value={formData.contact}
                   onChange={(e) => handleChange("contact", e.target.value)}
+                  className={!phoneValidation.contact.isValid ? "border-destructive" : ""}
+                  maxLength={10}
                 />
+                {!phoneValidation.contact.isValid && formData.contact.trim() && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {phoneValidation.contact.message}
+                  </p>
+                )}
+                {phoneValidation.contact.isValid && formData.contact.trim() && formData.contact.length === 10 && (
+                  <p className="text-sm text-green-600 flex items-center gap-1">
+                    <span className="text-green-600">✓</span>
+                    Valid phone number
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="address">Address *</Label>
@@ -423,7 +500,22 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="landlordContact"
                   value={formData.landlordContact}
                   onChange={(e) => handleChange("landlordContact", e.target.value)}
+                  placeholder="e.g., 0700000000"
+                  className={!phoneValidation.landlordContact.isValid ? "border-destructive" : ""}
+                  maxLength={10}
                 />
+                {!phoneValidation.landlordContact.isValid && formData.landlordContact.trim() && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {phoneValidation.landlordContact.message}
+                  </p>
+                )}
+                {phoneValidation.landlordContact.isValid && formData.landlordContact.trim() && formData.landlordContact.length === 10 && (
+                  <p className="text-sm text-green-600 flex items-center gap-1">
+                    <span className="text-green-600">✓</span>
+                    Valid phone number
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -501,7 +593,22 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="guarantor1Contact"
                   value={formData.guarantor1Contact}
                   onChange={(e) => handleChange("guarantor1Contact", e.target.value)}
+                  placeholder="e.g., 0700000000"
+                  className={!phoneValidation.guarantor1Contact.isValid ? "border-destructive" : ""}
+                  maxLength={10}
                 />
+                {!phoneValidation.guarantor1Contact.isValid && formData.guarantor1Contact.trim() && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {phoneValidation.guarantor1Contact.message}
+                  </p>
+                )}
+                {phoneValidation.guarantor1Contact.isValid && formData.guarantor1Contact.trim() && formData.guarantor1Contact.length === 10 && (
+                  <p className="text-sm text-green-600 flex items-center gap-1">
+                    <span className="text-green-600">✓</span>
+                    Valid phone number
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="guarantor2Name">Guarantor 2 Name</Label>
@@ -521,7 +628,22 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="guarantor2Contact"
                   value={formData.guarantor2Contact}
                   onChange={(e) => handleChange("guarantor2Contact", e.target.value)}
+                  placeholder="e.g., 0700000000"
+                  className={!phoneValidation.guarantor2Contact.isValid ? "border-destructive" : ""}
+                  maxLength={10}
                 />
+                {!phoneValidation.guarantor2Contact.isValid && formData.guarantor2Contact.trim() && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {phoneValidation.guarantor2Contact.message}
+                  </p>
+                )}
+                {phoneValidation.guarantor2Contact.isValid && formData.guarantor2Contact.trim() && formData.guarantor2Contact.length === 10 && (
+                  <p className="text-sm text-green-600 flex items-center gap-1">
+                    <span className="text-green-600">✓</span>
+                    Valid phone number
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -621,19 +743,43 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="agentPhone"
                   value={formData.agentPhone}
                   onChange={(e) => handleChange("agentPhone", e.target.value)}
+                  placeholder="e.g., 0700000000"
+                  className={!phoneValidation.agentPhone.isValid ? "border-destructive" : ""}
+                  maxLength={10}
                 />
+                {!phoneValidation.agentPhone.isValid && formData.agentPhone.trim() && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {phoneValidation.agentPhone.message}
+                  </p>
+                )}
+                {phoneValidation.agentPhone.isValid && formData.agentPhone.trim() && formData.agentPhone.length === 10 && (
+                  <p className="text-sm text-green-600 flex items-center gap-1">
+                    <span className="text-green-600">✓</span>
+                    Valid phone number
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
           <div className="flex gap-4 pt-4">
-            <Button type="submit" className="flex-1">
+            <Button 
+              type="submit" 
+              className="flex-1"
+              disabled={hasInvalidPhoneNumber()}
+            >
               Update Tenant
             </Button>
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
               Cancel
             </Button>
           </div>
+          {hasInvalidPhoneNumber() && (
+            <p className="text-sm text-destructive text-center">
+              Please fix phone number validation errors before updating
+            </p>
+          )}
         </form>
       </DialogContent>
     </Dialog>
