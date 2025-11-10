@@ -297,6 +297,13 @@ const Index = () => {
                     <BarChart3 className="w-4 h-4" />
                     <span>📊 Pipeline Analytics</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
+                    onClick={() => navigate("/agent-management")}
+                  >
+                    <Users className="w-4 h-4" />
+                    <span>👥 Agent Management</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     className="p-0 mt-2"
                     onSelect={(e) => e.preventDefault()}
