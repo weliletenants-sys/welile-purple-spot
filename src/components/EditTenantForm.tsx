@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,6 +82,14 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
     guarantor1Contact: { isValid: true, message: "" },
     guarantor2Contact: { isValid: true, message: "" },
   });
+
+  // Landlord duplicate detection
+  const [realtimeLandlordDuplicates, setRealtimeLandlordDuplicates] = useState<Array<{
+    name: string;
+    landlord: string;
+    address: string;
+  }>>([]);
+  const [isCheckingLandlordDuplicate, setIsCheckingLandlordDuplicate] = useState(false);
 
   // Check if tenant's agent is in the approved list, if not default to MUHWEZI MARTIN
   const isAgentValid = agents.some(agent => agent.name === tenant.agentName);
@@ -174,6 +182,40 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
     
     return false;
   };
+
+  // Real-time landlord contact duplicate detection with debouncing
+  useEffect(() => {
+    if (!open || !formData.landlordContact.trim() || formData.landlordContact.trim().length < 10) {
+      setRealtimeLandlordDuplicates([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingLandlordDuplicate(true);
+      try {
+        const { data: landlordMatches, error } = await supabase
+          .from("tenants")
+          .select("name, landlord, address")
+          .eq("landlord_contact", formData.landlordContact.trim())
+          .neq("id", tenant.id) // Exclude current tenant
+          .limit(5);
+
+        if (error) {
+          console.error("Error checking for landlord duplicates:", error);
+        } else if (landlordMatches && landlordMatches.length > 0) {
+          setRealtimeLandlordDuplicates(landlordMatches);
+        } else {
+          setRealtimeLandlordDuplicates([]);
+        }
+      } catch (error) {
+        console.error("Error checking for landlord duplicates:", error);
+      } finally {
+        setIsCheckingLandlordDuplicate(false);
+      }
+    }, 800); // 800ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.landlordContact, open, tenant.id]);
 
 
   const checkForDuplicates = async () => {
@@ -342,6 +384,10 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
     if ((field === "contact" || field === "name") && duplicateWarning) {
       setDuplicateWarning(null);
     }
+    // Clear realtime landlord duplicates when landlord contact changes
+    if (field === "landlordContact" && realtimeLandlordDuplicates.length > 0) {
+      setRealtimeLandlordDuplicates([]);
+    }
   };
 
   const handleAgentChange = (agentName: string) => {
@@ -501,7 +547,10 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   value={formData.landlordContact}
                   onChange={(e) => handleChange("landlordContact", e.target.value)}
                   placeholder="e.g., 0700000000"
-                  className={!phoneValidation.landlordContact.isValid ? "border-destructive" : ""}
+                  className={
+                    realtimeLandlordDuplicates.length > 0 ? "border-blue-500" :
+                    !phoneValidation.landlordContact.isValid ? "border-destructive" : ""
+                  }
                   maxLength={10}
                 />
                 {!phoneValidation.landlordContact.isValid && formData.landlordContact.trim() && (
@@ -510,11 +559,36 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                     {phoneValidation.landlordContact.message}
                   </p>
                 )}
-                {phoneValidation.landlordContact.isValid && formData.landlordContact.trim() && formData.landlordContact.length === 10 && (
+                {phoneValidation.landlordContact.isValid && formData.landlordContact.trim() && formData.landlordContact.length === 10 && !isCheckingLandlordDuplicate && realtimeLandlordDuplicates.length === 0 && (
                   <p className="text-sm text-green-600 flex items-center gap-1">
                     <span className="text-green-600">✓</span>
                     Valid phone number
                   </p>
+                )}
+                {isCheckingLandlordDuplicate && (
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <span className="inline-block w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                    Checking for existing landlords...
+                  </p>
+                )}
+                {realtimeLandlordDuplicates.length > 0 && !isCheckingLandlordDuplicate && (
+                  <Alert variant="default" className="mt-2 border-blue-500 bg-blue-50 dark:bg-blue-950/20">
+                    <AlertTriangle className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800 dark:text-blue-200">
+                      <strong>Landlord Already Registered:</strong> This landlord contact is associated with {realtimeLandlordDuplicates.length} other tenant{realtimeLandlordDuplicates.length > 1 ? 's' : ''}:
+                      <ul className="mt-1 space-y-1 text-sm">
+                        {realtimeLandlordDuplicates.slice(0, 3).map((duplicate, index) => (
+                          <li key={index}>
+                            <span className="font-semibold">{duplicate.name}</span> - Landlord: {duplicate.landlord} ({duplicate.address})
+                          </li>
+                        ))}
+                        {realtimeLandlordDuplicates.length > 3 && (
+                          <li className="text-xs italic">...and {realtimeLandlordDuplicates.length - 3} more</li>
+                        )}
+                      </ul>
+                      <p className="mt-2 text-xs">This is informational - same landlord can have multiple tenants.</p>
+                    </AlertDescription>
+                  </Alert>
                 )}
               </div>
             </div>

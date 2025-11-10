@@ -71,6 +71,12 @@ export const AddTenantForm = () => {
     address: string;
   }>>([]);
   const [isCheckingNameDuplicate, setIsCheckingNameDuplicate] = useState(false);
+  const [realtimeLandlordDuplicates, setRealtimeLandlordDuplicates] = useState<Array<{
+    name: string;
+    landlord: string;
+    address: string;
+  }>>([]);
+  const [isCheckingLandlordDuplicate, setIsCheckingLandlordDuplicate] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [phoneValidation, setPhoneValidation] = useState({
     contact: { isValid: true, message: "" },
@@ -199,6 +205,39 @@ export const AddTenantForm = () => {
 
     return () => clearTimeout(timeoutId);
   }, [formData.name, open]);
+
+  // Real-time landlord contact duplicate detection with debouncing
+  useEffect(() => {
+    if (!open || formData.status === "pipeline" || !formData.landlordContact.trim() || formData.landlordContact.trim().length < 10) {
+      setRealtimeLandlordDuplicates([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingLandlordDuplicate(true);
+      try {
+        const { data: landlordMatches, error } = await supabase
+          .from("tenants")
+          .select("name, landlord, address")
+          .eq("landlord_contact", formData.landlordContact.trim())
+          .limit(5);
+
+        if (error) {
+          console.error("Error checking for landlord duplicates:", error);
+        } else if (landlordMatches && landlordMatches.length > 0) {
+          setRealtimeLandlordDuplicates(landlordMatches);
+        } else {
+          setRealtimeLandlordDuplicates([]);
+        }
+      } catch (error) {
+        console.error("Error checking for landlord duplicates:", error);
+      } finally {
+        setIsCheckingLandlordDuplicate(false);
+      }
+    }, 800); // 800ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.landlordContact, formData.status, open]);
 
   // Calculate repayment details whenever rent amount or repayment days change
   const repaymentDetails = useMemo(() => {
@@ -460,6 +499,10 @@ export const AddTenantForm = () => {
     if (field === "name" && realtimeNameDuplicates.length > 0) {
       setRealtimeNameDuplicates([]);
     }
+    // Clear realtime landlord duplicates when landlord contact changes
+    if (field === "landlordContact" && realtimeLandlordDuplicates.length > 0) {
+      setRealtimeLandlordDuplicates([]);
+    }
   };
 
   const handleAgentChange = (agentName: string) => {
@@ -502,6 +545,7 @@ export const AddTenantForm = () => {
     setDuplicateWarning(null);
     setRealtimeDuplicate(null);
     setRealtimeNameDuplicates([]);
+    setRealtimeLandlordDuplicates([]);
     setPhoneValidation({
       contact: { isValid: true, message: "" },
       agentPhone: { isValid: true, message: "" },
@@ -755,7 +799,10 @@ export const AddTenantForm = () => {
                 value={formData.landlordContact}
                 onChange={(e) => handleChange("landlordContact", e.target.value)}
                 placeholder="e.g., 0700000000"
-                className={!phoneValidation.landlordContact.isValid ? "border-destructive" : ""}
+                className={
+                  realtimeLandlordDuplicates.length > 0 ? "border-blue-500" :
+                  !phoneValidation.landlordContact.isValid ? "border-destructive" : ""
+                }
                 maxLength={10}
               />
               {!phoneValidation.landlordContact.isValid && formData.landlordContact.trim() && (
@@ -764,11 +811,36 @@ export const AddTenantForm = () => {
                   {phoneValidation.landlordContact.message}
                 </p>
               )}
-              {phoneValidation.landlordContact.isValid && formData.landlordContact.trim() && formData.landlordContact.length === 10 && (
+              {phoneValidation.landlordContact.isValid && formData.landlordContact.trim() && formData.landlordContact.length === 10 && !isCheckingLandlordDuplicate && realtimeLandlordDuplicates.length === 0 && (
                 <p className="text-sm text-green-600 flex items-center gap-1">
                   <span className="text-green-600">✓</span>
                   Valid phone number
                 </p>
+              )}
+              {isCheckingLandlordDuplicate && (
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                  Checking for existing landlords...
+                </p>
+              )}
+              {realtimeLandlordDuplicates.length > 0 && !isCheckingLandlordDuplicate && (
+                <Alert variant="default" className="mt-2 border-blue-500 bg-blue-50 dark:bg-blue-950/20">
+                  <AlertTriangle className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800 dark:text-blue-200">
+                    <strong>Landlord Already Registered:</strong> This landlord contact is associated with {realtimeLandlordDuplicates.length} other tenant{realtimeLandlordDuplicates.length > 1 ? 's' : ''}:
+                    <ul className="mt-1 space-y-1 text-sm">
+                      {realtimeLandlordDuplicates.slice(0, 3).map((duplicate, index) => (
+                        <li key={index}>
+                          <span className="font-semibold">{duplicate.name}</span> - Landlord: {duplicate.landlord} ({duplicate.address})
+                        </li>
+                      ))}
+                      {realtimeLandlordDuplicates.length > 3 && (
+                        <li className="text-xs italic">...and {realtimeLandlordDuplicates.length - 3} more</li>
+                      )}
+                    </ul>
+                    <p className="mt-2 text-xs">This is informational - same landlord can have multiple tenants.</p>
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
           </div>
