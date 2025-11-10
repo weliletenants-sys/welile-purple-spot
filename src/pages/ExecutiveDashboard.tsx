@@ -16,6 +16,7 @@ import { ExportButtons } from "@/components/DashboardExport";
 import { useTrendData, useDistributionData } from "@/hooks/useTrendData";
 import { useDashboardWidgets, WidgetCustomizer } from "@/components/DashboardWidgets";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 
 const ADMIN_ACCESS_CODE = "Mypart@welile";
 
@@ -142,6 +143,9 @@ const ExecutiveDashboard = () => {
                 ],
               }}
             />
+
+            {/* Landlord Report Export */}
+            <LandlordGroupedExport />
 
             {/* Customize Widgets */}
             <WidgetCustomizer

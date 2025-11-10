@@ -14,6 +14,7 @@ import { AchievementsModal } from "@/components/AchievementsModal";
 import { LeaderboardModal } from "@/components/LeaderboardModal";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
+import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard } from "lucide-react";
@@ -303,6 +304,14 @@ const Index = () => {
                   >
                     <Users className="w-4 h-4" />
                     <span>👥 Agent Management</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="p-0 mt-2"
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <div className="w-full px-2">
+                      <LandlordGroupedExport />
+                    </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="p-0 mt-2"
