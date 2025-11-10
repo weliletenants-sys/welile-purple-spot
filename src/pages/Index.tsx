@@ -454,11 +454,16 @@ const Index = () => {
         {isAdmin && (
           <div className="space-y-6 animate-fade-in">
             {/* Prominent Add Agent Section */}
-            <Card className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 border-primary shadow-2xl">
-              <CardContent className="pt-8 pb-8 text-center">
-                <h2 className="text-3xl font-bold text-primary-foreground mb-6">
+            <Card className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 border-primary shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
+              <CardContent className="pt-10 pb-10 text-center relative z-10">
+                <UserPlus className="h-12 w-12 mx-auto mb-4 text-primary-foreground" />
+                <h2 className="text-4xl font-bold text-primary-foreground mb-2">
                   Agent Management Center
                 </h2>
+                <p className="text-primary-foreground/80 mb-6 text-lg">
+                  Add and manage your team of agents
+                </p>
                 <AddAgentDialog onSuccess={refetchAgents} />
               </CardContent>
             </Card>
