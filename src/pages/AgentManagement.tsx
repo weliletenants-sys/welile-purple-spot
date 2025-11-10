@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAgents } from "@/hooks/useAgents";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,11 +39,36 @@ interface Agent {
 
 const AgentManagement = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, isLoading: roleLoading } = useAdminRole();
   const { data: agents, isLoading, refetch } = useAgents();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [fullAgents, setFullAgents] = useState<Agent[]>([]);
+
+  // Redirect if not authenticated or not admin
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login to access agent management",
+        variant: "destructive",
+      });
+      navigate("/auth");
+    }
+  }, [authLoading, user, navigate, toast]);
+
+  useEffect(() => {
+    if (!roleLoading && !isAdmin && user) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this page",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [roleLoading, isAdmin, user, navigate, toast]);
 
   // Fetch full agent data including IDs
   const fetchFullAgents = async () => {
@@ -98,6 +125,23 @@ const AgentManagement = () => {
     setSelectedAgent(agent);
     setDeleteDialogOpen(true);
   };
+
+  // Show loading while checking auth
+  if (authLoading || roleLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Verifying permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not admin (will redirect via useEffect)
+  if (!user || !isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">

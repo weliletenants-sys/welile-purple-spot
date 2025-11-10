@@ -6,6 +6,7 @@ import { TenantCard } from "@/components/TenantCard";
 import { WelileLogo } from "@/components/WelileLogo";
 import { ShareButton } from "@/components/ShareButton";
 import { NotificationBell } from "@/components/NotificationBell";
+import { UserMenu } from "@/components/UserMenu";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
@@ -206,6 +207,7 @@ const Index = () => {
               </div>
               <ShareButton />
               <NotificationBell />
+              <UserMenu />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon" className="hover-scale" data-tour="navigation">

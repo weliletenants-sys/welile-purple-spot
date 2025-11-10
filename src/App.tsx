@@ -33,6 +33,7 @@ import RiskDashboard from "./pages/RiskDashboard";
 import PipelineTenants from "./pages/PipelineTenants";
 import PipelineAnalytics from "./pages/PipelineAnalytics";
 import AgentManagement from "./pages/AgentManagement";
+import Auth from "./pages/Auth";
 import Leaderboard from "./pages/Leaderboard";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,7 @@ const App = () => {
             <Route path="/pipeline-tenants" element={<PipelineTenants />} />
             <Route path="/pipeline-analytics" element={<PipelineAnalytics />} />
             <Route path="/agent-management" element={<AgentManagement />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
