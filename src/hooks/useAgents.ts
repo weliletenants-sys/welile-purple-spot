@@ -14,46 +14,17 @@ export const useAgents = () => {
     queryKey: ["agents"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tenants")
-        .select("agent_name, agent_phone")
-        .not("agent_name", "is", null)
-        .not("agent_name", "eq", "")
-        .order("agent_name");
+        .from("agents")
+        .select("name, phone")
+        .eq("is_active", true)
+        .order("name");
 
       if (error) throw error;
 
-      // Get unique agents with their phone numbers
-      const uniqueAgents = new Map<string, string>();
-      data?.forEach((tenant) => {
-        if (tenant.agent_name && tenant.agent_phone) {
-          uniqueAgents.set(tenant.agent_name, tenant.agent_phone);
-        }
-      });
-
-      // Convert to array and ensure required agents are always available
-      const agents: Agent[] = Array.from(uniqueAgents.entries()).map(
-        ([name, phone]) => ({
-          name,
-          phone,
-        })
-      );
-
-      // List of agents that should always be available
-      const requiredAgents = [
-        "MUHWEZI MARTIN",
-        "PAVIN",
-        "MICHEAL",
-        "WYCLIEF",
-        "SHAFIC"
-      ];
-
-      // Add missing required agents
-      requiredAgents.forEach(requiredName => {
-        const exists = agents.some(agent => agent.name === requiredName);
-        if (!exists) {
-          agents.push({ name: requiredName, phone: "" });
-        }
-      });
+      const agents: Agent[] = data.map((agent) => ({
+        name: agent.name,
+        phone: agent.phone || "",
+      }));
 
       // Sort to put MUHWEZI MARTIN first, then alphabetically
       agents.sort((a, b) => {
@@ -66,7 +37,7 @@ export const useAgents = () => {
     },
   });
 
-  // Subscribe to realtime changes for tenants (to update agent list)
+  // Subscribe to realtime changes for agents table
   useEffect(() => {
     const channel = supabase
       .channel('agents-changes')
@@ -75,7 +46,7 @@ export const useAgents = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'tenants'
+          table: 'agents'
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["agents"] });
