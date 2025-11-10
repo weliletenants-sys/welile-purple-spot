@@ -19,8 +19,7 @@ import { useTenants } from "@/hooks/useTenants";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Lazy load heavy components
-const AddTenantForm = lazy(() => import("@/components/AddTenantForm").then(m => ({ default: m.AddTenantForm })));
+import { AddTenantForm } from "@/components/AddTenantForm";
 import {
   Select,
   SelectContent,
@@ -313,9 +312,7 @@ const Index = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Suspense fallback={<Button variant="outline">Add Tenant</Button>}>
-                <AddTenantForm />
-              </Suspense>
+              <AddTenantForm />
             </div>
           </div>
         </div>
