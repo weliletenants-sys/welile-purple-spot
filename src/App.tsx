@@ -33,6 +33,7 @@ import RiskDashboard from "./pages/RiskDashboard";
 import PipelineTenants from "./pages/PipelineTenants";
 import PipelineAnalytics from "./pages/PipelineAnalytics";
 import AgentManagement from "./pages/AgentManagement";
+import AgentPerformanceDashboard from "./pages/AgentPerformanceDashboard";
 import Auth from "./pages/Auth";
 import Leaderboard from "./pages/Leaderboard";
 import LandlordManagement from "./pages/LandlordManagement";
@@ -82,7 +83,8 @@ const App = () => {
             <Route path="/risk-dashboard" element={<RiskDashboard />} />
             <Route path="/pipeline-tenants" element={<PipelineTenants />} />
             <Route path="/pipeline-analytics" element={<PipelineAnalytics />} />
-            <Route path="/agent-management" element={<AgentManagement />} />
+          <Route path="/agent-management" element={<AgentManagement />} />
+          <Route path="/agent-performance" element={<AgentPerformanceDashboard />} />
             <Route path="/landlord-management" element={<LandlordManagement />} />
             <Route path="/landlord/:landlordContact" element={<LandlordProfile />} />
             <Route path="/auth" element={<Auth />} />

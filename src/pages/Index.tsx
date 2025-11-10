@@ -405,14 +405,25 @@ const Index = () => {
                   <p className="text-green-50">Add, edit, and manage all agents in the system</p>
                 </div>
               </div>
-              <Button
-                size="lg"
-                onClick={() => navigate("/agent-management")}
-                className="bg-white text-green-600 hover:bg-green-50 font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-              >
-                <UserPlus className="h-5 w-5 mr-2" />
-                Agent Management
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  size="lg"
+                  onClick={() => navigate("/agent-management")}
+                  className="bg-white text-green-600 hover:bg-green-50 font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                >
+                  <UserPlus className="h-5 w-5 mr-2" />
+                  Agent Management
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={() => navigate("/agent-performance")}
+                  variant="outline"
+                  className="bg-white/10 text-white border-white hover:bg-white hover:text-green-600 font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                >
+                  <TrendingUp className="h-5 w-5 mr-2" />
+                  Performance Dashboard
+                </Button>
+              </div>
             </div>
           </div>
         )}
