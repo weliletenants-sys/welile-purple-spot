@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useAgents } from "@/hooks/useAgents";
-import { useAuth } from "@/hooks/useAuth";
-import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,9 +13,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, UserPlus, ArrowLeft } from "lucide-react";
+import { Pencil, Trash2, UserPlus, ArrowLeft, Lock } from "lucide-react";
 import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,36 +39,40 @@ interface Agent {
 
 const AgentManagement = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-  const { isAdmin, isLoading: roleLoading } = useAdminRole();
   const { data: agents, isLoading, refetch } = useAgents();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [fullAgents, setFullAgents] = useState<Agent[]>([]);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [accessName, setAccessName] = useState("");
 
-  // Redirect if not authenticated or not admin
+  // Check if user is already authorized
   useEffect(() => {
-    if (!authLoading && !user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please login to access agent management",
-        variant: "destructive",
-      });
-      navigate("/auth");
+    const authorized = sessionStorage.getItem("agentManagementAccess");
+    if (authorized) {
+      setIsAuthorized(true);
     }
-  }, [authLoading, user, navigate, toast]);
+  }, []);
 
-  useEffect(() => {
-    if (!roleLoading && !isAdmin && user) {
+  const handleAccessSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (accessName.trim().toUpperCase() === "MUHWEZI MARTIN" || accessName.trim().toLowerCase() === "admin") {
+      sessionStorage.setItem("agentManagementAccess", "true");
+      setIsAuthorized(true);
+      toast({
+        title: "Access Granted",
+        description: "Welcome to Agent Management",
+      });
+    } else {
       toast({
         title: "Access Denied",
-        description: "You don't have permission to access this page",
+        description: "Invalid access credentials",
         variant: "destructive",
       });
-      navigate("/");
     }
-  }, [roleLoading, isAdmin, user, navigate, toast]);
+  };
 
   // Fetch full agent data including IDs
   const fetchFullAgents = async () => {
@@ -126,21 +130,46 @@ const AgentManagement = () => {
     setDeleteDialogOpen(true);
   };
 
-  // Show loading while checking auth
-  if (authLoading || roleLoading) {
+  // Show access control screen if not authorized
+  if (!isAuthorized) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Verifying permissions...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center flex items-center justify-center gap-2">
+              <Lock className="h-6 w-6" />
+              Agent Management Access
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAccessSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="access-name">Enter Your Name</Label>
+                <Input
+                  id="access-name"
+                  placeholder="Enter authorized name"
+                  value={accessName}
+                  onChange={(e) => setAccessName(e.target.value)}
+                  className="text-center"
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Access Agent Management
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => navigate("/")}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     );
-  }
-
-  // Don't render if not admin (will redirect via useEffect)
-  if (!user || !isAdmin) {
-    return null;
   }
 
   return (

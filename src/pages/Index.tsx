@@ -207,7 +207,6 @@ const Index = () => {
               </div>
               <ShareButton />
               <NotificationBell />
-              <UserMenu />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon" className="hover-scale" data-tour="navigation">
