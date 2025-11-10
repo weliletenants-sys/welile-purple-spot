@@ -34,6 +34,7 @@ import PipelineTenants from "./pages/PipelineTenants";
 import PipelineAnalytics from "./pages/PipelineAnalytics";
 import AgentManagement from "./pages/AgentManagement";
 import AgentPerformanceDashboard from "./pages/AgentPerformanceDashboard";
+import AgentDetailPage from "./pages/AgentDetailPage";
 import Auth from "./pages/Auth";
 import Leaderboard from "./pages/Leaderboard";
 import LandlordManagement from "./pages/LandlordManagement";
@@ -85,6 +86,7 @@ const App = () => {
             <Route path="/pipeline-analytics" element={<PipelineAnalytics />} />
           <Route path="/agent-management" element={<AgentManagement />} />
           <Route path="/agent-performance" element={<AgentPerformanceDashboard />} />
+          <Route path="/agent/:agentPhone" element={<AgentDetailPage />} />
             <Route path="/landlord-management" element={<LandlordManagement />} />
             <Route path="/landlord/:landlordContact" element={<LandlordProfile />} />
             <Route path="/auth" element={<Auth />} />

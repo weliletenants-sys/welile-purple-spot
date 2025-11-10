@@ -243,7 +243,11 @@ const AgentPerformanceDashboard = () => {
                   </TableRow>
                 ) : (
                   filteredStats.map((stat) => (
-                    <TableRow key={stat.agentPhone}>
+                    <TableRow 
+                      key={stat.agentPhone}
+                      className="cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => navigate(`/agent/${stat.agentPhone}`)}
+                    >
                       <TableCell className="font-medium">{stat.agentName}</TableCell>
                       <TableCell>{stat.agentPhone}</TableCell>
                       <TableCell className="text-right">{stat.tenantCount}</TableCell>
