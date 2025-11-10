@@ -30,7 +30,7 @@ export const useAgents = () => {
         }
       });
 
-      // Convert to array and ensure MUHWEZI MARTIN is always first
+      // Convert to array and ensure required agents are always available
       const agents: Agent[] = Array.from(uniqueAgents.entries()).map(
         ([name, phone]) => ({
           name,
@@ -38,20 +38,29 @@ export const useAgents = () => {
         })
       );
 
+      // List of agents that should always be available
+      const requiredAgents = [
+        "MUHWEZI MARTIN",
+        "PAVIN",
+        "MICHEAL",
+        "WYCLIEF",
+        "SHAFIC"
+      ];
+
+      // Add missing required agents
+      requiredAgents.forEach(requiredName => {
+        const exists = agents.some(agent => agent.name === requiredName);
+        if (!exists) {
+          agents.push({ name: requiredName, phone: "" });
+        }
+      });
+
       // Sort to put MUHWEZI MARTIN first, then alphabetically
       agents.sort((a, b) => {
         if (a.name === "MUHWEZI MARTIN") return -1;
         if (b.name === "MUHWEZI MARTIN") return 1;
         return a.name.localeCompare(b.name);
       });
-
-      // Ensure MUHWEZI MARTIN exists in the list
-      const hasMuhweziMartin = agents.some(
-        (agent) => agent.name === "MUHWEZI MARTIN"
-      );
-      if (!hasMuhweziMartin) {
-        agents.unshift({ name: "MUHWEZI MARTIN", phone: "" });
-      }
 
       return agents;
     },
