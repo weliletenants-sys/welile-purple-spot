@@ -59,6 +59,12 @@ export const AddTenantForm = () => {
   const { data: agents = [] } = useAgents();
   const { data: serviceCenters = [] } = useServiceCenters();
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const [realtimeDuplicate, setRealtimeDuplicate] = useState<{
+    name: string;
+    contact: string;
+    address: string;
+  } | null>(null);
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
   const [formData, setFormData] = useState<TenantFormData>(() => {
@@ -105,6 +111,39 @@ export const AddTenantForm = () => {
       setLastSaved(new Date());
     }
   }, [formData, open]);
+
+  // Real-time duplicate detection with debouncing
+  useEffect(() => {
+    if (!open || !formData.contact.trim() || formData.contact.trim().length < 10) {
+      setRealtimeDuplicate(null);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingDuplicate(true);
+      try {
+        const { data: contactMatch, error } = await supabase
+          .from("tenants")
+          .select("name, contact, address")
+          .eq("contact", formData.contact.trim())
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error checking for duplicates:", error);
+        } else if (contactMatch) {
+          setRealtimeDuplicate(contactMatch);
+        } else {
+          setRealtimeDuplicate(null);
+        }
+      } catch (error) {
+        console.error("Error checking for duplicates:", error);
+      } finally {
+        setIsCheckingDuplicate(false);
+      }
+    }, 800); // 800ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.contact, open]);
 
   // Calculate repayment details whenever rent amount or repayment days change
   const repaymentDetails = useMemo(() => {
@@ -293,6 +332,10 @@ export const AddTenantForm = () => {
     if ((field === "contact" || field === "name") && duplicateWarning) {
       setDuplicateWarning(null);
     }
+    // Clear realtime duplicate when contact changes
+    if (field === "contact" && realtimeDuplicate) {
+      setRealtimeDuplicate(null);
+    }
   };
 
   const handleAgentChange = (agentName: string) => {
@@ -333,6 +376,7 @@ export const AddTenantForm = () => {
     setFormData(resetData);
     localStorage.removeItem(AUTOSAVE_KEY);
     setDuplicateWarning(null);
+    setRealtimeDuplicate(null);
     setLastSaved(null);
     toast({
       title: "Form Cleared",
@@ -461,7 +505,24 @@ export const AddTenantForm = () => {
                 value={formData.contact}
                 onChange={(e) => handleChange("contact", e.target.value)}
                 placeholder="e.g., 0700000000"
+                className={realtimeDuplicate ? "border-destructive" : ""}
               />
+              {isCheckingDuplicate && (
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                  Checking for duplicates...
+                </p>
+              )}
+              {realtimeDuplicate && !isCheckingDuplicate && (
+                <Alert variant="destructive" className="mt-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Duplicate Found!</strong> This contact number already exists:
+                    <br />
+                    <span className="font-semibold">{realtimeDuplicate.name}</span> at {realtimeDuplicate.address}
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -724,6 +785,8 @@ export const AddTenantForm = () => {
                 !formData.agentName.trim() ||
                 !formData.agentPhone.trim() ||
                 !formData.serviceCenter.trim() ||
+                realtimeDuplicate !== null ||
+                isCheckingDuplicate ||
                 (formData.status !== "pipeline" && (!formData.landlord.trim() || !formData.landlordContact.trim()))
               }
             >
@@ -780,10 +843,14 @@ export const AddTenantForm = () => {
             !formData.agentName.trim() ||
             !formData.agentPhone.trim() ||
             !formData.serviceCenter.trim() ||
+            realtimeDuplicate !== null ||
+            isCheckingDuplicate ||
             (formData.status !== "pipeline" && (!formData.landlord.trim() || !formData.landlordContact.trim()))
           ) && (
             <p className="text-sm text-muted-foreground text-center">
-              Please fill in all required fields marked with *
+              {realtimeDuplicate ? "Cannot add duplicate tenant - contact number already exists" :
+               isCheckingDuplicate ? "Checking for duplicate contacts..." :
+               "Please fill in all required fields marked with *"}
             </p>
           )}
         </form>
