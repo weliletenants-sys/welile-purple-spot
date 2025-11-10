@@ -48,7 +48,6 @@ interface LandlordData {
 export default function LandlordManagement() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [expandedLandlord, setExpandedLandlord] = useState<string | null>(null);
 
   // Fetch all tenants
   const { data: tenants, isLoading } = useQuery({
@@ -285,7 +284,7 @@ export default function LandlordManagement() {
           <CardHeader>
             <CardTitle>Landlords Overview</CardTitle>
             <CardDescription>
-              Click on any row to view detailed tenant information
+              Click on any landlord to view detailed profile with payment history and trends
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -318,11 +317,7 @@ export default function LandlordManagement() {
                           key={landlord.landlordContact}
                           className="cursor-pointer hover:bg-muted/50"
                           onClick={() =>
-                            setExpandedLandlord(
-                              expandedLandlord === landlord.landlordContact
-                                ? null
-                                : landlord.landlordContact
-                            )
+                            navigate(`/landlord/${encodeURIComponent(landlord.landlordContact)}`)
                           }
                         >
                           <TableCell className="font-medium">
@@ -384,54 +379,6 @@ export default function LandlordManagement() {
                             </div>
                           </TableCell>
                         </TableRow>
-                        {expandedLandlord === landlord.landlordContact && (
-                          <TableRow>
-                            <TableCell colSpan={9} className="bg-muted/30">
-                              <div className="p-4 space-y-3">
-                                <h4 className="font-semibold text-sm mb-3">
-                                  Tenant Details for {landlord.landlordName}
-                                </h4>
-                                <div className="grid gap-2">
-                                  {landlord.tenantDetails.map((tenant, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="flex items-center justify-between p-3 bg-card rounded-lg border text-sm"
-                                    >
-                                      <div className="flex-1">
-                                        <div className="font-medium">{tenant.name}</div>
-                                        <div className="text-xs text-muted-foreground">
-                                          {tenant.address}
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-4">
-                                        <div className="text-xs text-muted-foreground">
-                                          {tenant.contact}
-                                        </div>
-                                        <Badge
-                                          variant={
-                                            tenant.status === "active"
-                                              ? "default"
-                                              : tenant.status === "pipeline"
-                                              ? "outline"
-                                              : "secondary"
-                                          }
-                                        >
-                                          {tenant.status}
-                                        </Badge>
-                                        <div className="font-bold min-w-[120px] text-right">
-                                          UGX {tenant.rentAmount.toLocaleString()}
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">
-                                          {tenant.serviceCenter}
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
                       </>
                     ))
                   )}
