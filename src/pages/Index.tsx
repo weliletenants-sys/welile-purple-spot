@@ -17,7 +17,7 @@ import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { AddTenantForm } from "@/components/AddTenantForm";
@@ -304,6 +304,13 @@ const Index = () => {
                   >
                     <Users className="w-4 h-4" />
                     <span>👥 Agent Management</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
+                    onClick={() => navigate("/landlord-management")}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span>🏢 Landlord Management</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="p-0 mt-2"
