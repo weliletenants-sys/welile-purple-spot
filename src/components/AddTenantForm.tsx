@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, AlertTriangle, Save } from "lucide-react";
+import { Plus, AlertTriangle, Save, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
 import { calculateRepaymentDetails } from "@/data/tenants";
@@ -12,6 +12,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAgents } from "@/hooks/useAgents";
 import { useServiceCenters } from "@/hooks/useServiceCenterAnalytics";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface TenantFormData {
   name: string;
@@ -291,6 +302,42 @@ export const AddTenantForm = () => {
       agentName,
       agentPhone: selectedAgent?.phone || "",
     }));
+  };
+
+  const handleClearForm = () => {
+    const resetData: TenantFormData = {
+      name: "",
+      contact: "",
+      address: "",
+      landlord: "",
+      landlordContact: "",
+      rentAmount: "",
+      registrationFee: "",
+      accessFee: "",
+      repaymentDays: "60",
+      status: "pipeline",
+      paymentStatus: "pending",
+      guarantor1Name: "",
+      guarantor1Contact: "",
+      guarantor2Name: "",
+      guarantor2Contact: "",
+      country: "Uganda",
+      county: "",
+      district: "",
+      subcountyOrWard: "",
+      cellOrVillage: "",
+      agentName: "MUHWEZI MARTIN",
+      agentPhone: "",
+      serviceCenter: "",
+    };
+    setFormData(resetData);
+    localStorage.removeItem(AUTOSAVE_KEY);
+    setDuplicateWarning(null);
+    setLastSaved(null);
+    toast({
+      title: "Form Cleared",
+      description: "All form data has been cleared and auto-save removed.",
+    });
   };
 
 
@@ -683,6 +730,34 @@ export const AddTenantForm = () => {
               <Plus className="w-4 h-4 mr-2" />
               Add Tenant
             </Button>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  className="gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Clear
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear Form Data?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will clear all form fields and remove the auto-saved data. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearForm} className="bg-destructive hover:bg-destructive/90">
+                    Clear Form
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            
             <Button 
               type="button" 
               variant="outline" 
