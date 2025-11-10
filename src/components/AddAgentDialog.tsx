@@ -119,9 +119,9 @@ export const AddAgentDialog = ({ onSuccess }: AddAgentDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Agent
+        <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105">
+          <UserPlus className="mr-2 h-5 w-5" />
+          Add New Agent
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

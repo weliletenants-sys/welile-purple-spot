@@ -173,28 +173,46 @@ const AgentManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/")}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Agent Management</h1>
-              <p className="text-muted-foreground">
-                Manage agent profiles and contact information
-              </p>
+        {/* Header with prominent Add Agent button */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/")}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h1 className="text-4xl font-bold">Agent Management</h1>
+                <p className="text-muted-foreground text-lg">
+                  Manage agent profiles and contact information
+                </p>
+              </div>
             </div>
           </div>
-          <AddAgentDialog onSuccess={() => {
-            refetch();
-            fetchFullAgents();
-          }} />
+
+          {/* Prominent Add Agent Section */}
+          <div className="bg-gradient-to-r from-primary to-accent rounded-xl p-6 shadow-lg border-2 border-primary/30">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-lg">
+                  <UserPlus className="h-8 w-8 text-primary-foreground" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-primary-foreground">Add New Agent</h2>
+                  <p className="text-primary-foreground/90">Create new agent profiles quickly and easily</p>
+                </div>
+              </div>
+              <AddAgentDialog onSuccess={() => {
+                refetch();
+                fetchFullAgents();
+              }} />
+            </div>
+          </div>
         </div>
 
         <Card>

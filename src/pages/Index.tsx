@@ -7,6 +7,7 @@ import { WelileLogo } from "@/components/WelileLogo";
 import { ShareButton } from "@/components/ShareButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
@@ -48,6 +49,7 @@ const Index = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showTour, completeTour, skipTour } = useOnboardingTour();
+  const { isAdmin } = useAdminRole();
   const [showAchievements, setShowAchievements] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -389,6 +391,31 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Admin Quick Access Section */}
+        {isAdmin && (
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 shadow-xl border-2 border-green-400 animate-fade-in">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                  <Users className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Admin: Manage Agents</h3>
+                  <p className="text-green-50">Add, edit, and manage all agents in the system</p>
+                </div>
+              </div>
+              <Button
+                size="lg"
+                onClick={() => navigate("/agent-management")}
+                className="bg-white text-green-600 hover:bg-green-50 font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+              >
+                <UserPlus className="h-5 w-5 mr-2" />
+                Agent Management
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Stats Section with enhanced visuals */}
         <div data-tour="stats" className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in">
