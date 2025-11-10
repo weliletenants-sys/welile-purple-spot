@@ -65,6 +65,12 @@ export const AddTenantForm = () => {
     address: string;
   } | null>(null);
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
+  const [realtimeNameDuplicates, setRealtimeNameDuplicates] = useState<Array<{
+    name: string;
+    contact: string;
+    address: string;
+  }>>([]);
+  const [isCheckingNameDuplicate, setIsCheckingNameDuplicate] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
   const [formData, setFormData] = useState<TenantFormData>(() => {
@@ -144,6 +150,39 @@ export const AddTenantForm = () => {
 
     return () => clearTimeout(timeoutId);
   }, [formData.contact, open]);
+
+  // Real-time name duplicate detection with debouncing
+  useEffect(() => {
+    if (!open || !formData.name.trim() || formData.name.trim().length < 3) {
+      setRealtimeNameDuplicates([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingNameDuplicate(true);
+      try {
+        const { data: nameMatches, error } = await supabase
+          .from("tenants")
+          .select("name, contact, address")
+          .ilike("name", `%${formData.name.trim()}%`)
+          .limit(3);
+
+        if (error) {
+          console.error("Error checking for name duplicates:", error);
+        } else if (nameMatches && nameMatches.length > 0) {
+          setRealtimeNameDuplicates(nameMatches);
+        } else {
+          setRealtimeNameDuplicates([]);
+        }
+      } catch (error) {
+        console.error("Error checking for name duplicates:", error);
+      } finally {
+        setIsCheckingNameDuplicate(false);
+      }
+    }, 800); // 800ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.name, open]);
 
   // Calculate repayment details whenever rent amount or repayment days change
   const repaymentDetails = useMemo(() => {
@@ -336,6 +375,10 @@ export const AddTenantForm = () => {
     if (field === "contact" && realtimeDuplicate) {
       setRealtimeDuplicate(null);
     }
+    // Clear realtime name duplicates when name changes
+    if (field === "name" && realtimeNameDuplicates.length > 0) {
+      setRealtimeNameDuplicates([]);
+    }
   };
 
   const handleAgentChange = (agentName: string) => {
@@ -377,6 +420,7 @@ export const AddTenantForm = () => {
     localStorage.removeItem(AUTOSAVE_KEY);
     setDuplicateWarning(null);
     setRealtimeDuplicate(null);
+    setRealtimeNameDuplicates([]);
     setLastSaved(null);
     toast({
       title: "Form Cleared",
@@ -495,7 +539,30 @@ export const AddTenantForm = () => {
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 placeholder="Enter tenant's full name"
+                className={realtimeNameDuplicates.length > 0 ? "border-yellow-500" : ""}
               />
+              {isCheckingNameDuplicate && (
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                  Checking for similar names...
+                </p>
+              )}
+              {realtimeNameDuplicates.length > 0 && !isCheckingNameDuplicate && (
+                <Alert variant="default" className="mt-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+                    <strong>Similar names found:</strong>
+                    <ul className="mt-1 space-y-1 text-sm">
+                      {realtimeNameDuplicates.map((duplicate, index) => (
+                        <li key={index}>
+                          <span className="font-semibold">{duplicate.name}</span> - {duplicate.contact} ({duplicate.address})
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-xs">Please verify this is a new tenant.</p>
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
 
             <div className="space-y-2">
