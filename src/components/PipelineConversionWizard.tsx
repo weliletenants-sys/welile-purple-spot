@@ -68,9 +68,31 @@ export const PipelineConversionWizard = ({ tenant, open, onOpenChange }: Pipelin
   };
 
   const handleComplete = async () => {
+    // Validate all required fields
+    const missingFields = [];
+    if (!formData.landlord.trim()) missingFields.push("Landlord Name");
+    if (!formData.landlordContact.trim()) missingFields.push("Landlord Contact");
+    if (!formData.guarantor1Name.trim()) missingFields.push("Guarantor 1 Name");
+    if (!formData.guarantor1Contact.trim()) missingFields.push("Guarantor 1 Contact");
+    if (!formData.district.trim()) missingFields.push("District");
+    if (!formData.agentName.trim()) missingFields.push("Agent Name");
+    if (!formData.agentPhone.trim()) missingFields.push("Agent Phone");
+    if (!formData.serviceCenter.trim()) missingFields.push("Service Center");
+
+    if (missingFields.length > 0) {
+      toast({
+        title: "Missing Required Fields",
+        description: `Please fill in: ${missingFields.join(", ")}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const repaymentDays = parseInt(formData.repaymentDays) as 30 | 60 | 90;
       const repaymentDetails = calculateRepaymentDetails(tenant.rent_amount, repaymentDays);
+
+      console.log("Converting pipeline tenant to active:", tenant.id);
 
       await updateTenant({
         id: tenant.id,
@@ -103,16 +125,17 @@ export const PipelineConversionWizard = ({ tenant, open, onOpenChange }: Pipelin
       });
 
       toast({
-        title: "Tenant Activated",
+        title: "✅ Conversion Complete!",
         description: `${tenant.name} has been successfully converted to active status`,
       });
 
       onOpenChange(false);
       setStep(1);
     } catch (error: any) {
+      console.error("Error converting pipeline tenant:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to convert tenant",
+        title: "❌ Conversion Failed",
+        description: error.message || "Failed to convert tenant. Please try again.",
         variant: "destructive",
       });
     }

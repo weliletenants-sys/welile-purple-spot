@@ -119,33 +119,69 @@ export const AddTenantForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear previous warnings
+    setDuplicateWarning(null);
 
-    // Check for duplicates
-    const duplicateMessage = await checkForDuplicates();
-    if (duplicateMessage) {
-      setDuplicateWarning(duplicateMessage);
+    // Validate required fields
+    const missingFields = [];
+    if (!formData.name.trim()) missingFields.push("Name");
+    if (!formData.contact.trim()) missingFields.push("Contact");
+    if (!formData.address.trim()) missingFields.push("Address");
+    if (!formData.rentAmount || parseFloat(formData.rentAmount) <= 0) missingFields.push("Rent Amount");
+    if (!formData.agentName.trim()) missingFields.push("Agent Name");
+    if (!formData.agentPhone.trim()) missingFields.push("Agent Phone");
+    if (!formData.serviceCenter.trim()) missingFields.push("Service Center");
+    
+    if (formData.status !== "pipeline") {
+      if (!formData.landlord.trim()) missingFields.push("Landlord Name");
+      if (!formData.landlordContact.trim()) missingFields.push("Landlord Contact");
+    }
+
+    if (missingFields.length > 0) {
       toast({
-        title: "Duplicate Tenant Detected",
-        description: duplicateMessage,
+        title: "Missing Required Fields",
+        description: `Please fill in: ${missingFields.join(", ")}`,
         variant: "destructive",
       });
       return;
     }
 
+    // Check for duplicates
+    try {
+      const duplicateMessage = await checkForDuplicates();
+      if (duplicateMessage) {
+        setDuplicateWarning(duplicateMessage);
+        toast({
+          title: "Duplicate Tenant Detected",
+          description: duplicateMessage,
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking duplicates:", error);
+      toast({
+        title: "Warning",
+        description: "Could not check for duplicates. Proceeding with caution.",
+        variant: "default",
+      });
+    }
+
     const isPipeline = formData.status === "pipeline";
 
     try {
-      await addTenant({
-        name: formData.name.trim(),
+      const tenantData = {
+        name: formData.name.trim().toUpperCase(),
         contact: formData.contact.trim(),
         address: formData.address.trim(),
         landlord: isPipeline ? "TBD" : formData.landlord.trim(),
         landlordContact: isPipeline ? "TBD" : formData.landlordContact.trim(),
         rentAmount: parseFloat(formData.rentAmount),
-        registrationFee: isPipeline ? 0 : parseFloat(formData.registrationFee),
-        accessFee: isPipeline ? 0 : parseFloat(formData.accessFee),
+        registrationFee: isPipeline ? 0 : parseFloat(formData.registrationFee || "0"),
+        accessFee: isPipeline ? 0 : parseFloat(formData.accessFee || "0"),
         repaymentDays: isPipeline ? 60 : (parseInt(formData.repaymentDays) as 30 | 60 | 90),
-        status: formData.status as any, // Cast to allow 'pipeline' until types are regenerated
+        status: formData.status as any,
         paymentStatus: formData.paymentStatus,
         performance: 80,
         guarantor1: (!isPipeline && formData.guarantor1Name.trim()) ? {
@@ -166,11 +202,14 @@ export const AddTenantForm = () => {
         agentName: formData.agentName.trim(),
         agentPhone: formData.agentPhone.trim(),
         serviceCenter: formData.serviceCenter.trim(),
-      });
+      };
+
+      console.log("Adding tenant:", tenantData);
+      await addTenant(tenantData);
 
       toast({
-        title: "Tenant Added Successfully",
-        description: `${formData.name} has been added to the system`,
+        title: "✅ Success!",
+        description: `${formData.name} has been added to the system successfully`,
       });
 
       // Reset form
@@ -199,11 +238,13 @@ export const AddTenantForm = () => {
         agentPhone: "",
         serviceCenter: "",
       });
+      setDuplicateWarning(null);
       setOpen(false);
     } catch (error: any) {
+      console.error("Error adding tenant:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to add tenant",
+        title: "❌ Error Adding Tenant",
+        description: error.message || "Failed to add tenant. Please try again.",
         variant: "destructive",
       });
     }
@@ -592,24 +633,50 @@ export const AddTenantForm = () => {
           <div className="flex gap-3 pt-4">
             <Button 
               type="submit" 
-              className="flex-1"
+              className="flex-1 font-semibold"
               disabled={
-                !formData.name || 
-                !formData.contact || 
-                !formData.address || 
+                !formData.name.trim() || 
+                !formData.contact.trim() || 
+                !formData.address.trim() || 
                 !formData.rentAmount ||
-                !formData.agentName ||
-                !formData.agentPhone ||
-                !formData.serviceCenter ||
-                (formData.status !== "pipeline" && (!formData.landlord || !formData.landlordContact))
+                parseFloat(formData.rentAmount) <= 0 ||
+                !formData.agentName.trim() ||
+                !formData.agentPhone.trim() ||
+                !formData.serviceCenter.trim() ||
+                (formData.status !== "pipeline" && (!formData.landlord.trim() || !formData.landlordContact.trim()))
               }
             >
+              <Plus className="w-4 h-4 mr-2" />
               Add Tenant
             </Button>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                setOpen(false);
+                setDuplicateWarning(null);
+              }} 
+              className="flex-1"
+            >
               Cancel
             </Button>
           </div>
+          
+          {/* Helper text for disabled button */}
+          {(
+            !formData.name.trim() || 
+            !formData.contact.trim() || 
+            !formData.address.trim() || 
+            !formData.rentAmount ||
+            !formData.agentName.trim() ||
+            !formData.agentPhone.trim() ||
+            !formData.serviceCenter.trim() ||
+            (formData.status !== "pipeline" && (!formData.landlord.trim() || !formData.landlordContact.trim()))
+          ) && (
+            <p className="text-sm text-muted-foreground text-center">
+              Please fill in all required fields marked with *
+            </p>
+          )}
         </form>
       </DialogContent>
     </Dialog>

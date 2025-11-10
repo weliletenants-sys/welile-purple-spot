@@ -146,71 +146,108 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check for duplicates
-    const duplicateMessage = await checkForDuplicates();
-    if (duplicateMessage) {
-      setDuplicateWarning(duplicateMessage);
+    // Validate editor name
+    if (!formData.editorName.trim()) {
       toast({
-        title: "Duplicate Tenant Detected",
-        description: duplicateMessage,
+        title: "Editor Name Required",
+        description: "Please enter your name to save changes",
         variant: "destructive",
       });
       return;
     }
 
+    // Validate required fields
+    const missingFields = [];
+    if (!formData.name.trim()) missingFields.push("Name");
+    if (!formData.contact.trim()) missingFields.push("Contact");
+    if (!formData.address.trim()) missingFields.push("Address");
+    if (!formData.rentAmount || parseFloat(formData.rentAmount) <= 0) missingFields.push("Rent Amount");
+    
+    if (missingFields.length > 0) {
+      toast({
+        title: "Missing Required Fields",
+        description: `Please fill in: ${missingFields.join(", ")}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for duplicates
     try {
+      const duplicateMessage = await checkForDuplicates();
+      if (duplicateMessage) {
+        setDuplicateWarning(duplicateMessage);
+        toast({
+          title: "Duplicate Tenant Detected",
+          description: duplicateMessage,
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking duplicates:", error);
+      toast({
+        title: "Warning",
+        description: "Could not check for duplicates. Proceeding with caution.",
+        variant: "default",
+      });
+    }
+
+    try {
+      console.log("Updating tenant:", tenant.id, formData);
       await updateTenant({
         id: tenant.id,
         updates: {
-          name: formData.name,
-          contact: formData.contact,
-          address: formData.address,
+          name: formData.name.trim(),
+          contact: formData.contact.trim(),
+          address: formData.address.trim(),
           status: formData.status,
           paymentStatus: formData.paymentStatus,
-          landlord: formData.landlord,
-          landlordContact: formData.landlordContact,
+          landlord: formData.landlord.trim(),
+          landlordContact: formData.landlordContact.trim(),
           rentAmount: Number(formData.rentAmount),
           registrationFee: Number(formData.registrationFee),
           accessFee: Number(formData.accessFee),
           repaymentDays: Number(formData.repaymentDays) as 30 | 60 | 90,
-          guarantor1: formData.guarantor1Name
+          guarantor1: formData.guarantor1Name.trim()
             ? {
-                name: formData.guarantor1Name,
-                contact: formData.guarantor1Contact,
+                name: formData.guarantor1Name.trim(),
+                contact: formData.guarantor1Contact.trim(),
               }
             : undefined,
-          guarantor2: formData.guarantor2Name
+          guarantor2: formData.guarantor2Name.trim()
             ? {
-                name: formData.guarantor2Name,
-                contact: formData.guarantor2Contact,
+                name: formData.guarantor2Name.trim(),
+                contact: formData.guarantor2Contact.trim(),
               }
             : undefined,
           location: {
-            country: formData.locationCountry,
-            county: formData.locationCounty,
-            district: formData.locationDistrict,
-            subcountyOrWard: formData.locationSubcountyOrWard,
-            cellOrVillage: formData.locationCellOrVillage,
+            country: formData.locationCountry.trim(),
+            county: formData.locationCounty.trim(),
+            district: formData.locationDistrict.trim(),
+            subcountyOrWard: formData.locationSubcountyOrWard.trim(),
+            cellOrVillage: formData.locationCellOrVillage.trim(),
           },
-          agentName: formData.agentName,
-          agentPhone: formData.agentPhone,
-          serviceCenter: formData.serviceCenter,
+          agentName: formData.agentName.trim(),
+          agentPhone: formData.agentPhone.trim(),
+          serviceCenter: formData.serviceCenter.trim(),
           editedBy: formData.editorName.trim(),
           editedAt: new Date().toISOString(),
         },
       });
 
       toast({
-        title: "Success",
+        title: "✅ Success!",
         description: "Tenant updated successfully!",
       });
 
       setOpen(false);
-    } catch (error) {
+      setDuplicateWarning(null);
+    } catch (error: any) {
       console.error("Error updating tenant:", error);
       toast({
-        title: "Error",
-        description: "Failed to update tenant. Please try again.",
+        title: "❌ Error Updating Tenant",
+        description: error.message || "Failed to update tenant. Please try again.",
         variant: "destructive",
       });
     }
