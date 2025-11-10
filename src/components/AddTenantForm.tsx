@@ -79,6 +79,15 @@ export const AddTenantForm = () => {
     guarantor1Contact: { isValid: true, message: "" },
     guarantor2Contact: { isValid: true, message: "" },
   });
+
+  // Character limits for text fields
+  const CHARACTER_LIMITS = {
+    name: 100,
+    address: 200,
+    landlord: 100,
+    guarantor1Name: 100,
+    guarantor2Name: 100,
+  } as const;
   
   const [formData, setFormData] = useState<TenantFormData>(() => {
     // Load saved data from localStorage on initial load
@@ -416,12 +425,23 @@ export const AddTenantForm = () => {
   };
 
   const handleChange = (field: keyof TenantFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Enforce character limits for text fields
+    const limitedFields = ["name", "address", "landlord", "guarantor1Name", "guarantor2Name"] as const;
+    let finalValue = value;
+    
+    if (limitedFields.includes(field as any)) {
+      const limit = CHARACTER_LIMITS[field as keyof typeof CHARACTER_LIMITS];
+      if (limit && value.length > limit) {
+        finalValue = value.slice(0, limit);
+      }
+    }
+    
+    setFormData(prev => ({ ...prev, [field]: finalValue }));
     
     // Validate phone number fields in real-time
     const phoneFields = ["contact", "agentPhone", "landlordContact", "guarantor1Contact", "guarantor2Contact"];
     if (phoneFields.includes(field)) {
-      const validation = validatePhoneNumber(value);
+      const validation = validatePhoneNumber(finalValue);
       setPhoneValidation(prev => ({
         ...prev,
         [field]: validation
@@ -622,7 +642,11 @@ export const AddTenantForm = () => {
                 onChange={(e) => handleChange("name", e.target.value)}
                 placeholder="Enter tenant's full name"
                 className={realtimeNameDuplicates.length > 0 ? "border-yellow-500" : ""}
+                maxLength={CHARACTER_LIMITS.name}
               />
+              <p className={`text-xs ${formData.name.length >= CHARACTER_LIMITS.name ? "text-destructive" : "text-muted-foreground"}`}>
+                {CHARACTER_LIMITS.name - formData.name.length} characters remaining
+              </p>
               {isCheckingNameDuplicate && (
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <span className="inline-block w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
@@ -697,7 +721,11 @@ export const AddTenantForm = () => {
                 value={formData.address}
                 onChange={(e) => handleChange("address", e.target.value)}
                 placeholder="Enter tenant's address"
+                maxLength={CHARACTER_LIMITS.address}
               />
+              <p className={`text-xs ${formData.address.length >= CHARACTER_LIMITS.address ? "text-destructive" : "text-muted-foreground"}`}>
+                {CHARACTER_LIMITS.address - formData.address.length} characters remaining
+              </p>
             </div>
           </div>
 
@@ -713,7 +741,11 @@ export const AddTenantForm = () => {
                 value={formData.landlord}
                 onChange={(e) => handleChange("landlord", e.target.value)}
                 placeholder="Enter landlord's name"
+                maxLength={CHARACTER_LIMITS.landlord}
               />
+              <p className={`text-xs ${formData.landlord.length >= CHARACTER_LIMITS.landlord ? "text-destructive" : "text-muted-foreground"}`}>
+                {CHARACTER_LIMITS.landlord - formData.landlord.length} characters remaining
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -855,7 +887,11 @@ export const AddTenantForm = () => {
                     value={formData.guarantor1Name}
                     onChange={(e) => handleChange("guarantor1Name", e.target.value)}
                     placeholder="Enter guarantor's name"
+                    maxLength={CHARACTER_LIMITS.guarantor1Name}
                   />
+                  <p className={`text-xs ${formData.guarantor1Name.length >= CHARACTER_LIMITS.guarantor1Name ? "text-destructive" : "text-muted-foreground"}`}>
+                    {CHARACTER_LIMITS.guarantor1Name - formData.guarantor1Name.length} characters remaining
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="guarantor1Contact">Contact</Label>
@@ -893,7 +929,11 @@ export const AddTenantForm = () => {
                     value={formData.guarantor2Name}
                     onChange={(e) => handleChange("guarantor2Name", e.target.value)}
                     placeholder="Enter guarantor's name"
+                    maxLength={CHARACTER_LIMITS.guarantor2Name}
                   />
+                  <p className={`text-xs ${formData.guarantor2Name.length >= CHARACTER_LIMITS.guarantor2Name ? "text-destructive" : "text-muted-foreground"}`}>
+                    {CHARACTER_LIMITS.guarantor2Name - formData.guarantor2Name.length} characters remaining
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="guarantor2Contact">Contact</Label>

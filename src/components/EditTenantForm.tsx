@@ -65,6 +65,15 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
   const [open, setOpen] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
+  // Character limits for text fields
+  const CHARACTER_LIMITS = {
+    name: 100,
+    address: 200,
+    landlord: 100,
+    guarantor1Name: 100,
+    guarantor2Name: 100,
+  } as const;
+
   // Check if tenant's agent is in the approved list, if not default to MUHWEZI MARTIN
   const isAgentValid = agents.some(agent => agent.name === tenant.agentName);
   const validAgentName = isAgentValid ? tenant.agentName : "MUHWEZI MARTIN";
@@ -254,7 +263,18 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
   };
 
   const handleChange = (field: keyof TenantFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Enforce character limits for text fields
+    const limitedFields = ["name", "address", "landlord", "guarantor1Name", "guarantor2Name"] as const;
+    let finalValue = value;
+    
+    if (limitedFields.includes(field as any)) {
+      const limit = CHARACTER_LIMITS[field as keyof typeof CHARACTER_LIMITS];
+      if (limit && value.length > limit) {
+        finalValue = value.slice(0, limit);
+      }
+    }
+    
+    setFormData((prev) => ({ ...prev, [field]: finalValue }));
     // Clear duplicate warning when user changes contact or name
     if ((field === "contact" || field === "name") && duplicateWarning) {
       setDuplicateWarning(null);
@@ -323,7 +343,11 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
+                  maxLength={CHARACTER_LIMITS.name}
                 />
+                <p className={`text-xs ${formData.name.length >= CHARACTER_LIMITS.name ? "text-destructive" : "text-muted-foreground"}`}>
+                  {CHARACTER_LIMITS.name - formData.name.length} characters remaining
+                </p>
               </div>
               <div>
                 <Label htmlFor="contact">Contact *</Label>
@@ -339,7 +363,11 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
+                  maxLength={CHARACTER_LIMITS.address}
                 />
+                <p className={`text-xs ${formData.address.length >= CHARACTER_LIMITS.address ? "text-destructive" : "text-muted-foreground"}`}>
+                  {CHARACTER_LIMITS.address - formData.address.length} characters remaining
+                </p>
               </div>
               <div>
                 <Label htmlFor="status">Status</Label>
@@ -383,7 +411,11 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="landlord"
                   value={formData.landlord}
                   onChange={(e) => handleChange("landlord", e.target.value)}
+                  maxLength={CHARACTER_LIMITS.landlord}
                 />
+                <p className={`text-xs ${formData.landlord.length >= CHARACTER_LIMITS.landlord ? "text-destructive" : "text-muted-foreground"}`}>
+                  {CHARACTER_LIMITS.landlord - formData.landlord.length} characters remaining
+                </p>
               </div>
               <div>
                 <Label htmlFor="landlordContact">Landlord Contact *</Label>
@@ -457,7 +489,11 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="guarantor1Name"
                   value={formData.guarantor1Name}
                   onChange={(e) => handleChange("guarantor1Name", e.target.value)}
+                  maxLength={CHARACTER_LIMITS.guarantor1Name}
                 />
+                <p className={`text-xs ${formData.guarantor1Name.length >= CHARACTER_LIMITS.guarantor1Name ? "text-destructive" : "text-muted-foreground"}`}>
+                  {CHARACTER_LIMITS.guarantor1Name - formData.guarantor1Name.length} characters remaining
+                </p>
               </div>
               <div>
                 <Label htmlFor="guarantor1Contact">Guarantor 1 Contact</Label>
@@ -473,7 +509,11 @@ export const EditTenantForm = ({ tenant, children }: EditTenantFormProps) => {
                   id="guarantor2Name"
                   value={formData.guarantor2Name}
                   onChange={(e) => handleChange("guarantor2Name", e.target.value)}
+                  maxLength={CHARACTER_LIMITS.guarantor2Name}
                 />
+                <p className={`text-xs ${formData.guarantor2Name.length >= CHARACTER_LIMITS.guarantor2Name ? "text-destructive" : "text-muted-foreground"}`}>
+                  {CHARACTER_LIMITS.guarantor2Name - formData.guarantor2Name.length} characters remaining
+                </p>
               </div>
               <div>
                 <Label htmlFor="guarantor2Contact">Guarantor 2 Contact</Label>
