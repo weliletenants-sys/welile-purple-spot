@@ -1,10 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
 import { calculateRepaymentDetails } from "@/data/tenants";
@@ -39,6 +39,8 @@ interface TenantFormData {
   serviceCenter: string;
 }
 
+const AUTOSAVE_KEY = "addTenantFormData";
+
 export const AddTenantForm = () => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -46,31 +48,52 @@ export const AddTenantForm = () => {
   const { data: agents = [] } = useAgents();
   const { data: serviceCenters = [] } = useServiceCenters();
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
-  const [formData, setFormData] = useState<TenantFormData>({
-    name: "",
-    contact: "",
-    address: "",
-    landlord: "",
-    landlordContact: "",
-    rentAmount: "",
-    registrationFee: "",
-    accessFee: "",
-    repaymentDays: "60",
-    status: "pipeline",
-    paymentStatus: "pending",
-    guarantor1Name: "",
-    guarantor1Contact: "",
-    guarantor2Name: "",
-    guarantor2Contact: "",
-    country: "Uganda",
-    county: "",
-    district: "",
-    subcountyOrWard: "",
-    cellOrVillage: "",
-    agentName: "MUHWEZI MARTIN",
-    agentPhone: "",
-    serviceCenter: "",
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  
+  const [formData, setFormData] = useState<TenantFormData>(() => {
+    // Load saved data from localStorage on initial load
+    const saved = localStorage.getItem(AUTOSAVE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse saved form data:", e);
+      }
+    }
+    return {
+      name: "",
+      contact: "",
+      address: "",
+      landlord: "",
+      landlordContact: "",
+      rentAmount: "",
+      registrationFee: "",
+      accessFee: "",
+      repaymentDays: "60",
+      status: "pipeline",
+      paymentStatus: "pending",
+      guarantor1Name: "",
+      guarantor1Contact: "",
+      guarantor2Name: "",
+      guarantor2Contact: "",
+      country: "Uganda",
+      county: "",
+      district: "",
+      subcountyOrWard: "",
+      cellOrVillage: "",
+      agentName: "MUHWEZI MARTIN",
+      agentPhone: "",
+      serviceCenter: "",
+    };
   });
+
+  // Auto-save form data whenever it changes
+  useEffect(() => {
+    if (open) {
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(formData));
+      setLastSaved(new Date());
+    }
+  }, [formData, open]);
 
   // Calculate repayment details whenever rent amount or repayment days change
   const repaymentDetails = useMemo(() => {
@@ -212,8 +235,8 @@ export const AddTenantForm = () => {
         description: `${formData.name} has been added to the system successfully`,
       });
 
-      // Reset form
-      setFormData({
+      // Reset form and clear auto-saved data
+      const resetData: TenantFormData = {
         name: "",
         contact: "",
         address: "",
@@ -237,8 +260,11 @@ export const AddTenantForm = () => {
         agentName: "MUHWEZI MARTIN",
         agentPhone: "",
         serviceCenter: "",
-      });
+      };
+      setFormData(resetData);
+      localStorage.removeItem(AUTOSAVE_KEY);
       setDuplicateWarning(null);
+      setLastSaved(null);
       setOpen(false);
     } catch (error: any) {
       console.error("Error adding tenant:", error);
@@ -278,7 +304,15 @@ export const AddTenantForm = () => {
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-primary">Add New Tenant</DialogTitle>
+          <DialogTitle className="flex items-center justify-between text-2xl font-bold text-primary">
+            <span>Add New Tenant</span>
+            {lastSaved && (
+              <span className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+                <Save className="w-4 h-4" />
+                Auto-saved {lastSaved.toLocaleTimeString()}
+              </span>
+            )}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           {/* Duplicate Warning */}
