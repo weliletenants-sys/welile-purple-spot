@@ -30,6 +30,7 @@ export const usePayments = (tenantId: string) => {
         modifiedBy: payment.modified_by,
         modifiedAt: payment.modified_at,
         serviceCenter: payment.service_center,
+        paymentMode: payment.payment_mode,
         _id: payment.id,
       })) as (DailyPayment & { _id: string })[];
     },
@@ -80,6 +81,7 @@ export const usePayments = (tenantId: string) => {
           ...(updates.modifiedBy && { modified_by: updates.modifiedBy }),
           ...(updates.modifiedAt && { modified_at: updates.modifiedAt }),
           ...(updates.serviceCenter && { service_center: updates.serviceCenter }),
+          ...(updates.paymentMode && { payment_mode: updates.paymentMode }),
         })
         .eq("id", paymentId)
         .select()

@@ -272,6 +272,7 @@ export type Database = {
           modified_by: string | null
           paid: boolean
           paid_amount: number | null
+          payment_mode: string | null
           recorded_at: string | null
           recorded_by: string | null
           service_center: string | null
@@ -287,6 +288,7 @@ export type Database = {
           modified_by?: string | null
           paid?: boolean
           paid_amount?: number | null
+          payment_mode?: string | null
           recorded_at?: string | null
           recorded_by?: string | null
           service_center?: string | null
@@ -302,6 +304,7 @@ export type Database = {
           modified_by?: string | null
           paid?: boolean
           paid_amount?: number | null
+          payment_mode?: string | null
           recorded_at?: string | null
           recorded_by?: string | null
           service_center?: string | null

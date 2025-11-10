@@ -76,6 +76,7 @@ export default function RepaymentSchedule() {
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [recordedByName, setRecordedByName] = useState<string>("");
   const [selectedServiceCenter, setSelectedServiceCenter] = useState<string>("");
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<string>("");
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
   const [authorizedRecorders, setAuthorizedRecorders] = useState<string[]>([]);
@@ -220,6 +221,15 @@ export default function RepaymentSchedule() {
       return;
     }
 
+    if (!selectedPaymentMode.trim()) {
+      toast({
+        title: "Payment Mode Required",
+        description: "Please select a payment mode",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await updatePayment({
         paymentId: payment._id,
@@ -229,12 +239,14 @@ export default function RepaymentSchedule() {
           recordedBy: recordedByName.trim(),
           recordedAt: new Date().toISOString(),
           serviceCenter: selectedServiceCenter.trim(),
+          paymentMode: selectedPaymentMode.trim(),
         },
       });
 
       setPaymentAmount("");
       setRecordedByName("");
       setSelectedServiceCenter("");
+      setSelectedPaymentMode("");
       setSelectedPaymentIndex(null);
       
       toast({
@@ -257,6 +269,7 @@ export default function RepaymentSchedule() {
     setPaymentAmount((payment.paidAmount || 0).toString());
     setRecordedByName("");
     setSelectedServiceCenter(payment.serviceCenter || "");
+    setSelectedPaymentMode(payment.paymentMode || "");
     setEditingPaymentIndex(index);
   };
 
@@ -292,6 +305,15 @@ export default function RepaymentSchedule() {
       return;
     }
 
+    if (!selectedPaymentMode.trim()) {
+      toast({
+        title: "Payment Mode Required",
+        description: "Please select a payment mode",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await updatePayment({
         paymentId: payment._id,
@@ -301,12 +323,14 @@ export default function RepaymentSchedule() {
           modifiedBy: recordedByName.trim(),
           modifiedAt: new Date().toISOString(),
           serviceCenter: selectedServiceCenter.trim(),
+          paymentMode: selectedPaymentMode.trim(),
         },
       });
 
       setPaymentAmount("");
       setRecordedByName("");
       setSelectedServiceCenter("");
+      setSelectedPaymentMode("");
       setEditingPaymentIndex(null);
       
       toast({
@@ -542,6 +566,11 @@ export default function RepaymentSchedule() {
                         📍 Service Center: {payment.serviceCenter}
                       </p>
                     )}
+                    {payment.paymentMode && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        💳 Payment Mode: {payment.paymentMode}
+                      </p>
+                    )}
                     {payment.modifiedBy && (
                       <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
                         ✏️ Edited by {payment.modifiedBy}
@@ -586,6 +615,16 @@ export default function RepaymentSchedule() {
                             ))}
                           </SelectContent>
                         </Select>
+                        <Select value={selectedPaymentMode} onValueChange={setSelectedPaymentMode}>
+                          <SelectTrigger className="h-12 text-lg">
+                            <SelectValue placeholder="💳 Select Payment Mode" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="MTN Mobile Money">MTN Mobile Money</SelectItem>
+                            <SelectItem value="Airtel Mobile Money">Airtel Mobile Money</SelectItem>
+                            <SelectItem value="Cash">Cash</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <div className="flex gap-2">
                           <Button 
                             size="lg" 
@@ -606,11 +645,12 @@ export default function RepaymentSchedule() {
                            <Button 
                             size="lg" 
                             variant="ghost" 
-                            onClick={() => {
+                             onClick={() => {
                               setEditingPaymentIndex(null);
                               setPaymentAmount("");
                               setRecordedByName("");
                               setSelectedServiceCenter("");
+                              setSelectedPaymentMode("");
                             }}
                             className="h-12"
                           >
@@ -669,6 +709,16 @@ export default function RepaymentSchedule() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <Select value={selectedPaymentMode} onValueChange={setSelectedPaymentMode}>
+                        <SelectTrigger className="h-14 text-lg">
+                          <SelectValue placeholder="💳 Select Payment Mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="MTN Mobile Money">MTN Mobile Money</SelectItem>
+                          <SelectItem value="Airtel Mobile Money">Airtel Mobile Money</SelectItem>
+                          <SelectItem value="Cash">Cash</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <div className="flex gap-3">
                         <Button 
                           size="lg" 
@@ -686,6 +736,7 @@ export default function RepaymentSchedule() {
                             setPaymentAmount("");
                             setRecordedByName("");
                             setSelectedServiceCenter("");
+                            setSelectedPaymentMode("");
                           }}
                           className="h-14 px-6"
                         >
