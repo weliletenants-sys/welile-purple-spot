@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil } from "lucide-react";
 import { z } from "zod";
+import { useAgentActivity } from "@/hooks/useAgentActivity";
 
 const agentSchema = z.object({
   name: z
@@ -49,6 +50,7 @@ export const EditAgentDialog = ({ agent, onSuccess, children }: EditAgentDialogP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
   const { toast } = useToast();
+  const { logActivity } = useAgentActivity();
 
   const resetForm = () => {
     setName(agent.name);
@@ -120,6 +122,21 @@ export const EditAgentDialog = ({ agent, onSuccess, children }: EditAgentDialogP
     toast({
       title: "Success",
       description: `Agent ${validation.data.name.toUpperCase()} updated successfully`,
+    });
+
+    // Log the activity
+    await logActivity({
+      agentId: agent.id,
+      agentName: validation.data.name.toUpperCase(),
+      agentPhone: validation.data.phone || agent.phone,
+      actionType: "agent_updated",
+      actionDescription: `Agent profile updated`,
+      metadata: {
+        previous_name: agent.name,
+        previous_phone: agent.phone,
+        new_name: validation.data.name.toUpperCase(),
+        new_phone: validation.data.phone,
+      },
     });
 
     setOpen(false);

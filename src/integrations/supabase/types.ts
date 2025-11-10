@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_activity_log: {
+        Row: {
+          action_description: string | null
+          action_type: string
+          agent_id: string | null
+          agent_name: string
+          agent_phone: string
+          created_at: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action_description?: string | null
+          action_type: string
+          agent_id?: string | null
+          agent_name: string
+          agent_phone: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action_description?: string | null
+          action_type?: string
+          agent_id?: string | null
+          agent_name?: string
+          agent_phone?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_activity_log_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_earnings: {
         Row: {
           agent_name: string
@@ -136,24 +177,36 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          last_action_at: string | null
+          last_action_type: string | null
+          last_login_at: string | null
           name: string
           phone: string | null
+          total_logins: number | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           is_active?: boolean
+          last_action_at?: string | null
+          last_action_type?: string | null
+          last_login_at?: string | null
           name: string
           phone?: string | null
+          total_logins?: number | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           is_active?: boolean
+          last_action_at?: string | null
+          last_action_type?: string | null
+          last_login_at?: string | null
           name?: string
           phone?: string | null
+          total_logins?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -935,6 +988,25 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_agent_activity: {
+        Args: {
+          p_action_description?: string
+          p_action_type: string
+          p_agent_id: string
+          p_agent_name: string
+          p_agent_phone: string
+          p_metadata?: Json
+        }
+        Returns: string
+      }
+      record_agent_login: {
+        Args: {
+          p_agent_id: string
+          p_agent_name: string
+          p_agent_phone: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

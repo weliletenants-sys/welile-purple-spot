@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus } from "lucide-react";
 import { z } from "zod";
+import { useAgentActivity } from "@/hooks/useAgentActivity";
 
 const agentSchema = z.object({
   name: z
@@ -41,6 +42,7 @@ export const AddAgentDialog = ({ onSuccess, children }: AddAgentDialogProps) => 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
   const { toast } = useToast();
+  const { logActivity } = useAgentActivity();
 
   const resetForm = () => {
     setName("");
@@ -90,11 +92,15 @@ export const AddAgentDialog = ({ onSuccess, children }: AddAgentDialogProps) => 
     }
 
     // Insert new agent
-    const { error: insertError } = await supabase.from("agents").insert({
-      name: validation.data.name.toUpperCase(),
-      phone: validation.data.phone || "",
-      is_active: true,
-    });
+    const { data: newAgent, error: insertError } = await supabase
+      .from("agents")
+      .insert({
+        name: validation.data.name.toUpperCase(),
+        phone: validation.data.phone || "",
+        is_active: true,
+      })
+      .select()
+      .single();
 
     if (insertError) {
       toast({
@@ -110,6 +116,17 @@ export const AddAgentDialog = ({ onSuccess, children }: AddAgentDialogProps) => 
       title: "Success",
       description: `Agent ${validation.data.name.toUpperCase()} added successfully`,
     });
+
+    // Log the activity
+    if (newAgent) {
+      await logActivity({
+        agentId: newAgent.id,
+        agentName: validation.data.name.toUpperCase(),
+        agentPhone: validation.data.phone || "",
+        actionType: "agent_created",
+        actionDescription: `New agent ${validation.data.name.toUpperCase()} created`,
+      });
+    }
 
     resetForm();
     setOpen(false);

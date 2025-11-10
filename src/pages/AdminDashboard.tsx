@@ -469,18 +469,61 @@ const AdminSidebar = ({
 
 // Agent Management Section Component
 const AgentManagementSection = () => {
-  // Fetch agents with is_active field from database
+  // Fetch agents with activity tracking data
   const { data: agents, isLoading, refetch } = useQuery({
     queryKey: ["agents-full"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agents")
-        .select("id, name, phone, is_active")
+        .select("id, name, phone, is_active, last_login_at, total_logins, last_action_at, last_action_type")
         .eq("is_active", true)
         .order("name");
 
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Fetch tenant counts per agent
+  const { data: tenantCounts } = useQuery({
+    queryKey: ["agent-tenant-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tenants")
+        .select("agent_phone");
+
+      if (error) throw error;
+
+      const counts: Record<string, number> = {};
+      data.forEach((tenant) => {
+        if (tenant.agent_phone) {
+          counts[tenant.agent_phone] = (counts[tenant.agent_phone] || 0) + 1;
+        }
+      });
+      return counts;
+    },
+  });
+
+  // Fetch recent activities
+  const { data: recentActivities } = useQuery({
+    queryKey: ["agent-recent-activities"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agent_activity_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      // Group by agent phone, get most recent
+      const latest: Record<string, any> = {};
+      data.forEach((activity) => {
+        if (!latest[activity.agent_phone]) {
+          latest[activity.agent_phone] = activity;
+        }
+      });
+      return latest;
     },
   });
 
@@ -524,6 +567,51 @@ const AgentManagementSection = () => {
 
   return (
     <div className="space-y-6">
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{agents?.length || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Active Today</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {agents?.filter(a => 
+                a.last_login_at && 
+                new Date(a.last_login_at).toDateString() === new Date().toDateString()
+              ).length || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {tenantCounts ? Object.values(tenantCounts).reduce((a, b) => a + b, 0) : 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Total Logins</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {agents?.reduce((sum, a) => sum + (a.total_logins || 0), 0) || 0}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -557,38 +645,86 @@ const AgentManagementSection = () => {
               {searchTerm ? "No agents found matching your search" : "No agents found"}
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left p-4 font-medium">Name</th>
                     <th className="text-left p-4 font-medium">Phone</th>
+                    <th className="text-left p-4 font-medium">Tenants</th>
+                    <th className="text-left p-4 font-medium">Last Login</th>
+                    <th className="text-left p-4 font-medium">Total Logins</th>
+                    <th className="text-left p-4 font-medium">Recent Action</th>
                     <th className="text-right p-4 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAgents.map((agent) => (
-                    <tr key={agent.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="p-4 font-medium">{agent.name}</td>
-                      <td className="p-4">{agent.phone}</td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <EditAgentDialog agent={agent} onSuccess={refetch}>
-                            <Button variant="ghost" size="sm">
-                              <Pencil className="h-4 w-4" />
+                  {filteredAgents.map((agent) => {
+                    const tenantCount = tenantCounts?.[agent.phone] || 0;
+                    const recentActivity = recentActivities?.[agent.phone];
+                    
+                    return (
+                      <tr key={agent.id} className="border-b last:border-0 hover:bg-muted/50">
+                        <td className="p-4 font-medium">{agent.name}</td>
+                        <td className="p-4">{agent.phone}</td>
+                        <td className="p-4">
+                          <Badge variant="secondary">
+                            {tenantCount} tenant{tenantCount !== 1 ? 's' : ''}
+                          </Badge>
+                        </td>
+                        <td className="p-4 text-sm">
+                          {agent.last_login_at ? (
+                            <div className="flex flex-col">
+                              <span>{format(new Date(agent.last_login_at), "MMM d, yyyy")}</span>
+                              <span className="text-muted-foreground text-xs">
+                                {format(new Date(agent.last_login_at), "h:mm a")}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">Never</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-sm">
+                          <Badge variant="outline">
+                            {agent.total_logins || 0} login{agent.total_logins !== 1 ? 's' : ''}
+                          </Badge>
+                        </td>
+                        <td className="p-4 text-sm">
+                          {recentActivity ? (
+                            <div className="flex flex-col">
+                              <span className="font-medium capitalize">{recentActivity.action_type}</span>
+                              {recentActivity.action_description && (
+                                <span className="text-muted-foreground text-xs line-clamp-1">
+                                  {recentActivity.action_description}
+                                </span>
+                              )}
+                              <span className="text-muted-foreground text-xs">
+                                {format(new Date(recentActivity.created_at), "MMM d, h:mm a")}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">No activity</span>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <EditAgentDialog agent={agent} onSuccess={refetch}>
+                              <Button variant="ghost" size="sm">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </EditAgentDialog>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openDeleteDialog(agent)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
-                          </EditAgentDialog>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openDeleteDialog(agent)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
