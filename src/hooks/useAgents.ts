@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 
 export interface Agent {
+  id: string;
   name: string;
   phone: string;
 }
@@ -15,13 +16,14 @@ export const useAgents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agents")
-        .select("name, phone")
+        .select("id, name, phone")
         .eq("is_active", true)
         .order("name");
 
       if (error) throw error;
 
       const agents: Agent[] = data.map((agent) => ({
+        id: agent.id,
         name: agent.name,
         phone: agent.phone || "",
       }));

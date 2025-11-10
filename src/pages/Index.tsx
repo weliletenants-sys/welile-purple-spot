@@ -8,7 +8,10 @@ import { ShareButton } from "@/components/ShareButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useAgents } from "@/hooks/useAgents";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { AddAgentDialog } from "@/components/AddAgentDialog";
+import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { AchievementsModal } from "@/components/AchievementsModal";
@@ -18,8 +21,10 @@ import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
-import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard, Building2 } from "lucide-react";
+import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard, Building2, Phone, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 import { AddTenantForm } from "@/components/AddTenantForm";
 import {
@@ -50,6 +55,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const { showTour, completeTour, skipTour } = useOnboardingTour();
   const { isAdmin } = useAdminRole();
+  const { data: agents, refetch: refetchAgents } = useAgents();
   const [showAchievements, setShowAchievements] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -392,39 +398,97 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Admin Quick Access Section */}
+        {/* Admin Agent Management Section */}
         {isAdmin && (
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 shadow-xl border-2 border-green-400 animate-fade-in">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
-                  <Users className="h-8 w-8 text-white" />
+          <div className="space-y-6 animate-fade-in">
+            {/* Prominent Add Agent Section */}
+            <Card className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 border-primary shadow-2xl">
+              <CardContent className="pt-8 pb-8 text-center">
+                <h2 className="text-3xl font-bold text-primary-foreground mb-6">
+                  Agent Management Center
+                </h2>
+                <AddAgentDialog onSuccess={refetchAgents} />
+              </CardContent>
+            </Card>
+
+            {/* Agent Cards Grid */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <UserCog className="h-6 w-6" />
+                    Active Agents ({agents?.length || 0})
+                  </span>
+                  <Link to="/agent-management">
+                    <Button variant="outline" size="sm">
+                      View All
+                    </Button>
+                  </Link>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {agents && agents.length > 0 ? (
+                    agents.slice(0, 9).map((agent) => (
+                      <Card key={agent.id} className="hover:shadow-lg transition-shadow">
+                        <CardContent className="pt-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg mb-2">{agent.name}</h3>
+                              {agent.phone && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Phone className="h-4 w-4" />
+                                  <span>{agent.phone}</span>
+                                </div>
+                              )}
+                            </div>
+                            <EditAgentDialog 
+                              agent={{ 
+                                id: agent.id, 
+                                name: agent.name, 
+                                phone: agent.phone, 
+                                is_active: true 
+                              }} 
+                              onSuccess={refetchAgents} 
+                            />
+                          </div>
+                          <Link to={`/agent/${agent.phone}`}>
+                            <Button variant="outline" size="sm" className="w-full">
+                              View Performance
+                            </Button>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-8 text-muted-foreground">
+                      No agents found. Add your first agent above!
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-white">Admin: Manage Agents</h3>
-                  <p className="text-green-50">Add, edit, and manage all agents in the system</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  size="lg"
-                  onClick={() => navigate("/agent-management")}
-                  className="bg-white text-green-600 hover:bg-green-50 font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                >
-                  <UserPlus className="h-5 w-5 mr-2" />
-                  Agent Management
-                </Button>
-                <Button
-                  size="lg"
-                  onClick={() => navigate("/agent-performance")}
-                  variant="outline"
-                  className="bg-white/10 text-white border-white hover:bg-white hover:text-green-600 font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                >
-                  <TrendingUp className="h-5 w-5 mr-2" />
-                  Performance Dashboard
-                </Button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+
+            {/* Other Admin Actions */}
+            <Card className="bg-gradient-to-br from-secondary/30 via-secondary/20 to-background">
+              <CardHeader>
+                <CardTitle className="text-2xl">Other Admin Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Link to="/agent-performance">
+                  <Button size="lg" variant="outline" className="w-full text-lg py-6">
+                    <TrendingUp className="mr-2 h-5 w-5" />
+                    Agent Performance Dashboard
+                  </Button>
+                </Link>
+                <Link to="/agent-management">
+                  <Button size="lg" variant="outline" className="w-full text-lg py-6">
+                    <Users className="mr-2 h-5 w-5" />
+                    Full Agent List
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         )}
 
