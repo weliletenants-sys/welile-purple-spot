@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Activity, ChevronLeft, ChevronRight, Calendar as CalendarIcon, X } from "lucide-react";
+import { ArrowLeft, Activity, ChevronLeft, ChevronRight, Calendar as CalendarIcon, X, TrendingUp, TrendingDown, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -58,6 +58,92 @@ const AgentActivityLog = () => {
   const [actionTypes, setActionTypes] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [datePreset, setDatePreset] = useState<string>("all");
+  const [allActivityLogs, setAllActivityLogs] = useState<ActivityLog[]>([]);
+
+  // Fetch all activity logs for statistics (without pagination)
+  const fetchAllActivityLogs = async () => {
+    try {
+      let query = supabase
+        .from("agent_activity_log")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      // Apply same filters as main query
+      if (searchQuery) {
+        query = query.or(
+          `agent_name.ilike.%${searchQuery}%,agent_phone.ilike.%${searchQuery}%,action_description.ilike.%${searchQuery}%`
+        );
+      }
+
+      if (actionTypeFilter !== "all") {
+        query = query.eq("action_type", actionTypeFilter);
+      }
+
+      if (dateRange?.from) {
+        query = query.gte("created_at", dateRange.from.toISOString());
+      }
+      if (dateRange?.to) {
+        query = query.lte("created_at", dateRange.to.toISOString());
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setAllActivityLogs(data || []);
+    } catch (error) {
+      console.error("Error fetching all activity logs:", error);
+    }
+  };
+
+  // Calculate statistics
+  const calculateStats = () => {
+    const totalActions = allActivityLogs.length;
+
+    // Find most common action type
+    const actionTypeCounts: Record<string, number> = {};
+    allActivityLogs.forEach((log) => {
+      actionTypeCounts[log.action_type] = (actionTypeCounts[log.action_type] || 0) + 1;
+    });
+
+    const mostCommonAction = Object.entries(actionTypeCounts)
+      .sort(([, a], [, b]) => b - a)[0];
+
+    // Calculate trend (compare last 7 days vs previous 7 days)
+    const now = new Date();
+    const last7Days = subDays(now, 7);
+    const previous7Days = subDays(now, 14);
+
+    const recentActions = allActivityLogs.filter(
+      (log) => new Date(log.created_at) >= last7Days
+    ).length;
+
+    const previousActions = allActivityLogs.filter(
+      (log) => {
+        const date = new Date(log.created_at);
+        return date >= previous7Days && date < last7Days;
+      }
+    ).length;
+
+    const trend = previousActions > 0
+      ? ((recentActions - previousActions) / previousActions) * 100
+      : recentActions > 0 ? 100 : 0;
+
+    return {
+      totalActions,
+      mostCommonAction: mostCommonAction
+        ? { type: mostCommonAction[0], count: mostCommonAction[1] }
+        : null,
+      trend: {
+        value: trend,
+        direction: trend > 0 ? "up" : trend < 0 ? "down" : "stable",
+        recentCount: recentActions,
+        previousCount: previousActions,
+      },
+    };
+  };
+
+  const stats = calculateStats();
 
   // Handle date preset changes
   const handleDatePresetChange = (preset: string) => {
@@ -165,6 +251,7 @@ const AgentActivityLog = () => {
 
   useEffect(() => {
     fetchActivityLogs();
+    fetchAllActivityLogs();
   }, [currentPage, searchQuery, actionTypeFilter, dateRange]);
 
   useEffect(() => {
@@ -244,6 +331,80 @@ const AgentActivityLog = () => {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Actions</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalActions}</div>
+              <p className="text-xs text-muted-foreground">
+                {dateRange?.from && dateRange?.to
+                  ? `In selected date range`
+                  : "All time activity"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Most Common Action</CardTitle>
+              <Zap className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              {stats.mostCommonAction ? (
+                <>
+                  <div className="text-2xl font-bold capitalize">
+                    {stats.mostCommonAction.type.replace(/_/g, " ")}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.mostCommonAction.count} occurrences
+                  </p>
+                </>
+              ) : (
+                <div className="text-sm text-muted-foreground">No data</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Activity Trend</CardTitle>
+              {stats.trend.direction === "up" ? (
+                <TrendingUp className="h-4 w-4 text-green-600" />
+              ) : stats.trend.direction === "down" ? (
+                <TrendingDown className="h-4 w-4 text-red-600" />
+              ) : (
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold flex items-center gap-2">
+                <span
+                  className={
+                    stats.trend.direction === "up"
+                      ? "text-green-600"
+                      : stats.trend.direction === "down"
+                      ? "text-red-600"
+                      : "text-muted-foreground"
+                  }
+                >
+                  {stats.trend.value > 0 ? "+" : ""}
+                  {stats.trend.value.toFixed(1)}%
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Last 7 days vs previous 7 days
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.trend.recentCount} vs {stats.trend.previousCount} actions
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters and Search */}
