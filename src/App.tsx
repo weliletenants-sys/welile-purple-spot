@@ -9,38 +9,60 @@ import { InstallBanner } from "@/components/InstallBanner";
 import { HelpChatbot } from "@/components/HelpChatbot";
 import { WhatsNewModal } from "@/components/WhatsNewModal";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
+import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
-import RepaymentSchedule from "./pages/RepaymentSchedule";
-import ExecutiveDashboard from "./pages/ExecutiveDashboard";
-import AgentDashboard from "./pages/AgentDashboard";
-import TopPerformers from "./pages/TopPerformers";
-import RecordingActivity from "./pages/RecordingActivity";
-import NotFound from "./pages/NotFound";
-import BulkAddAdekeAnnet from "./pages/BulkAddAdekeAnnet";
-import AutoImportTenants from "./pages/AutoImportTenants";
-import MissedPayments from "./pages/MissedPayments";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
-import WithdrawalHistory from "./pages/WithdrawalHistory";
-import MonthlySummary from "./pages/MonthlySummary";
-import AgentPortalLogin from "./pages/AgentPortalLogin";
-import AgentPortal from "./pages/AgentPortal";
-import ServiceCenterAnalytics from "./pages/ServiceCenterAnalytics";
-import ServiceCenterManagement from "./pages/ServiceCenterManagement";
-import ServiceCenterTransferAnalytics from "./pages/ServiceCenterTransferAnalytics";
-import RecentlyAddedTenants from "./pages/RecentlyAddedTenants";
-import RiskDashboard from "./pages/RiskDashboard";
-import PipelineTenants from "./pages/PipelineTenants";
-import PipelineAnalytics from "./pages/PipelineAnalytics";
-import AgentManagement from "./pages/AgentManagement";
-import AgentPerformanceDashboard from "./pages/AgentPerformanceDashboard";
-import AgentDetailPage from "./pages/AgentDetailPage";
-import Auth from "./pages/Auth";
-import Leaderboard from "./pages/Leaderboard";
-import LandlordManagement from "./pages/LandlordManagement";
-import LandlordProfile from "./pages/LandlordProfile";
 
-const queryClient = new QueryClient();
+// Lazy load all other pages for faster initial load
+const RepaymentSchedule = lazy(() => import("./pages/RepaymentSchedule"));
+const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
+const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
+const TopPerformers = lazy(() => import("./pages/TopPerformers"));
+const RecordingActivity = lazy(() => import("./pages/RecordingActivity"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const BulkAddAdekeAnnet = lazy(() => import("./pages/BulkAddAdekeAnnet"));
+const AutoImportTenants = lazy(() => import("./pages/AutoImportTenants"));
+const MissedPayments = lazy(() => import("./pages/MissedPayments"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const WithdrawalHistory = lazy(() => import("./pages/WithdrawalHistory"));
+const MonthlySummary = lazy(() => import("./pages/MonthlySummary"));
+const AgentPortalLogin = lazy(() => import("./pages/AgentPortalLogin"));
+const AgentPortal = lazy(() => import("./pages/AgentPortal"));
+const ServiceCenterAnalytics = lazy(() => import("./pages/ServiceCenterAnalytics"));
+const ServiceCenterManagement = lazy(() => import("./pages/ServiceCenterManagement"));
+const ServiceCenterTransferAnalytics = lazy(() => import("./pages/ServiceCenterTransferAnalytics"));
+const RecentlyAddedTenants = lazy(() => import("./pages/RecentlyAddedTenants"));
+const RiskDashboard = lazy(() => import("./pages/RiskDashboard"));
+const PipelineTenants = lazy(() => import("./pages/PipelineTenants"));
+const PipelineAnalytics = lazy(() => import("./pages/PipelineAnalytics"));
+const AgentManagement = lazy(() => import("./pages/AgentManagement"));
+const AgentPerformanceDashboard = lazy(() => import("./pages/AgentPerformanceDashboard"));
+const AgentDetailPage = lazy(() => import("./pages/AgentDetailPage"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const LandlordManagement = lazy(() => import("./pages/LandlordManagement"));
+const LandlordProfile = lazy(() => import("./pages/LandlordProfile"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - reduce refetching
+      gcTime: 10 * 60 * 1000, // 10 minutes cache time
+      refetchOnWindowFocus: false, // Don't refetch on every focus
+      retry: 1, // Only retry once on failure
+    },
+  },
+});
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-lg font-semibold text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
 
 const App = () => {
   const { showWhatsNew, markAsSeen, currentVersion } = useWhatsNew();
@@ -60,40 +82,41 @@ const App = () => {
         <BrowserRouter>
           <HelpChatbot />
           <InstallBanner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
-            <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
-            <Route path="/agent-dashboard" element={<AgentDashboard />} />
-            <Route path="/agent/:agentName" element={<AgentDashboard />} />
-            <Route path="/top-performers" element={<TopPerformers />} />
-            <Route path="/recording-activity" element={<RecordingActivity />} />
-            <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />
-            <Route path="/auto-import" element={<AutoImportTenants />} />
-            <Route path="/missed-payments" element={<MissedPayments />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            <Route path="/withdrawal-history" element={<WithdrawalHistory />} />
-            <Route path="/monthly-summary" element={<MonthlySummary />} />
-            <Route path="/agent-portal-login" element={<AgentPortalLogin />} />
-            <Route path="/agent-portal" element={<AgentPortal />} />
-            <Route path="/service-center-analytics" element={<ServiceCenterAnalytics />} />
-            <Route path="/service-center-management" element={<ServiceCenterManagement />} />
-            <Route path="/service-center-transfer-analytics" element={<ServiceCenterTransferAnalytics />} />
-            <Route path="/recently-added" element={<RecentlyAddedTenants />} />
-            <Route path="/risk-dashboard" element={<RiskDashboard />} />
-            <Route path="/pipeline-tenants" element={<PipelineTenants />} />
-            <Route path="/pipeline-analytics" element={<PipelineAnalytics />} />
-          <Route path="/agent-management" element={<AgentManagement />} />
-          <Route path="/agent-performance" element={<AgentPerformanceDashboard />} />
-          <Route path="/agent/:agentPhone" element={<AgentDetailPage />} />
-            <Route path="/landlord-management" element={<LandlordManagement />} />
-            <Route path="/landlord/:landlordContact" element={<LandlordProfile />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
+              <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+              <Route path="/agent-dashboard" element={<AgentDashboard />} />
+              <Route path="/agent/:agentName" element={<AgentDashboard />} />
+              <Route path="/top-performers" element={<TopPerformers />} />
+              <Route path="/recording-activity" element={<RecordingActivity />} />
+              <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />
+              <Route path="/auto-import" element={<AutoImportTenants />} />
+              <Route path="/missed-payments" element={<MissedPayments />} />
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/withdrawal-history" element={<WithdrawalHistory />} />
+              <Route path="/monthly-summary" element={<MonthlySummary />} />
+              <Route path="/agent-portal-login" element={<AgentPortalLogin />} />
+              <Route path="/agent-portal" element={<AgentPortal />} />
+              <Route path="/service-center-analytics" element={<ServiceCenterAnalytics />} />
+              <Route path="/service-center-management" element={<ServiceCenterManagement />} />
+              <Route path="/service-center-transfer-analytics" element={<ServiceCenterTransferAnalytics />} />
+              <Route path="/recently-added" element={<RecentlyAddedTenants />} />
+              <Route path="/risk-dashboard" element={<RiskDashboard />} />
+              <Route path="/pipeline-tenants" element={<PipelineTenants />} />
+              <Route path="/pipeline-analytics" element={<PipelineAnalytics />} />
+              <Route path="/agent-management" element={<AgentManagement />} />
+              <Route path="/agent-performance" element={<AgentPerformanceDashboard />} />
+              <Route path="/agent/:agentPhone" element={<AgentDetailPage />} />
+              <Route path="/landlord-management" element={<LandlordManagement />} />
+              <Route path="/landlord/:landlordContact" element={<LandlordProfile />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
