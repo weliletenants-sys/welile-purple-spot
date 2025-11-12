@@ -11,6 +11,8 @@ import { WhatsNewModal } from "@/components/WhatsNewModal";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { DynamicBreadcrumb } from "@/components/DynamicBreadcrumb";
+import { CommandPalette } from "@/components/CommandPalette";
+import { KeyboardShortcutsHint } from "@/components/KeyboardShortcutsHint";
 import { OfflineQueueProvider } from "@/contexts/OfflineQueueContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -79,8 +81,10 @@ const App = () => {
         <OfflineQueueProvider>
           <OfflineIndicator />
           <SyncIndicator />
+          <KeyboardShortcutsHint />
           <UpdatePrompt />
           <InstallPrompt />
+          <CommandPalette />
           <WhatsNewModal 
             open={showWhatsNew} 
             onClose={markAsSeen} 
