@@ -14,6 +14,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
+import BulkUploadPipelineTenants from "@/components/BulkUploadPipelineTenants";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { AchievementsModal } from "@/components/AchievementsModal";
 import { LeaderboardModal } from "@/components/LeaderboardModal";
@@ -396,6 +397,12 @@ const Index = () => {
                     onSelect={(e) => e.preventDefault()}
                   >
                     <BulkUploadTenants />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="p-0 mt-2"
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <BulkUploadPipelineTenants />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
