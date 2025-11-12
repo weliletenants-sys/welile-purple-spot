@@ -30,10 +30,20 @@ export const UpdatePrompt = () => {
 
       // Listen for new service worker
       navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // Show success toast
+        toast({
+          title: "✨ App Updated Successfully",
+          description: "You're now using the latest version with all new features and improvements.",
+          duration: 4000,
+        });
+        
         // Close dialog if open
         setShowUpdateDialog(false);
-        // Reload the page automatically
-        window.location.reload();
+        
+        // Reload the page after a brief delay to show the toast
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       });
     }
   }, [toast]);
