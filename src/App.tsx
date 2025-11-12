@@ -84,7 +84,6 @@ const App = () => {
           <KeyboardShortcutsHint />
           <UpdatePrompt />
           <InstallPrompt />
-          <CommandPalette />
           <WhatsNewModal 
             open={showWhatsNew} 
             onClose={markAsSeen} 
@@ -93,6 +92,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <CommandPalette />
             <SidebarProvider>
               <div className="flex min-h-screen w-full">
                 <AppSidebar />
