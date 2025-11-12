@@ -718,12 +718,12 @@ const Index = () => {
               {Array.from({ length: pageSize }).map((_, index) => (
                 <Card key={index} className="p-4">
                   <div className="space-y-3">
-                    <Skeleton className="h-32 w-full rounded-lg" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton variant="slow" className="h-32 w-full rounded-lg" />
+                    <Skeleton variant="fast" className="h-4 w-3/4" />
+                    <Skeleton variant="fast" className="h-4 w-1/2" />
                     <div className="flex gap-2">
-                      <Skeleton className="h-6 w-16 rounded-full" />
-                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <Skeleton variant="fast" className="h-6 w-16 rounded-full" />
+                      <Skeleton variant="fast" className="h-6 w-16 rounded-full" />
                     </div>
                   </div>
                 </Card>

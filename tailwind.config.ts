@@ -118,6 +118,8 @@ export default {
         "slide-down": "slide-down 0.3s ease-out",
         "slide-up": "slide-up 0.3s ease-out",
         "shimmer": "shimmer 2s infinite",
+        "shimmer-fast": "shimmer 1.5s infinite",
+        "shimmer-slow": "shimmer 2.5s infinite",
       },
     },
   },
