@@ -161,11 +161,11 @@ const AgentPerformanceDashboard = () => {
             {Array.from({ length: 4 }).map((_, index) => (
               <Card key={index}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <Skeleton variant="fast" className="h-4 w-24" />
-                  <Skeleton variant="fast" className="h-4 w-4 rounded" />
+                  <Skeleton variant="fast" delay={index * 100} className="h-4 w-24" />
+                  <Skeleton variant="fast" delay={index * 100 + 50} className="h-4 w-4 rounded" />
                 </CardHeader>
                 <CardContent>
-                  <Skeleton variant="default" className="h-8 w-32" />
+                  <Skeleton variant="default" delay={index * 100 + 100} className="h-8 w-32" />
                 </CardContent>
               </Card>
             ))}
@@ -243,7 +243,7 @@ const AgentPerformanceDashboard = () => {
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, index) => (
                   <div key={index} className="flex items-center gap-4">
-                    <Skeleton variant="slow" className="h-12 w-full" />
+                    <Skeleton variant="slow" delay={index * 100} className="h-12 w-full" />
                   </div>
                 ))}
               </div>

@@ -716,14 +716,14 @@ const Index = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
               {Array.from({ length: pageSize }).map((_, index) => (
-                <Card key={index} className="p-4">
+                <Card key={index} className="p-4" style={{ animationDelay: `${index * 50}ms` }}>
                   <div className="space-y-3">
-                    <Skeleton variant="slow" className="h-32 w-full rounded-lg" />
-                    <Skeleton variant="fast" className="h-4 w-3/4" />
-                    <Skeleton variant="fast" className="h-4 w-1/2" />
+                    <Skeleton variant="slow" delay={index * 50} className="h-32 w-full rounded-lg" />
+                    <Skeleton variant="fast" delay={index * 50 + 100} className="h-4 w-3/4" />
+                    <Skeleton variant="fast" delay={index * 50 + 150} className="h-4 w-1/2" />
                     <div className="flex gap-2">
-                      <Skeleton variant="fast" className="h-6 w-16 rounded-full" />
-                      <Skeleton variant="fast" className="h-6 w-16 rounded-full" />
+                      <Skeleton variant="fast" delay={index * 50 + 200} className="h-6 w-16 rounded-full" />
+                      <Skeleton variant="fast" delay={index * 50 + 250} className="h-6 w-16 rounded-full" />
                     </div>
                   </div>
                 </Card>
