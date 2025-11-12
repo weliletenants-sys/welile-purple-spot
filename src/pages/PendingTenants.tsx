@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -196,10 +196,13 @@ const PendingTenants = () => {
                     {filteredTenants.map((tenant) => (
                       <TableRow key={tenant.id}>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{tenant.name}</span>
-                          </div>
+                          <Link 
+                            to={`/tenant/${tenant.id}`}
+                            className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer group"
+                          >
+                            <User className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span className="font-medium underline-offset-4 group-hover:underline">{tenant.name}</span>
+                          </Link>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
