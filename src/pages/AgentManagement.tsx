@@ -384,22 +384,30 @@ const AgentManagement = () => {
                 <Activity className="h-5 w-5 text-primary" />
                 <CardTitle>Recent Activity</CardTitle>
               </div>
-              <Select
-                value={activityTypeFilter}
-                onValueChange={setActivityTypeFilter}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Filter by action" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Actions</SelectItem>
-                  {activityTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      <span className="capitalize">{type.replace(/_/g, ' ')}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={activityTypeFilter}
+                  onValueChange={setActivityTypeFilter}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Filter by action" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Actions</SelectItem>
+                    {activityTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        <span className="capitalize">{type.replace(/_/g, ' ')}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/agent-activity-log")}
+                >
+                  View Full Log
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>

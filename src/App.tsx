@@ -44,6 +44,7 @@ const RiskDashboard = lazy(() => import("./pages/RiskDashboard"));
 const PipelineTenants = lazy(() => import("./pages/PipelineTenants"));
 const PipelineAnalytics = lazy(() => import("./pages/PipelineAnalytics"));
 const AgentManagement = lazy(() => import("./pages/AgentManagement"));
+const AgentActivityLog = lazy(() => import("./pages/AgentActivityLog"));
 const AgentPerformanceDashboard = lazy(() => import("./pages/AgentPerformanceDashboard"));
 const AgentDetailPage = lazy(() => import("./pages/AgentDetailPage"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -137,6 +138,7 @@ const App = () => {
               <Route path="/pipeline-tenants" element={<PipelineTenants />} />
               <Route path="/pipeline-analytics" element={<PipelineAnalytics />} />
               <Route path="/agent-management" element={<AgentManagement />} />
+              <Route path="/agent-activity-log" element={<AgentActivityLog />} />
               <Route path="/agent-performance" element={<AgentPerformanceDashboard />} />
               <Route path="/agent/:agentPhone" element={<AgentDetailPage />} />
               <Route path="/landlord-management" element={<LandlordManagement />} />
