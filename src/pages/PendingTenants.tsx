@@ -43,10 +43,13 @@ import {
   ArrowUp,
   ArrowDown,
   X,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import * as XLSX from "xlsx";
 
 const PendingTenants = () => {
   const navigate = useNavigate();
@@ -234,6 +237,95 @@ const PendingTenants = () => {
 
   const hasActiveFilters = filterDistrict !== "all" || filterAgent !== "all" || dateFrom || dateTo;
 
+  const exportToCSV = () => {
+    if (!sortedTenants || sortedTenants.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No pending tenants to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const csvData = sortedTenants.map(tenant => ({
+      "Tenant Name": tenant.name,
+      "Contact": tenant.contact,
+      "District": tenant.location_district || "N/A",
+      "Address": tenant.address,
+      "Agent Name": tenant.agent_name || "Unassigned",
+      "Agent Phone": tenant.agent_phone || "N/A",
+      "Status": tenant.status,
+      "Rent Amount": tenant.rent_amount,
+      "Date Added": format(new Date(tenant.created_at), "MMM dd, yyyy"),
+      "Landlord": tenant.landlord,
+      "Landlord Contact": tenant.landlord_contact,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(csvData);
+    const csv = XLSX.utils.sheet_to_csv(ws);
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pending-tenants-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Successful",
+      description: `Exported ${sortedTenants.length} pending tenant(s) to CSV`,
+    });
+  };
+
+  const exportToExcel = () => {
+    if (!sortedTenants || sortedTenants.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No pending tenants to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const excelData = sortedTenants.map(tenant => ({
+      "Tenant Name": tenant.name,
+      "Contact": tenant.contact,
+      "District": tenant.location_district || "N/A",
+      "Address": tenant.address,
+      "Agent Name": tenant.agent_name || "Unassigned",
+      "Agent Phone": tenant.agent_phone || "N/A",
+      "Status": tenant.status,
+      "Payment Status": tenant.payment_status,
+      "Rent Amount": tenant.rent_amount,
+      "Repayment Days": tenant.repayment_days,
+      "Date Added": format(new Date(tenant.created_at), "MMM dd, yyyy"),
+      "Landlord": tenant.landlord,
+      "Landlord Contact": tenant.landlord_contact,
+      "Guarantor 1 Name": tenant.guarantor1_name || "N/A",
+      "Guarantor 1 Contact": tenant.guarantor1_contact || "N/A",
+      "Guarantor 2 Name": tenant.guarantor2_name || "N/A",
+      "Guarantor 2 Contact": tenant.guarantor2_contact || "N/A",
+      "Service Center": tenant.service_center || "N/A",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    
+    // Auto-size columns
+    const colWidths = Object.keys(excelData[0] || {}).map(key => ({
+      wch: Math.max(key.length, 15)
+    }));
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Pending Tenants");
+    XLSX.writeFile(wb, `pending-tenants-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+
+    toast({
+      title: "Export Successful",
+      description: `Exported ${sortedTenants.length} pending tenant(s) to Excel`,
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -282,6 +374,24 @@ const PendingTenants = () => {
                 )}
               </div>
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportToCSV}
+                  disabled={!sortedTenants || sortedTenants.length === 0}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Export CSV
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportToExcel}
+                  disabled={!sortedTenants || sortedTenants.length === 0}
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-1" />
+                  Export Excel
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
