@@ -19,6 +19,7 @@ import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -232,57 +233,59 @@ const AgentManagement = () => {
                 No agents found. Add your first agent to get started.
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Phone Number</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fullAgents.map((agent) => (
-                    <TableRow key={agent.id}>
-                      <TableCell className="font-medium">{agent.name}</TableCell>
-                      <TableCell>
-                        {agent.phone || (
-                          <span className="text-muted-foreground italic">
-                            No phone number
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={agent.is_active ? "default" : "secondary"}
-                        >
-                          {agent.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <EditAgentDialog
-                            agent={agent}
-                            onSuccess={() => {
-                              refetch();
-                              fetchFullAgents();
-                            }}
-                          />
-                          {agent.is_active && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openDeleteDialog(agent)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+              <ScrollArea className="h-[600px] w-full rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Phone Number</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {fullAgents.map((agent) => (
+                      <TableRow key={agent.id}>
+                        <TableCell className="font-medium">{agent.name}</TableCell>
+                        <TableCell>
+                          {agent.phone || (
+                            <span className="text-muted-foreground italic">
+                              No phone number
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={agent.is_active ? "default" : "secondary"}
+                          >
+                            {agent.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <EditAgentDialog
+                              agent={agent}
+                              onSuccess={() => {
+                                refetch();
+                                fetchFullAgents();
+                              }}
+                            />
+                            {agent.is_active && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openDeleteDialog(agent)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
             )}
           </CardContent>
         </Card>
