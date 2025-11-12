@@ -391,55 +391,71 @@ const AgentDashboard = () => {
         )}
 
         {/* Summary Cards */}
-        <div className="grid gap-6 md:grid-cols-4 mb-8">
-          <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Expected Commission</p>
-                <p className="text-3xl font-bold text-foreground">UGX {totalExpectedCommissions.toLocaleString()}</p>
+        {isLoading ? (
+          <div className="grid gap-6 md:grid-cols-4 mb-8">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index} className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                  <Skeleton className="h-12 w-12 rounded-lg" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-4 mb-8">
+            <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Expected Commission</p>
+                  <p className="text-3xl font-bold text-foreground">UGX {totalExpectedCommissions.toLocaleString()}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
+                  <TrendingUp className="w-6 h-6 text-primary-foreground" />
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
-                <TrendingUp className="w-6 h-6 text-primary-foreground" />
-              </div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Earned Commission</p>
-                <p className="text-3xl font-bold text-foreground">UGX {totalEarnedCommissions.toLocaleString()}</p>
+            <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Earned Commission</p>
+                  <p className="text-3xl font-bold text-foreground">UGX {totalEarnedCommissions.toLocaleString()}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
+                  <DollarSign className="w-6 h-6 text-primary-foreground" />
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
-                <DollarSign className="w-6 h-6 text-primary-foreground" />
-              </div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Withdrawn</p>
-                <p className="text-3xl font-bold text-foreground">UGX {totalWithdrawnCommissions.toLocaleString()}</p>
+            <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Withdrawn</p>
+                  <p className="text-3xl font-bold text-foreground">UGX {totalWithdrawnCommissions.toLocaleString()}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-gradient-to-br from-destructive/20 to-destructive/10">
+                  <TrendingDown className="w-6 h-6 text-destructive" />
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-gradient-to-br from-destructive/20 to-destructive/10">
-                <TrendingDown className="w-6 h-6 text-destructive" />
-              </div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Available</p>
-                <p className="text-3xl font-bold text-foreground">UGX {totalAvailableCommissions.toLocaleString()}</p>
+            <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Available</p>
+                  <p className="text-3xl font-bold text-foreground">UGX {totalAvailableCommissions.toLocaleString()}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
+                  <UserCheck className="w-6 h-6 text-primary-foreground" />
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
-                <UserCheck className="w-6 h-6 text-primary-foreground" />
-              </div>
-            </div>
-          </Card>
-        </div>
+            </Card>
+          </div>
+        )}
 
         {/* Pagination Controls - Top */}
         {!isLoading && sortedAgents && sortedAgents.length > itemsPerPage && (

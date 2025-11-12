@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { TenantCard } from "@/components/TenantCard";
 import { WelileLogo } from "@/components/WelileLogo";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ShareButton } from "@/components/ShareButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
@@ -712,22 +713,34 @@ const Index = () => {
 
         {/* Tenant Cards Grid - Fully responsive for all devices */}
         <div className="relative">
-          {isLoading && (
-            <div className="absolute top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm rounded-lg p-4 flex items-center justify-center gap-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-              <span className="text-sm font-medium text-foreground">Searching...</span>
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+              {Array.from({ length: pageSize }).map((_, index) => (
+                <Card key={index} className="p-4">
+                  <div className="space-y-3">
+                    <Skeleton className="h-32 w-full rounded-lg" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+              {tenants.map((tenant, index) => (
+                <TenantCard 
+                  key={tenant.id} 
+                  tenant={tenant} 
+                  tenantNumber={((currentPage - 1) * pageSize) + index + 1}
+                  isFiltered={debouncedSearchTerm.length > 0} 
+                />
+              ))}
             </div>
           )}
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 transition-opacity duration-200 ${isLoading ? 'opacity-60' : 'opacity-100'}`}>
-            {tenants.map((tenant, index) => (
-              <TenantCard 
-                key={tenant.id} 
-                tenant={tenant} 
-                tenantNumber={((currentPage - 1) * pageSize) + index + 1}
-                isFiltered={debouncedSearchTerm.length > 0} 
-              />
-            ))}
-          </div>
         </div>
 
         {!isLoading && tenants.length === 0 && (

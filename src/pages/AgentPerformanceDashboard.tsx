@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -34,7 +35,7 @@ const AgentPerformanceDashboard = () => {
   const { tenants } = useTenants();
 
   // Fetch all payments
-  const { data: payments } = useQuery({
+  const { data: payments, isLoading: paymentsLoading } = useQuery({
     queryKey: ["all-payments"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -111,6 +112,8 @@ const AgentPerformanceDashboard = () => {
     return Array.from(statsMap.values()).sort((a, b) => b.totalRentCollected - a.totalRentCollected);
   }, [tenants, payments]);
 
+  const isLoading = !tenants || paymentsLoading;
+
   const filteredStats = useMemo(() => {
     return agentStats.filter((stat) =>
       stat.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -153,51 +156,67 @@ const AgentPerformanceDashboard = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalStats.totalAgents}</div>
-            </CardContent>
-          </Card>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-4 rounded" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-32" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalStats.totalAgents}</div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalStats.totalTenants}</div>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalStats.totalTenants}</div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Collected</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                UGX {totalStats.totalCollected.toLocaleString()}
-              </div>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Collected</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  UGX {totalStats.totalCollected.toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Success Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {totalStats.avgSuccessRate.toFixed(1)}%
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avg Success Rate</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {totalStats.avgSuccessRate.toFixed(1)}%
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Search */}
         <Card>
@@ -220,56 +239,66 @@ const AgentPerformanceDashboard = () => {
             <CardTitle>Agent Performance Metrics</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Agent Name</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead className="text-right">Total Tenants</TableHead>
-                  <TableHead className="text-right">Active Tenants</TableHead>
-                  <TableHead className="text-right">Monthly Rent</TableHead>
-                  <TableHead className="text-right">Total Collected</TableHead>
-                  <TableHead className="text-right">Expected</TableHead>
-                  <TableHead className="text-right">Success Rate</TableHead>
-                  <TableHead>Performance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStats.length === 0 ? (
+            {isLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      No agents found
-                    </TableCell>
+                    <TableHead>Agent Name</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-right">Total Tenants</TableHead>
+                    <TableHead className="text-right">Active Tenants</TableHead>
+                    <TableHead className="text-right">Monthly Rent</TableHead>
+                    <TableHead className="text-right">Total Collected</TableHead>
+                    <TableHead className="text-right">Expected</TableHead>
+                    <TableHead className="text-right">Success Rate</TableHead>
+                    <TableHead>Performance</TableHead>
                   </TableRow>
-                ) : (
-                  filteredStats.map((stat) => (
-                    <TableRow 
-                      key={stat.agentPhone}
-                      className="cursor-pointer hover:bg-accent/50 transition-colors"
-                      onClick={() => navigate(`/agent/${stat.agentPhone}`)}
-                    >
-                      <TableCell className="font-medium">{stat.agentName}</TableCell>
-                      <TableCell>{stat.agentPhone}</TableCell>
-                      <TableCell className="text-right">{stat.tenantCount}</TableCell>
-                      <TableCell className="text-right">{stat.activeTenants}</TableCell>
-                      <TableCell className="text-right">
-                        UGX {stat.totalMonthlyRent.toLocaleString()}
+                </TableHeader>
+                <TableBody>
+                  {filteredStats.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        No agents found
                       </TableCell>
-                      <TableCell className="text-right font-semibold text-green-600">
-                        UGX {stat.totalRentCollected.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        UGX {stat.expectedRent.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right font-bold">
-                        {stat.successRate.toFixed(1)}%
-                      </TableCell>
-                      <TableCell>{getSuccessRateBadge(stat.successRate)}</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredStats.map((stat) => (
+                      <TableRow 
+                        key={stat.agentPhone}
+                        className="cursor-pointer hover:bg-accent/50 transition-colors"
+                        onClick={() => navigate(`/agent/${stat.agentPhone}`)}
+                      >
+                        <TableCell className="font-medium">{stat.agentName}</TableCell>
+                        <TableCell>{stat.agentPhone}</TableCell>
+                        <TableCell className="text-right">{stat.tenantCount}</TableCell>
+                        <TableCell className="text-right">{stat.activeTenants}</TableCell>
+                        <TableCell className="text-right">
+                          UGX {stat.totalMonthlyRent.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-green-600">
+                          UGX {stat.totalRentCollected.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          UGX {stat.expectedRent.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right font-bold">
+                          {stat.successRate.toFixed(1)}%
+                        </TableCell>
+                        <TableCell>{getSuccessRateBadge(stat.successRate)}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
