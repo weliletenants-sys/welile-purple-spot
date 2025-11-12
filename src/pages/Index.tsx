@@ -418,6 +418,13 @@ const Index = () => {
                       <DollarSign className="w-4 h-4" />
                       <span>💰 Earn UGX 100 Per Tenant!</span>
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 text-amber-700 dark:text-amber-400 hover:from-amber-100 hover:to-yellow-100 dark:hover:from-amber-950/30 dark:hover:to-yellow-950/30 font-semibold py-3 px-4 rounded-md mt-2 flex items-center gap-2 border-2 border-amber-200 dark:border-amber-800"
+                      onClick={() => navigate("/referral-dashboard")}
+                    >
+                      <Award className="w-4 h-4" />
+                      <span>🏆 Referral Leaderboard</span>
+                    </DropdownMenuItem>
                   </ScrollArea>
                 </DropdownMenuContent>
               </DropdownMenu>

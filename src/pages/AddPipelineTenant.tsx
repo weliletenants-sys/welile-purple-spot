@@ -223,7 +223,7 @@ const AddPipelineTenant = () => {
         {tenantsAdded > 0 && (
           <Card className="mb-6 border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10">
             <CardContent className="pt-6">
-              <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="grid grid-cols-2 gap-4 text-center mb-4">
                 <div>
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <Trophy className="h-5 w-5 text-primary" />
@@ -239,6 +239,14 @@ const AddPipelineTenant = () => {
                   <p className="text-3xl font-bold text-green-600">UGX {totalEarned.toLocaleString()}</p>
                 </div>
               </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => window.open("/referral-dashboard", "_blank")}
+              >
+                <Trophy className="h-4 w-4 mr-2" />
+                View Full Leaderboard
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -505,7 +513,8 @@ const AddPipelineTenant = () => {
           <CardContent className="space-y-4">
             <div className="bg-white/50 dark:bg-background/50 p-4 rounded-lg border-2 border-green-300 dark:border-green-700">
               <p className="text-sm text-muted-foreground text-center mb-3">
-                💡 <strong>Tip:</strong> Share on WhatsApp Status, Groups, or send to individuals
+                💡 <strong>Tip:</strong> Share on WhatsApp Status, Groups, or send to individuals. 
+                Check your ranking on the <a href="/referral-dashboard" className="text-primary underline font-semibold">Referral Leaderboard</a>!
               </p>
               <WhatsAppShareButton
                 message={`🎉 EARN UGX 100 FOR EVERY TENANT YOU ADD! 💰
