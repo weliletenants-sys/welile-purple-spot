@@ -12,6 +12,8 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { DynamicBreadcrumb } from "@/components/DynamicBreadcrumb";
 import { OfflineQueueProvider } from "@/contexts/OfflineQueueContext";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
@@ -86,12 +88,24 @@ const App = () => {
           />
           <Toaster />
           <Sonner />
-        <BrowserRouter>
-          <HelpChatbot />
-          <InstallBanner />
-          <DynamicBreadcrumb />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+          <BrowserRouter>
+            <SidebarProvider>
+              <div className="flex min-h-screen w-full">
+                <AppSidebar />
+                <div className="flex-1 flex flex-col">
+                  <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                    <div className="flex h-14 items-center px-4 gap-4">
+                      <SidebarTrigger />
+                      <div className="flex-1">
+                        <HelpChatbot />
+                      </div>
+                    </div>
+                  </header>
+                  <InstallBanner />
+                  <DynamicBreadcrumb />
+                  <main className="flex-1">
+                    <Suspense fallback={<PageLoader />}>
+                      <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
               <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
@@ -123,9 +137,13 @@ const App = () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+                      </Routes>
+                    </Suspense>
+                  </main>
+                </div>
+              </div>
+            </SidebarProvider>
+          </BrowserRouter>
         </OfflineQueueProvider>
       </TooltipProvider>
     </QueryClientProvider>
