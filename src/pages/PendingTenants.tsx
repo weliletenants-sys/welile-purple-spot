@@ -45,6 +45,10 @@ import {
   X,
   Download,
   FileSpreadsheet,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -66,6 +70,8 @@ const PendingTenants = () => {
   const [filterAgent, setFilterAgent] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Get unique districts and agents for filters
   const uniqueDistricts = Array.from(new Set(tenants?.map(t => t.location_district).filter(Boolean))) as string[];
@@ -116,6 +122,27 @@ const PendingTenants = () => {
     if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
     return 0;
   });
+
+  // Pagination
+  const totalItems = sortedTenants?.length || 0;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedTenants = sortedTenants?.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  const resetPagination = () => {
+    setCurrentPage(1);
+  };
+
+  const handlePageSizeChange = (newSize: string) => {
+    setPageSize(Number(newSize));
+    setCurrentPage(1);
+  };
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
 
   const handleSort = (column: "name" | "created_at" | "location_district") => {
     if (sortColumn === column) {
@@ -213,10 +240,10 @@ const PendingTenants = () => {
   };
 
   const toggleSelectAll = () => {
-    if (selectedTenants.length === sortedTenants?.length) {
+    if (selectedTenants.length === paginatedTenants?.length) {
       setSelectedTenants([]);
     } else {
-      setSelectedTenants(sortedTenants?.map(t => t.id) || []);
+      setSelectedTenants(paginatedTenants?.map(t => t.id) || []);
     }
   };
 
@@ -233,6 +260,7 @@ const PendingTenants = () => {
     setFilterAgent("all");
     setDateFrom(undefined);
     setDateTo(undefined);
+    resetPagination();
   };
 
   const hasActiveFilters = filterDistrict !== "all" || filterAgent !== "all" || dateFrom || dateTo;
@@ -370,6 +398,11 @@ const PendingTenants = () => {
                 {selectedTenants.length > 0 && (
                   <p className="text-sm text-muted-foreground mt-2">
                     {selectedTenants.length} tenant(s) selected
+                  </p>
+                )}
+                {totalItems > 0 && totalItems !== tenants?.length && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {totalItems} filtered result(s)
                   </p>
                 )}
               </div>
@@ -621,6 +654,31 @@ const PendingTenants = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Results Summary and Page Size Selector */}
+            {sortedTenants && sortedTenants.length > 0 && (
+              <div className="flex items-center justify-between mb-4 pb-4 border-b">
+                <div className="text-sm text-muted-foreground">
+                  Showing <span className="font-medium text-foreground">{startIndex + 1}</span> to{" "}
+                  <span className="font-medium text-foreground">{Math.min(endIndex, totalItems)}</span> of{" "}
+                  <span className="font-medium text-foreground">{totalItems}</span> result(s)
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Rows per page:</span>
+                  <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -628,16 +686,17 @@ const PendingTenants = () => {
                 ))}
               </div>
             ) : sortedTenants && sortedTenants.length > 0 ? (
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={selectedTenants.length === sortedTenants?.length && sortedTenants?.length > 0}
-                          onCheckedChange={toggleSelectAll}
-                        />
-                      </TableHead>
+              <>
+                <ScrollArea className="h-[600px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={selectedTenants.length === paginatedTenants?.length && paginatedTenants?.length > 0}
+                            onCheckedChange={toggleSelectAll}
+                          />
+                        </TableHead>
                       <TableHead>
                         <Button
                           variant="ghost"
@@ -679,7 +738,7 @@ const PendingTenants = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedTenants?.map((tenant) => (
+                    {paginatedTenants?.map((tenant) => (
                       <TableRow key={tenant.id}>
                         <TableCell>
                           <Checkbox
@@ -776,6 +835,77 @@ const PendingTenants = () => {
                   </TableBody>
                 </Table>
               </ScrollArea>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(pageNum)}
+                          className="w-10"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                  
+                  <span className="text-sm text-muted-foreground ml-4">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                </div>
+              )}
+            </>
             ) : (
               <div className="text-center py-12">
                 <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
