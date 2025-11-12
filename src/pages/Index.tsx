@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
 import { AddTenantForm } from "@/components/AddTenantForm";
+import { QuickAddTenantForm } from "@/components/QuickAddTenantForm";
 import {
   Select,
   SelectContent,
@@ -390,6 +391,7 @@ const Index = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <QuickAddTenantForm />
               <AddTenantForm />
             </div>
           </div>
