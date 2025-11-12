@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { startOfWeek, startOfMonth, endOfWeek, endOfMonth } from "date-fns";
 
 export interface ReferrerStats {
   referrerName: string;
@@ -16,12 +17,17 @@ export interface ReferrerStats {
   }[];
 }
 
-export const useReferralStats = () => {
+export type TimePeriod = "all" | "week" | "month";
+
+interface UseReferralStatsParams {
+  period?: TimePeriod;
+}
+
+export const useReferralStats = ({ period = "all" }: UseReferralStatsParams = {}) => {
   return useQuery({
-    queryKey: ["referral-stats"],
+    queryKey: ["referral-stats", period],
     queryFn: async () => {
-      // Fetch all pipeline referral earnings with tenant details
-      const { data: earnings, error } = await supabase
+      let query = supabase
         .from("agent_earnings")
         .select(`
           agent_name,
@@ -39,6 +45,23 @@ export const useReferralStats = () => {
         `)
         .eq("earning_type", "pipeline_referral")
         .order("created_at", { ascending: false });
+
+      // Apply date filtering based on period
+      if (period === "week") {
+        const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
+        const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+        query = query
+          .gte("created_at", weekStart.toISOString())
+          .lte("created_at", weekEnd.toISOString());
+      } else if (period === "month") {
+        const monthStart = startOfMonth(new Date());
+        const monthEnd = endOfMonth(new Date());
+        query = query
+          .gte("created_at", monthStart.toISOString())
+          .lte("created_at", monthEnd.toISOString());
+      }
+
+      const { data: earnings, error } = await query;
 
       if (error) throw error;
 

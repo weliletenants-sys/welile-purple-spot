@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -16,7 +17,7 @@ import {
 import { BackToHome } from "@/components/BackToHome";
 import { WelileLogo } from "@/components/WelileLogo";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
-import { useReferralStats } from "@/hooks/useReferralStats";
+import { useReferralStats, TimePeriod } from "@/hooks/useReferralStats";
 import {
   DollarSign,
   Users,
@@ -29,13 +30,30 @@ import {
   Award,
   Sparkles,
   ExternalLink,
+  CalendarDays,
+  CalendarRange,
+  Infinity,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 
 const ReferralDashboard = () => {
-  const { data: referrers, isLoading } = useReferralStats();
+  const [period, setPeriod] = useState<TimePeriod>("all");
+  const { data: referrers, isLoading } = useReferralStats({ period });
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedReferrer, setExpandedReferrer] = useState<string | null>(null);
+
+  const getPeriodLabel = () => {
+    switch (period) {
+      case "week":
+        const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+        const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+        return `${format(weekStart, "MMM dd")} - ${format(weekEnd, "MMM dd, yyyy")}`;
+      case "month":
+        return format(new Date(), "MMMM yyyy");
+      default:
+        return "All Time";
+    }
+  };
 
   const filteredReferrers = referrers?.filter(
     (referrer) =>
@@ -63,16 +81,51 @@ const ReferralDashboard = () => {
             <Trophy className="h-10 w-10 text-primary" />
             Referral Leaderboard
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-muted-foreground mb-4">
             Track your referral earnings and see who's leading the pack!
           </p>
+          
+          {/* Time Period Filter */}
+          <div className="flex justify-center mb-4">
+            <Tabs value={period} onValueChange={(value) => setPeriod(value as TimePeriod)} className="w-full max-w-md">
+              <TabsList className="grid w-full grid-cols-3 h-auto">
+                <TabsTrigger value="all" className="flex items-center gap-2 py-3">
+                  <Infinity className="h-4 w-4" />
+                  <div className="text-left">
+                    <div className="font-semibold">All Time</div>
+                    <div className="text-xs text-muted-foreground">Total</div>
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="month" className="flex items-center gap-2 py-3">
+                  <CalendarRange className="h-4 w-4" />
+                  <div className="text-left">
+                    <div className="font-semibold">This Month</div>
+                    <div className="text-xs text-muted-foreground">{format(new Date(), "MMM")}</div>
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="week" className="flex items-center gap-2 py-3">
+                  <CalendarDays className="h-4 w-4" />
+                  <div className="text-left">
+                    <div className="font-semibold">This Week</div>
+                    <div className="text-xs text-muted-foreground">7 days</div>
+                  </div>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          
+          <Badge variant="secondary" className="text-sm">
+            Showing: {getPeriodLabel()}
+          </Badge>
         </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10">
             <CardHeader className="pb-3">
-              <CardDescription className="text-sm">Total Earnings Distributed</CardDescription>
+              <CardDescription className="text-sm">
+                Total Earnings {period !== "all" && `(${getPeriodLabel()})`}
+              </CardDescription>
               <CardTitle className="text-3xl font-bold text-primary flex items-center gap-2">
                 <DollarSign className="h-8 w-8" />
                 UGX {totalEarnings.toLocaleString()}
@@ -80,27 +133,31 @@ const ReferralDashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                {totalTenants} tenants referred in total
+                {totalTenants} tenant{totalTenants !== 1 ? "s" : ""} referred
               </p>
             </CardContent>
           </Card>
 
           <Card className="border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
             <CardHeader className="pb-3">
-              <CardDescription className="text-sm">Total Referrers</CardDescription>
+              <CardDescription className="text-sm">
+                Active Referrers {period !== "all" && `(${getPeriodLabel()})`}
+              </CardDescription>
               <CardTitle className="text-3xl font-bold text-green-600 flex items-center gap-2">
                 <Users className="h-8 w-8" />
                 {totalReferrers}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Active community members earning</p>
+              <p className="text-sm text-muted-foreground">Community members earning</p>
             </CardContent>
           </Card>
 
           <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/10">
             <CardHeader className="pb-3">
-              <CardDescription className="text-sm">Average Earnings</CardDescription>
+              <CardDescription className="text-sm">
+                Average Earnings {period !== "all" && `(${getPeriodLabel()})`}
+              </CardDescription>
               <CardTitle className="text-3xl font-bold text-amber-600 flex items-center gap-2">
                 <TrendingUp className="h-8 w-8" />
                 UGX {totalReferrers > 0 ? Math.round(totalEarnings / totalReferrers).toLocaleString() : 0}
@@ -172,10 +229,13 @@ Start earning now: ${shareUrl}`}
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-primary" />
-              Top Referrers
+              Top Referrers - {getPeriodLabel()}
             </CardTitle>
             <CardDescription>
-              All-time referral rankings. Click on a referrer to see their referred tenants.
+              {period === "all" 
+                ? "All-time referral rankings. Click on a referrer to see their referred tenants."
+                : `Rankings for ${getPeriodLabel()}. Click on a referrer to see their referred tenants.`
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
