@@ -59,7 +59,10 @@ const AgentManagement = () => {
   const handleAccessSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (accessName.trim().toUpperCase() === "MUHWEZI MARTIN" || accessName.trim().toLowerCase() === "admin") {
+    const authorizedNames = ["BENJAMIN", "MERCY", "GLORIA MUTUNGI", "MARTIN", "ADMIN"];
+    const inputName = accessName.trim().toUpperCase();
+    
+    if (authorizedNames.includes(inputName)) {
       sessionStorage.setItem("agentManagementAccess", "true");
       setIsAuthorized(true);
       toast({
