@@ -12,6 +12,7 @@ import { useAgents } from "@/hooks/useAgents";
 import { useServiceCenters } from "@/hooks/useServiceCenterAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 import { ShareButton } from "@/components/ShareButton";
+import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { BackToHome } from "@/components/BackToHome";
 import { WelileLogo } from "@/components/WelileLogo";
 import { 
@@ -24,7 +25,8 @@ import {
   Home,
   Sparkles,
   Trophy,
-  Target
+  Target,
+  MessageCircle
 } from "lucide-react";
 import ugandaLocations from "@/data/ugandaLocations";
 
@@ -490,19 +492,72 @@ const AddPipelineTenant = () => {
         </Card>
 
         {/* Share Section */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-center">Share This Page & Earn More!</CardTitle>
-            <CardDescription className="text-center">
-              Invite others to add tenants. You all benefit from growing the network!
+        <Card className="mt-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-2 border-green-200 dark:border-green-800">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+              <MessageCircle className="h-6 w-6 text-green-600" />
+              Share & Earn Together!
+            </CardTitle>
+            <CardDescription className="text-base mt-2">
+              Share this page with friends, family, and your network. Everyone who adds tenants earns UGX 100 per tenant!
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex justify-center">
-            <ShareButton
-              title="Earn UGX 100 Per Tenant - Add Pipeline Tenants to Welile Hub"
-              text={`Join me in earning money by adding pipeline tenants! Earn UGX 100 for each tenant you add from anywhere in Uganda. ${shareUrl}`}
-              url={shareUrl}
-            />
+          <CardContent className="space-y-4">
+            <div className="bg-white/50 dark:bg-background/50 p-4 rounded-lg border-2 border-green-300 dark:border-green-700">
+              <p className="text-sm text-muted-foreground text-center mb-3">
+                💡 <strong>Tip:</strong> Share on WhatsApp Status, Groups, or send to individuals
+              </p>
+              <WhatsAppShareButton
+                message={`🎉 EARN UGX 100 FOR EVERY TENANT YOU ADD! 💰
+
+I just discovered this amazing opportunity with Welile Tenants Hub!
+
+✅ Add pipeline tenants from ANYWHERE in Uganda
+✅ Get paid UGX 100 instantly for each tenant
+✅ No limit - Add as many as you want!
+✅ Help grow Uganda's rental network
+
+It's super easy and takes less than 2 minutes per tenant!
+
+Click here to start earning now:
+${shareUrl}
+
+Let's earn together! 🚀`}
+                variant="default"
+                size="lg"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg h-14"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center text-sm">
+              <div className="p-3 bg-white/30 dark:bg-background/30 rounded-lg">
+                <p className="font-semibold text-green-700 dark:text-green-400">📱 Easy to Share</p>
+                <p className="text-muted-foreground mt-1">One click to WhatsApp</p>
+              </div>
+              <div className="p-3 bg-white/30 dark:bg-background/30 rounded-lg">
+                <p className="font-semibold text-green-700 dark:text-green-400">💵 Everyone Earns</p>
+                <p className="text-muted-foreground mt-1">UGX 100 per tenant added</p>
+              </div>
+              <div className="p-3 bg-white/30 dark:bg-background/30 rounded-lg">
+                <p className="font-semibold text-green-700 dark:text-green-400">🌍 All of Uganda</p>
+                <p className="text-muted-foreground mt-1">Any district, any location</p>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-green-200 dark:border-green-800">
+              <p className="text-xs text-center text-muted-foreground mb-3">
+                Or use other sharing options:
+              </p>
+              <div className="flex justify-center">
+                <ShareButton
+                  title="Earn UGX 100 Per Tenant - Add Pipeline Tenants to Welile Hub"
+                  text={`Join me in earning money by adding pipeline tenants! Earn UGX 100 for each tenant you add from anywhere in Uganda. ${shareUrl}`}
+                  url={shareUrl}
+                  variant="outline"
+                  size="default"
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
