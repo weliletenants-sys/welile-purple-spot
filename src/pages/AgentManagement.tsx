@@ -14,12 +14,19 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, UserPlus, ArrowLeft, Lock } from "lucide-react";
+import { Pencil, Trash2, UserPlus, ArrowLeft, Lock, Search } from "lucide-react";
 import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +55,8 @@ const AgentManagement = () => {
   const [fullAgents, setFullAgents] = useState<Agent[]>([]);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [accessName, setAccessName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   // Check if user is already authorized
   useEffect(() => {
@@ -134,6 +143,20 @@ const AgentManagement = () => {
     setSelectedAgent(agent);
     setDeleteDialogOpen(true);
   };
+
+  // Filter agents based on search and status
+  const filteredAgents = fullAgents.filter((agent) => {
+    const matchesSearch = 
+      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (agent.phone && agent.phone.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesStatus = 
+      statusFilter === "all" ||
+      (statusFilter === "active" && agent.is_active) ||
+      (statusFilter === "inactive" && !agent.is_active);
+    
+    return matchesSearch && matchesStatus;
+  });
 
   // Show access control screen if not authorized
   if (!isAuthorized) {
@@ -223,7 +246,40 @@ const AgentManagement = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>All Agents</CardTitle>
+            <div className="flex flex-col gap-4">
+              <CardTitle>All Agents</CardTitle>
+              
+              {/* Search and Filter Section */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or phone..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Agents</SelectItem>
+                    <SelectItem value="active">Active Only</SelectItem>
+                    <SelectItem value="inactive">Inactive Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Results count */}
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredAgents.length} of {fullAgents.length} agents
+              </p>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -231,6 +287,10 @@ const AgentManagement = () => {
             ) : fullAgents.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No agents found. Add your first agent to get started.
+              </div>
+            ) : filteredAgents.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No agents match your search criteria.
               </div>
             ) : (
               <ScrollArea className="h-[600px] w-full rounded-md">
@@ -244,7 +304,7 @@ const AgentManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {fullAgents.map((agent) => (
+                    {filteredAgents.map((agent) => (
                       <TableRow key={agent.id}>
                         <TableCell className="font-medium">{agent.name}</TableCell>
                         <TableCell>
