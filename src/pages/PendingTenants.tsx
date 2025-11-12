@@ -250,7 +250,7 @@ const PendingTenants = () => {
       const { error } = await supabase
         .from("tenants")
         .update({ 
-          status: "rejected",
+          status: "under_review",
           rejection_reason: reason,
           rejection_notes: notes,
           rejected_at: new Date().toISOString(),
@@ -263,9 +263,8 @@ const PendingTenants = () => {
       if (error) throw error;
 
       toast({
-        title: "Tenants Rejected",
-        description: `${selectedTenants.length} tenant(s) have been rejected`,
-        variant: "destructive",
+        title: "Tenants Moved to Review",
+        description: `${selectedTenants.length} tenant(s) moved to under review`,
       });
 
       // Clear selection and close dialog
