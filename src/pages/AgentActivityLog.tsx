@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Activity, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { ArrowLeft, Activity, ChevronLeft, ChevronRight, Calendar as CalendarIcon, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -25,6 +25,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
 
 interface ActivityLog {
   id: string;
@@ -48,6 +56,41 @@ const AgentActivityLog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [actionTypeFilter, setActionTypeFilter] = useState<string>("all");
   const [actionTypes, setActionTypes] = useState<string[]>([]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [datePreset, setDatePreset] = useState<string>("all");
+
+  // Handle date preset changes
+  const handleDatePresetChange = (preset: string) => {
+    setDatePreset(preset);
+    const now = new Date();
+    
+    switch (preset) {
+      case "today":
+        setDateRange({
+          from: startOfDay(now),
+          to: endOfDay(now),
+        });
+        break;
+      case "last7days":
+        setDateRange({
+          from: startOfDay(subDays(now, 7)),
+          to: endOfDay(now),
+        });
+        break;
+      case "last30days":
+        setDateRange({
+          from: startOfDay(subDays(now, 30)),
+          to: endOfDay(now),
+        });
+        break;
+      case "all":
+        setDateRange(undefined);
+        break;
+      default:
+        break;
+    }
+    setCurrentPage(1);
+  };
 
   // Fetch activity logs with pagination
   const fetchActivityLogs = async () => {
@@ -68,6 +111,14 @@ const AgentActivityLog = () => {
 
       if (actionTypeFilter !== "all") {
         query = query.eq("action_type", actionTypeFilter);
+      }
+
+      // Apply date range filter
+      if (dateRange?.from) {
+        query = query.gte("created_at", dateRange.from.toISOString());
+      }
+      if (dateRange?.to) {
+        query = query.lte("created_at", dateRange.to.toISOString());
       }
 
       // Apply pagination
@@ -114,7 +165,7 @@ const AgentActivityLog = () => {
 
   useEffect(() => {
     fetchActivityLogs();
-  }, [currentPage, searchQuery, actionTypeFilter]);
+  }, [currentPage, searchQuery, actionTypeFilter, dateRange]);
 
   useEffect(() => {
     fetchActionTypes();
@@ -201,39 +252,125 @@ const AgentActivityLog = () => {
             <CardTitle>Filter Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
-              <Input
-                placeholder="Search by agent name, phone, or description..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1); // Reset to first page on search
-                }}
-                className="flex-1"
-              />
-              <Select
-                value={actionTypeFilter}
-                onValueChange={(value) => {
-                  setActionTypeFilter(value);
-                  setCurrentPage(1); // Reset to first page on filter
-                }}
-              >
-                <SelectTrigger className="w-full md:w-[200px]">
-                  <SelectValue placeholder="Filter by action" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Actions</SelectItem>
-                  {actionTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      <span className="capitalize">{type.replace(/_/g, " ")}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <Input
+                  placeholder="Search by agent name, phone, or description..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1); // Reset to first page on search
+                  }}
+                  className="flex-1"
+                />
+                <Select
+                  value={actionTypeFilter}
+                  onValueChange={(value) => {
+                    setActionTypeFilter(value);
+                    setCurrentPage(1); // Reset to first page on filter
+                  }}
+                >
+                  <SelectTrigger className="w-full md:w-[200px]">
+                    <SelectValue placeholder="Filter by action" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Actions</SelectItem>
+                    {actionTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        <span className="capitalize">{type.replace(/_/g, " ")}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date Range Filters */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <Select
+                  value={datePreset}
+                  onValueChange={handleDatePresetChange}
+                >
+                  <SelectTrigger className="w-full md:w-[200px]">
+                    <SelectValue placeholder="Date range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="last7days">Last 7 Days</SelectItem>
+                    <SelectItem value="last30days">Last 30 Days</SelectItem>
+                    <SelectItem value="custom">Custom Range</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {datePreset === "custom" && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full md:w-[300px] justify-start text-left font-normal",
+                          !dateRange && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                          dateRange.to ? (
+                            <>
+                              {format(dateRange.from, "LLL dd, y")} -{" "}
+                              {format(dateRange.to, "LLL dd, y")}
+                            </>
+                          ) : (
+                            format(dateRange.from, "LLL dd, y")
+                          )
+                        ) : (
+                          <span>Pick a date range</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={(range) => {
+                          setDateRange(range);
+                          setCurrentPage(1);
+                        }}
+                        numberOfMonths={2}
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+
+                {dateRange && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setDateRange(undefined);
+                      setDatePreset("all");
+                      setCurrentPage(1);
+                    }}
+                    title="Clear date range"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing {activityLogs.length} of {totalCount} results
+                  {dateRange?.from && dateRange?.to && (
+                    <span className="ml-2">
+                      from {format(dateRange.from, "MMM dd")} to {format(dateRange.to, "MMM dd, yyyy")}
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-4">
-              Showing {activityLogs.length} of {totalCount} results
-            </p>
           </CardContent>
         </Card>
 
@@ -267,7 +404,7 @@ const AgentActivityLog = () => {
                         <TableRow key={log.id}>
                           <TableCell className="whitespace-nowrap">
                             <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                               <div>
                                 <div className="font-medium">
                                   {format(new Date(log.created_at), "MMM dd, yyyy")}
