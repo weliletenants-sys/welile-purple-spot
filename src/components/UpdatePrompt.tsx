@@ -22,10 +22,13 @@ export const UpdatePrompt = () => {
       navigator.serviceWorker.ready.then((reg) => {
         setRegistration(reg);
         
-        // Check for updates every 10 minutes
+        // Check for updates every 2 minutes for faster detection
         setInterval(() => {
           reg.update();
-        }, 10 * 60 * 1000);
+        }, 2 * 60 * 1000);
+        
+        // Also check immediately on page load
+        reg.update();
       });
 
       // Listen for new service worker
@@ -81,14 +84,19 @@ export const UpdatePrompt = () => {
 
   const handleLater = () => {
     setShowUpdateDialog(false);
-    // Show reminder after 5 minutes
+    // Show reminder after 2 minutes (more persistent)
     setTimeout(() => {
       setShowUpdateDialog(true);
-    }, 5 * 60 * 1000);
+    }, 2 * 60 * 1000);
   };
 
   return (
-    <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+    <Dialog open={showUpdateDialog} onOpenChange={(open) => {
+      // Prevent closing the dialog by clicking outside
+      if (!open) {
+        handleLater();
+      }
+    }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
