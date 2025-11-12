@@ -59,7 +59,7 @@ const AgentManagement = () => {
   const handleAccessSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const authorizedNames = ["BENJAMIN", "MERCY", "GLORIA MUTUNGI", "MARTIN", "ADMIN"];
+    const authorizedNames = ["BENJAMIN", "MERCY", "GLORIA MUTUNGI", "MARTIN", "SHARIMA", "ADMIN"];
     const inputName = accessName.trim().toUpperCase();
     
     if (authorizedNames.includes(inputName)) {
