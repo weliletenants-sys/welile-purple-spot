@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { BackToHome } from "@/components/BackToHome";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, AlertTriangle, User, Phone, MapPin } from "lucide-react";
@@ -111,6 +112,7 @@ const MissedPayments = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
+      <BackToHome />
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">

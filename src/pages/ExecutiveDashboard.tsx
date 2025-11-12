@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { StatsCard } from "@/components/StatsCard";
 import { WelileLogo } from "@/components/WelileLogo";
+import { BackToHome } from "@/components/BackToHome";
 import { HomeSummaryWidget } from "@/components/HomeSummaryWidget";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,7 @@ const ExecutiveDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <BackToHome />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
+import { BackToHome } from "@/components/BackToHome";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Star, Download, Calendar as CalendarIcon, ArrowUpDown, Eye, CheckSquare, Square, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -347,6 +348,7 @@ const RecordingActivity = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
+      <BackToHome />
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">

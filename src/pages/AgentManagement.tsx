@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAgents } from "@/hooks/useAgents";
 import { supabase } from "@/integrations/supabase/client";
+import { BackToHome } from "@/components/BackToHome";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -174,6 +175,7 @@ const AgentManagement = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background p-6">
+      <BackToHome />
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header with prominent Add Agent button */}
         <div className="flex flex-col gap-4">

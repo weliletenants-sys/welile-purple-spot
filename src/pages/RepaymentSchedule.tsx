@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Calendar, DollarSign, TrendingUp, Edit2, Check, X, Trash2, Wallet, Home } from "lucide-react";
 import { WelileLogo } from "@/components/WelileLogo";
+import { BackToHome } from "@/components/BackToHome";
 import { useToast } from "@/hooks/use-toast";
 import { usePayments } from "@/hooks/usePayments";
 import { EditTenantForm } from "@/components/EditTenantForm";
@@ -391,6 +392,7 @@ export default function RepaymentSchedule() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10">
+      <BackToHome />
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">

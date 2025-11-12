@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, TrendingUp, Users, DollarSign, Calendar, Filter, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { BackToHome } from "@/components/BackToHome";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { usePipelineStats } from "@/hooks/usePipelineStats";
@@ -106,6 +107,7 @@ export default function PipelineAnalytics() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-8">
+      <BackToHome />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { WelileLogo } from "@/components/WelileLogo";
+import { BackToHome } from "@/components/BackToHome";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter, Wallet } from "lucide-react";
@@ -256,6 +257,7 @@ const AgentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <BackToHome />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { BackToHome } from "@/components/BackToHome";
 import { format, subDays, parseISO, startOfWeek, endOfWeek } from "date-fns";
 import { ArrowLeft, AlertTriangle, TrendingUp, TrendingDown, Shield, Users, DollarSign, Calendar, Download, CheckCircle, XCircle, Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -339,6 +340,7 @@ export default function RiskDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-destructive/5 to-background p-4 md:p-8">
+      <BackToHome />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Back Button */}
         <Button
