@@ -48,8 +48,8 @@ export default function ServiceCenterAnalytics() {
   const navigate = useNavigate();
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
-  const [selectedRegion, setSelectedRegion] = useState<string>("");
-  const [selectedDistrict, setSelectedDistrict] = useState<string>("");
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Keyboard shortcut: Escape to go home
@@ -70,8 +70,8 @@ export default function ServiceCenterAnalytics() {
   const { data: analytics, isLoading } = useServiceCenterAnalytics(
     startDate ? format(startDate, "yyyy-MM-dd") : undefined,
     endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-    selectedRegion,
-    selectedDistrict
+    selectedRegion === "all" ? "" : selectedRegion,
+    selectedDistrict === "all" ? "" : selectedDistrict
   );
 
   const handlePresetDateRange = (preset: string) => {
@@ -99,8 +99,8 @@ export default function ServiceCenterAnalytics() {
   const clearFilters = () => {
     setStartDate(undefined);
     setEndDate(undefined);
-    setSelectedRegion("");
-    setSelectedDistrict("");
+    setSelectedRegion("all");
+    setSelectedDistrict("all");
     setSearchQuery("");
   };
 
@@ -245,7 +245,7 @@ export default function ServiceCenterAnalytics() {
                     <SelectValue placeholder="All Regions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Regions</SelectItem>
+                    <SelectItem value="all">All Regions</SelectItem>
                     {regions?.map((region) => (
                       <SelectItem key={region} value={region}>
                         {region}
@@ -262,7 +262,7 @@ export default function ServiceCenterAnalytics() {
                     <SelectValue placeholder="All Districts" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Districts</SelectItem>
+                    <SelectItem value="all">All Districts</SelectItem>
                     {districts?.map((district) => (
                       <SelectItem key={district} value={district}>
                         {district}
@@ -287,7 +287,7 @@ export default function ServiceCenterAnalytics() {
               <Button size="sm" variant="outline" onClick={() => handlePresetDateRange("thisMonth")}>
                 This Month
               </Button>
-              {(startDate || endDate || selectedRegion || selectedDistrict) && (
+              {(startDate || endDate || selectedRegion !== "all" || selectedDistrict !== "all") && (
                 <Button size="sm" variant="ghost" onClick={clearFilters}>
                   <X className="w-4 h-4 mr-2" />
                   Clear Filters
