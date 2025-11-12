@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAgents } from "@/hooks/useAgents";
 import { useServiceCenters } from "@/hooks/useServiceCenterAnalytics";
+import { useAgentActivity } from "@/hooks/useAgentActivity";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,7 @@ export const AddTenantForm = () => {
   const { addTenant } = useTenants();
   const { data: agents = [] } = useAgents();
   const { data: serviceCenters = [] } = useServiceCenters();
+  const { logActivity } = useAgentActivity();
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [realtimeDuplicate, setRealtimeDuplicate] = useState<{
     name: string;
@@ -415,7 +417,25 @@ export const AddTenantForm = () => {
       };
 
       console.log("Adding tenant:", tenantData);
-      await addTenant(tenantData);
+      const result = await addTenant(tenantData);
+
+      // Log agent activity for adding tenant
+      const selectedAgent = agents.find(agent => agent.name === formData.agentName);
+      if (selectedAgent?.id) {
+        await logActivity({
+          agentId: selectedAgent.id,
+          agentName: formData.agentName,
+          agentPhone: formData.agentPhone,
+          actionType: 'tenant_added',
+          actionDescription: `Added new tenant: ${formData.name}`,
+          metadata: { 
+            tenantName: formData.name,
+            tenantContact: formData.contact,
+            tenantStatus: formData.status,
+            serviceCenter: formData.serviceCenter
+          }
+        });
+      }
 
       toast({
         title: "✅ Success!",
