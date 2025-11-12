@@ -74,6 +74,7 @@ const navigationGroups = [
       { title: "Recording Activity", url: "/recording-activity", icon: Activity },
       { title: "Earnings Analytics", url: "/agent-earnings-analytics", icon: TrendingUp },
       { title: "Earnings Leaderboard", url: "/earnings-leaderboard", icon: Award },
+      { title: "Team Leaderboard", url: "/team-earnings", icon: Users },
       { title: "Bonus Calculator", url: "/recording-bonus-calculator", icon: DollarSign },
       { title: "Monthly Summary", url: "/monthly-summary", icon: FileText },
     ],
