@@ -9,6 +9,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAgents } from "@/hooks/useAgents";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -888,6 +889,9 @@ const Index = () => {
 
       {/* Floating Quick Actions Panel */}
       <FloatingQuickActionsPanel />
+      
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 };
