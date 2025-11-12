@@ -57,6 +57,7 @@ const PendingTenants = lazy(() => import("./pages/PendingTenants"));
 const UnderReviewTenants = lazy(() => import("./pages/UnderReviewTenants"));
 const StatusHistoryPage = lazy(() => import("./pages/StatusHistoryPage"));
 const AgentEarningsAnalytics = lazy(() => import("./pages/AgentEarningsAnalytics"));
+const RecordingBonusCalculator = lazy(() => import("./pages/RecordingBonusCalculator"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -154,6 +155,7 @@ const App = () => {
               <Route path="/under-review-tenants" element={<UnderReviewTenants />} />
               <Route path="/status-history" element={<StatusHistoryPage />} />
               <Route path="/agent-earnings-analytics" element={<AgentEarningsAnalytics />} />
+              <Route path="/recording-bonus-calculator" element={<RecordingBonusCalculator />} />
               <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
