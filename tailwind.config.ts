@@ -111,6 +111,16 @@ export default {
             transform: "translateX(100%)",
           },
         },
+        "skeleton-fade-in": {
+          "0%": {
+            opacity: "0",
+            transform: "scale(0.98)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "scale(1)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -120,6 +130,7 @@ export default {
         "shimmer": "shimmer 2s infinite",
         "shimmer-fast": "shimmer 1.5s infinite",
         "shimmer-slow": "shimmer 2.5s infinite",
+        "skeleton-fade-in": "skeleton-fade-in 0.3s ease-out forwards",
       },
     },
   },
