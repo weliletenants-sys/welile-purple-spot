@@ -59,6 +59,7 @@ const StatusHistoryPage = lazy(() => import("./pages/StatusHistoryPage"));
 const AgentEarningsAnalytics = lazy(() => import("./pages/AgentEarningsAnalytics"));
 const RecordingBonusCalculator = lazy(() => import("./pages/RecordingBonusCalculator"));
 const EarningsLeaderboard = lazy(() => import("./pages/EarningsLeaderboard"));
+const TeamEarningsLeaderboard = lazy(() => import("./pages/TeamEarningsLeaderboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -157,7 +158,8 @@ const App = () => {
               <Route path="/status-history" element={<StatusHistoryPage />} />
               <Route path="/agent-earnings-analytics" element={<AgentEarningsAnalytics />} />
               <Route path="/recording-bonus-calculator" element={<RecordingBonusCalculator />} />
-              <Route path="/earnings-leaderboard" element={<EarningsLeaderboard />} />
+        <Route path="/earnings-leaderboard" element={<EarningsLeaderboard />} />
+        <Route path="/team-earnings" element={<TeamEarningsLeaderboard />} />
               <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
