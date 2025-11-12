@@ -10,6 +10,7 @@ import { HelpChatbot } from "@/components/HelpChatbot";
 import { WhatsNewModal } from "@/components/WhatsNewModal";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { SyncIndicator } from "@/components/SyncIndicator";
+import { DynamicBreadcrumb } from "@/components/DynamicBreadcrumb";
 import { OfflineQueueProvider } from "@/contexts/OfflineQueueContext";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { lazy, Suspense } from "react";
@@ -85,11 +86,12 @@ const App = () => {
           />
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <HelpChatbot />
-            <InstallBanner />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+        <BrowserRouter>
+          <HelpChatbot />
+          <InstallBanner />
+          <DynamicBreadcrumb />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
               <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
