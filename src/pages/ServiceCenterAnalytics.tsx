@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -139,15 +140,57 @@ export default function ServiceCenterAnalytics() {
     return acc;
   }, [] as Array<{ name: string; value: number; payments: number }>);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <p className="text-lg text-muted-foreground">Loading analytics...</p>
-        </div>
+  const LoadingSkeleton = () => (
+    <>
+      {/* Summary Stats Skeletons */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-    );
-  }
+
+      {/* Charts Skeletons */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {[1, 2].map((i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-32 mt-2" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-[400px] w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Table Skeleton */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-64" />
+          <Skeleton className="h-4 w-48 mt-2" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10">
@@ -308,175 +351,178 @@ export default function ServiceCenterAnalytics() {
           </CardContent>
         </Card>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Service Centers</p>
-                  <p className="text-2xl font-bold">{totalServiceCenters}</p>
-                </div>
-                <Building2 className="w-8 h-8 text-primary opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : (
+          <>
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Service Centers</p>
+                      <p className="text-2xl font-bold">{totalServiceCenters}</p>
+                    </div>
+                    <Building2 className="w-8 h-8 text-primary opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Payments</p>
-                  <p className="text-2xl font-bold">{totalPayments.toLocaleString()}</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-green-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Payments</p>
+                      <p className="text-2xl font-bold">{totalPayments.toLocaleString()}</p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-green-500 opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Amount</p>
-                  <p className="text-2xl font-bold">UGX {totalAmount.toLocaleString()}</p>
-                </div>
-                <DollarSign className="w-8 h-8 text-amber-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Amount</p>
+                      <p className="text-2xl font-bold">UGX {totalAmount.toLocaleString()}</p>
+                    </div>
+                    <DollarSign className="w-8 h-8 text-amber-500 opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Unique Tenants</p>
-                  <p className="text-2xl font-bold">{totalTenants.toLocaleString()}</p>
-                </div>
-                <Users className="w-8 h-8 text-blue-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Performance Alerts */}
-        <PerformanceAlerts />
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Service Centers Bar Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Top 10 Service Centers by Revenue</CardTitle>
-              <CardDescription>Highest performing locations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={topCentersData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
-                    angle={-45} 
-                    textAnchor="end" 
-                    height={100}
-                    fontSize={12}
-                  />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value: number) => `UGX ${value.toLocaleString()}`}
-                  />
-                  <Legend />
-                  <Bar dataKey="amount" fill="#8b5cf6" name="Total Amount (UGX)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Regional Distribution Pie Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue by Region</CardTitle>
-              <CardDescription>Distribution across regions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={regionData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={120}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {regionData?.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => `UGX ${value.toLocaleString()}`} />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Detailed Service Center Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Service Center Performance Details</CardTitle>
-            <CardDescription>Detailed metrics for each service center</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold">Service Center</th>
-                    <th className="text-left py-3 px-4 font-semibold">District</th>
-                    <th className="text-left py-3 px-4 font-semibold">Region</th>
-                    <th className="text-right py-3 px-4 font-semibold">Payments</th>
-                    <th className="text-right py-3 px-4 font-semibold">Total Amount</th>
-                    <th className="text-right py-3 px-4 font-semibold">Avg Payment</th>
-                    <th className="text-right py-3 px-4 font-semibold">Tenants</th>
-                    <th className="text-right py-3 px-4 font-semibold">Recorders</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAnalytics?.map((stat, index) => (
-                    <tr key={stat.serviceCenterName} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{index + 1}</Badge>
-                          <span className="font-medium">{stat.serviceCenterName}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">{stat.district}</td>
-                      <td className="py-3 px-4">
-                        <Badge>{stat.region}</Badge>
-                      </td>
-                      <td className="py-3 px-4 text-right">{stat.totalPayments}</td>
-                      <td className="py-3 px-4 text-right font-semibold">
-                        UGX {stat.totalAmount.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        UGX {Math.round(stat.averagePaymentAmount).toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4 text-right">{stat.uniqueTenants}</td>
-                      <td className="py-3 px-4 text-right">{stat.recordersCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredAnalytics?.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No service center data found for the selected filters
-                </div>
-              )}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Unique Tenants</p>
+                      <p className="text-2xl font-bold">{totalTenants.toLocaleString()}</p>
+                    </div>
+                    <Users className="w-8 h-8 text-blue-500 opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Top Service Centers Bar Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top 10 Service Centers by Revenue</CardTitle>
+                  <CardDescription>Highest performing locations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={topCentersData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="name" 
+                        angle={-45} 
+                        textAnchor="end" 
+                        height={100}
+                        fontSize={12}
+                      />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value: number) => `UGX ${value.toLocaleString()}`}
+                      />
+                      <Legend />
+                      <Bar dataKey="amount" fill="#8b5cf6" name="Total Amount (UGX)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Regional Distribution Pie Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue by Region</CardTitle>
+                  <CardDescription>Distribution across regions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie
+                        data={regionData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={120}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {regionData?.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => `UGX ${value.toLocaleString()}`} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Detailed Service Center Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Service Center Performance Details</CardTitle>
+                <CardDescription>Detailed metrics for each service center</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-semibold">Service Center</th>
+                        <th className="text-left py-3 px-4 font-semibold">District</th>
+                        <th className="text-left py-3 px-4 font-semibold">Region</th>
+                        <th className="text-right py-3 px-4 font-semibold">Payments</th>
+                        <th className="text-right py-3 px-4 font-semibold">Total Amount</th>
+                        <th className="text-right py-3 px-4 font-semibold">Avg Payment</th>
+                        <th className="text-right py-3 px-4 font-semibold">Tenants</th>
+                        <th className="text-right py-3 px-4 font-semibold">Recorders</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredAnalytics?.map((stat, index) => (
+                        <tr key={stat.serviceCenterName} className="border-b hover:bg-muted/50">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">{index + 1}</Badge>
+                              <span className="font-medium">{stat.serviceCenterName}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">{stat.district}</td>
+                          <td className="py-3 px-4">
+                            <Badge>{stat.region}</Badge>
+                          </td>
+                          <td className="py-3 px-4 text-right">{stat.totalPayments}</td>
+                          <td className="py-3 px-4 text-right font-semibold">
+                            UGX {stat.totalAmount.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            UGX {Math.round(stat.averagePaymentAmount).toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-right">{stat.uniqueTenants}</td>
+                          <td className="py-3 px-4 text-right">{stat.recordersCount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filteredAnalytics?.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No service center data found for the selected filters
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </main>
     </div>
   );
