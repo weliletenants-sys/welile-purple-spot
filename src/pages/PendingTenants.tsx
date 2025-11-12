@@ -39,6 +39,9 @@ import {
   AlertCircle,
   XCircle,
   Eye,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -51,12 +54,54 @@ const PendingTenants = () => {
   const [updatingTenant, setUpdatingTenant] = useState<string | null>(null);
   const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [sortColumn, setSortColumn] = useState<"name" | "created_at" | "location_district" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const filteredTenants = tenants?.filter(
     (tenant) =>
       tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tenant.contact.includes(searchTerm)
   );
+
+  const sortedTenants = filteredTenants?.slice().sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aValue: any;
+    let bValue: any;
+
+    if (sortColumn === "name") {
+      aValue = a.name.toLowerCase();
+      bValue = b.name.toLowerCase();
+    } else if (sortColumn === "created_at") {
+      aValue = new Date(a.created_at).getTime();
+      bValue = new Date(b.created_at).getTime();
+    } else if (sortColumn === "location_district") {
+      aValue = (a.location_district || "").toLowerCase();
+      bValue = (b.location_district || "").toLowerCase();
+    }
+
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (column: "name" | "created_at" | "location_district") => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (column: "name" | "created_at" | "location_district") => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 text-muted-foreground" />;
+    }
+    return sortDirection === "asc" 
+      ? <ArrowUp className="h-4 w-4 ml-1 text-primary" />
+      : <ArrowDown className="h-4 w-4 ml-1 text-primary" />;
+  };
 
   const handleStatusUpdate = async (tenantId: string, newStatus: string) => {
     setUpdatingTenant(tenantId);
@@ -136,10 +181,10 @@ const PendingTenants = () => {
   };
 
   const toggleSelectAll = () => {
-    if (selectedTenants.length === filteredTenants?.length) {
+    if (selectedTenants.length === sortedTenants?.length) {
       setSelectedTenants([]);
     } else {
-      setSelectedTenants(filteredTenants?.map(t => t.id) || []);
+      setSelectedTenants(sortedTenants?.map(t => t.id) || []);
     }
   };
 
@@ -292,29 +337,59 @@ const PendingTenants = () => {
                   <Skeleton key={i} className="h-20 w-full" />
                 ))}
               </div>
-            ) : filteredTenants && filteredTenants.length > 0 ? (
+            ) : sortedTenants && sortedTenants.length > 0 ? (
               <ScrollArea className="h-[600px]">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={selectedTenants.length === filteredTenants?.length && filteredTenants?.length > 0}
+                          checked={selectedTenants.length === sortedTenants?.length && sortedTenants?.length > 0}
                           onCheckedChange={toggleSelectAll}
                         />
                       </TableHead>
-                      <TableHead>Tenant Name</TableHead>
+                      <TableHead>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSort("name")}
+                          className="hover:bg-accent/50 -ml-3"
+                        >
+                          Tenant Name
+                          {getSortIcon("name")}
+                        </Button>
+                      </TableHead>
                       <TableHead>Contact</TableHead>
-                      <TableHead>District</TableHead>
+                      <TableHead>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSort("location_district")}
+                          className="hover:bg-accent/50 -ml-3"
+                        >
+                          District
+                          {getSortIcon("location_district")}
+                        </Button>
+                      </TableHead>
                       <TableHead>Agent</TableHead>
-                      <TableHead>Date Added</TableHead>
+                      <TableHead>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSort("created_at")}
+                          className="hover:bg-accent/50 -ml-3"
+                        >
+                          Date Added
+                          {getSortIcon("created_at")}
+                        </Button>
+                      </TableHead>
                       <TableHead>Current Status</TableHead>
                       <TableHead className="text-center">Change Status</TableHead>
                       <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTenants.map((tenant) => (
+                    {sortedTenants?.map((tenant) => (
                       <TableRow key={tenant.id}>
                         <TableCell>
                           <Checkbox
