@@ -802,6 +802,10 @@ export type Database = {
           payment_status: string
           performance: number
           registration_fee: number
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_notes: string | null
+          rejection_reason: string | null
           rent_amount: number
           repayment_days: number
           service_center: string | null
@@ -834,6 +838,10 @@ export type Database = {
           payment_status: string
           performance?: number
           registration_fee?: number
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_notes?: string | null
+          rejection_reason?: string | null
           rent_amount: number
           repayment_days: number
           service_center?: string | null
@@ -866,6 +874,10 @@ export type Database = {
           payment_status?: string
           performance?: number
           registration_fee?: number
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_notes?: string | null
+          rejection_reason?: string | null
           rent_amount?: number
           repayment_days?: number
           service_center?: string | null

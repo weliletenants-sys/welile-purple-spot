@@ -54,6 +54,7 @@ import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import * as XLSX from "xlsx";
+import { BulkRejectTenantsDialog } from "@/components/BulkRejectTenantsDialog";
 
 const PendingTenants = () => {
   const navigate = useNavigate();
@@ -72,6 +73,7 @@ const PendingTenants = () => {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
 
   // Get unique districts and agents for filters
   const uniqueDistricts = Array.from(new Set(tenants?.map(t => t.location_district).filter(Boolean))) as string[];
@@ -232,6 +234,53 @@ const PendingTenants = () => {
       toast({
         title: "Bulk Update Failed",
         description: error.message || "Failed to update tenant statuses",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  const handleBulkReject = async (reason: string, notes: string) => {
+    if (selectedTenants.length === 0) return;
+
+    setIsBulkUpdating(true);
+
+    try {
+      const { error } = await supabase
+        .from("tenants")
+        .update({ 
+          status: "rejected",
+          rejection_reason: reason,
+          rejection_notes: notes,
+          rejected_at: new Date().toISOString(),
+          rejected_by: "Admin",
+          edited_at: new Date().toISOString(),
+          edited_by: "Admin"
+        })
+        .in("id", selectedTenants);
+
+      if (error) throw error;
+
+      toast({
+        title: "Tenants Rejected",
+        description: `${selectedTenants.length} tenant(s) have been rejected`,
+        variant: "destructive",
+      });
+
+      // Clear selection and close dialog
+      setSelectedTenants([]);
+      setShowRejectDialog(false);
+
+      // Refetch data
+      queryClient.invalidateQueries({ queryKey: ["pending-tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["pending-tenants-count"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+    } catch (error: any) {
+      console.error("Error rejecting tenants:", error);
+      toast({
+        title: "Rejection Failed",
+        description: error.message || "Failed to reject tenants",
         variant: "destructive",
       });
     } finally {
@@ -479,11 +528,30 @@ const PendingTenants = () => {
                     <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
                     Approve All
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowRejectDialog(true)}
+                    disabled={isBulkUpdating}
+                    className="border-red-500/50 hover:bg-red-500/10"
+                  >
+                    <XCircle className="h-4 w-4 mr-1 text-red-600" />
+                    Reject Selected
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
+
+        {/* Rejection Dialog */}
+        <BulkRejectTenantsDialog
+          open={showRejectDialog}
+          onClose={() => setShowRejectDialog(false)}
+          onConfirm={handleBulkReject}
+          tenantCount={selectedTenants.length}
+          isSubmitting={isBulkUpdating}
+        />
 
         {/* Search and Filters */}
         <Card className="mb-6">
