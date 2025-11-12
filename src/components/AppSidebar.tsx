@@ -65,6 +65,7 @@ const navigationGroups = [
       { title: "Recently Added", url: "/recently-added", icon: Clock },
       { title: "Risk Dashboard", url: "/risk-dashboard", icon: AlertTriangle },
       { title: "Missed Payments", url: "/missed-payments", icon: DollarSign },
+      { title: "Status History", url: "/status-history", icon: Activity },
     ],
   },
   {
