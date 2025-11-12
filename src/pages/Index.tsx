@@ -10,6 +10,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { ScrollProgress } from "@/components/ScrollProgress";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAgents } from "@/hooks/useAgents";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -228,6 +229,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
+      {/* Scroll Progress Indicator */}
+      <ScrollProgress />
+      
       <FloatingQuickActionsPanel 
         onAchievementsClick={() => setShowAchievements(true)}
         onLeaderboardClick={() => setShowLeaderboard(true)}
