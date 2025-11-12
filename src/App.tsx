@@ -8,6 +8,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { InstallBanner } from "@/components/InstallBanner";
 import { HelpChatbot } from "@/components/HelpChatbot";
 import { WhatsNewModal } from "@/components/WhatsNewModal";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
@@ -70,6 +71,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <OfflineIndicator />
         <UpdatePrompt />
         <InstallPrompt />
         <WhatsNewModal 

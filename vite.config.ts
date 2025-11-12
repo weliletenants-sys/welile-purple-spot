@@ -64,8 +64,14 @@ export default defineConfig(({ mode }) => ({
         skipWaiting: true,
         clientsClaim: true,
         navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api/],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB limit
+        
+        // Precache critical assets for offline use
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
+        
         runtimeCaching: [
+          // Cache Google Fonts
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "CacheFirst",
@@ -73,33 +79,84 @@ export default defineConfig(({ mode }) => ({
               cacheName: "google-fonts-cache",
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
               },
               cacheableResponse: {
                 statuses: [0, 200]
               }
             }
           },
+          
+          // Network-first for Supabase API calls with offline fallback
           {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
             handler: "NetworkFirst",
             options: {
-              cacheName: "supabase-cache",
+              cacheName: "supabase-api-cache",
               networkTimeoutSeconds: 10,
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 5
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              },
+              plugins: [
+                {
+                  handlerDidError: async () => {
+                    return new Response(
+                      JSON.stringify({ 
+                        error: "You are offline. Please reconnect to access fresh data.",
+                        cached: true 
+                      }),
+                      {
+                        headers: { "Content-Type": "application/json" }
+                      }
+                    );
+                  }
+                }
+              ]
+            }
+          },
+          
+          // Cache-first for Supabase Storage (images, files)
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "supabase-storage-cache",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           },
+          
+          // Cache images with Cache-first strategy
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
             handler: "CacheFirst",
             options: {
               cacheName: "images-cache",
               expiration: {
-                maxEntries: 60,
-                maxAgeSeconds: 60 * 60 * 24 * 30
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 90 // 90 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          
+          // Stale-while-revalidate for other assets (CSS, JS)
+          {
+            urlPattern: /\.(?:js|css|woff2?)$/,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "static-assets-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
               }
             }
           }
