@@ -257,39 +257,46 @@ const Index = () => {
             <div className="flex items-center gap-4">
               <WelileLogo />
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  Tenants Hub
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+                  🏠 Tenants Hub
                 </h1>
-                <p className="text-muted-foreground text-sm mt-1">Monitor and manage tenant performance</p>
+                <p className="text-muted-foreground text-base mt-1">Your tenants, all in one place</p>
               </div>
             </div>
             <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-accent">
-                <Users className="w-5 h-5 text-primary-foreground" />
-                <span className="font-bold text-primary-foreground">{stats.total.toLocaleString()} Total Tenants</span>
+              <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-primary to-accent">
+                <Users className="w-6 h-6 text-primary-foreground" />
+                <span className="font-bold text-lg text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
               </div>
               <ShareButton />
               <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="hover-scale" data-tour="navigation">
-                    <Menu className="h-5 w-5" />
+                  <Button variant="outline" size="lg" className="hover-scale gap-2 text-base font-semibold" data-tour="navigation">
+                    <Menu className="h-6 w-6" />
+                    Menu
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 bg-card">
+                <DropdownMenuContent align="end" className="w-80 bg-card p-2">
                   <DropdownMenuItem 
-                    className="cursor-pointer bg-red-600 text-white hover:bg-red-700 font-bold text-base py-4 mb-2 rounded-md animate-fade-in flex items-center gap-2"
+                    className="cursor-pointer bg-red-600 text-white hover:bg-red-700 font-bold text-lg py-5 mb-3 rounded-md animate-fade-in flex items-center gap-3"
                     onClick={() => navigate("/missed-payments")}
                   >
-                    <AlertTriangle className="w-5 h-5 animate-bounce" />
-                    <span>🚨 Missed Payments</span>
+                    <AlertTriangle className="w-7 h-7 animate-bounce" />
+                    <div className="flex flex-col">
+                      <span>🚨 Late Payments</span>
+                      <span className="text-xs font-normal opacity-90">Overdue tenants</span>
+                    </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="cursor-pointer flex items-center gap-2 py-3"
+                    className="cursor-pointer flex items-center gap-3 py-4 text-base"
                     onClick={() => navigate("/executive-dashboard")}
                   >
-                    <BarChart3 className="w-4 h-4" />
-                    <span>Executive Dashboard</span>
+                    <BarChart3 className="w-6 h-6 text-primary" />
+                    <div className="flex flex-col">
+                      <span className="font-semibold">📊 Reports</span>
+                      <span className="text-xs text-muted-foreground">View all data</span>
+                    </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer flex items-center gap-2 py-3" 
@@ -404,49 +411,50 @@ const Index = () => {
           <div className="absolute inset-0 opacity-10 bg-card"></div>
           
           <div className="relative z-10 space-y-6">
-            <div className="text-center">
-              <h2 className="text-3xl md:text-5xl font-bold text-primary-foreground">
-                🔍 Find Your Tenant
+            <div className="text-center space-y-2">
+              <h2 className="text-4xl md:text-6xl font-bold text-primary-foreground">
+                🔍 Search
               </h2>
+              <p className="text-lg md:text-xl text-primary-foreground/90">Find any tenant quickly</p>
             </div>
             
-            <div className="max-w-7xl mx-auto space-y-4">
+            <div className="max-w-7xl mx-auto space-y-6">
               {/* Main Search Bar */}
               <div className="relative">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-primary z-10" />
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 text-primary z-10" />
                 <Input
-                  placeholder="Search by name, location, agent, phone..."
+                  placeholder="👤 Type tenant name here..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-20 pl-20 pr-8 text-xl bg-card border-2 border-white/50 focus:border-white rounded-2xl shadow-lg font-semibold placeholder:text-muted-foreground/60"
+                  className="w-full h-24 pl-24 pr-8 text-2xl bg-card border-4 border-white/50 focus:border-white rounded-2xl shadow-2xl font-bold placeholder:text-muted-foreground/60"
                 />
               </div>
               
               {/* Filter Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 max-w-3xl mx-auto">
+              <div className="flex flex-col sm:flex-row gap-4 max-w-4xl mx-auto">
                 <Select value={locationFilter} onValueChange={setLocationFilter}>
-                  <SelectTrigger className={`h-12 bg-card border border-white/50 text-base font-semibold ${locationFilter !== "all" ? "border-white bg-primary/20" : ""}`}>
-                    <MapPin className="w-5 h-5 mr-2" />
-                    <SelectValue placeholder="All Locations" />
+                  <SelectTrigger className={`h-16 bg-card border-2 border-white/50 text-lg font-bold ${locationFilter !== "all" ? "border-white bg-primary/20" : ""}`}>
+                    <MapPin className="w-6 h-6 mr-2" />
+                    <SelectValue placeholder="📍 All Places" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px] bg-card border-border">
-                    <SelectItem value="all">All Locations</SelectItem>
+                    <SelectItem value="all" className="text-lg py-4 font-semibold">📍 All Places</SelectItem>
                     {locations.map(location => (
-                      <SelectItem key={location} value={location}>
-                        {location}
+                      <SelectItem key={location} value={location} className="text-lg py-4">
+                        📍 {location}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 
                 <Select value={feeFilter} onValueChange={setFeeFilter}>
-                  <SelectTrigger className={`h-12 bg-card border border-white/50 text-base font-semibold ${feeFilter !== "all" ? "border-white bg-primary/20" : ""}`}>
-                    <DollarSign className="w-5 h-5 mr-2" />
-                    <SelectValue placeholder="All Fees" />
+                  <SelectTrigger className={`h-16 bg-card border-2 border-white/50 text-lg font-bold ${feeFilter !== "all" ? "border-white bg-primary/20" : ""}`}>
+                    <DollarSign className="w-6 h-6 mr-2" />
+                    <SelectValue placeholder="💰 All Payments" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
-                    <SelectItem value="all">All Tenants</SelectItem>
-                    <SelectItem value="registration">With Registration Fee</SelectItem>
+                    <SelectItem value="all" className="text-lg py-4 font-semibold">💰 All Payments</SelectItem>
+                    <SelectItem value="registration" className="text-lg py-4">💵 Registration Fee</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

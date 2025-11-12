@@ -64,14 +64,14 @@ export const FloatingQuickActionsPanel = ({
     },
     {
       icon: AlertTriangle,
-      label: 'Missed Payments',
+      label: '⚠️ Late Payments',
       color: 'bg-red-600 hover:bg-red-700',
       path: '/missed-payments',
       priority: 'high'
     },
     {
       icon: TrendingUp,
-      label: 'Top Performers',
+      label: '🏆 Top Performers',
       color: 'bg-green-600 hover:bg-green-700',
       action: () => {
         onLeaderboardClick?.();
@@ -81,42 +81,42 @@ export const FloatingQuickActionsPanel = ({
     },
     {
       icon: BarChart3,
-      label: 'Executive Dashboard',
+      label: '📊 View Reports',
       color: 'bg-blue-600 hover:bg-blue-700',
       path: '/executive-dashboard',
       priority: 'normal'
     },
     {
       icon: Users,
-      label: 'Agent Dashboard',
+      label: '👥 Agents',
       color: 'bg-purple-600 hover:bg-purple-700',
       path: '/agent-dashboard',
       priority: 'normal'
     },
     {
       icon: DollarSign,
-      label: 'Withdrawals',
+      label: '💰 Money Out',
       color: 'bg-yellow-600 hover:bg-yellow-700',
       path: '/withdrawal-history',
       priority: 'normal'
     },
     {
       icon: Clock,
-      label: 'Pipeline',
+      label: '📈 New Prospects',
       color: 'bg-orange-600 hover:bg-orange-700',
       path: '/pipeline-tenants',
       priority: 'medium'
     },
     {
       icon: FileText,
-      label: 'Reports',
+      label: '📋 Admin',
       color: 'bg-indigo-600 hover:bg-indigo-700',
       path: '/admin-dashboard',
       priority: 'normal'
     },
     {
       icon: Target,
-      label: 'Risk Dashboard',
+      label: '🚨 Risk Alert',
       color: 'bg-pink-600 hover:bg-pink-700',
       path: '/risk-dashboard',
       priority: 'high'
@@ -148,12 +148,12 @@ export const FloatingQuickActionsPanel = ({
                         }
                       }}
                       className={cn(
-                        "h-14 w-14 rounded-full shadow-lg transition-all duration-200 hover-scale text-white",
+                        "h-16 w-16 rounded-full shadow-lg transition-all duration-200 hover-scale text-white",
                         action.color
                       )}
                       size="icon"
                     >
-                      <action.icon className="h-6 w-6" />
+                      <action.icon className="h-7 w-7" />
                     </Button>
                     {action.priority === 'high' && (
                       <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-600 border-2 border-white animate-pulse" />
@@ -178,7 +178,7 @@ export const FloatingQuickActionsPanel = ({
                     )}
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="left" className="font-medium">
+                <TooltipContent side="left" className="font-semibold text-base p-3">
                   <p>{action.label}</p>
                 </TooltipContent>
               </Tooltip>
@@ -192,20 +192,20 @@ export const FloatingQuickActionsPanel = ({
                 data-tour="quick-actions"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className={cn(
-                  "h-16 w-16 rounded-full shadow-2xl transition-all duration-300 bg-gradient-to-br from-primary to-accent hover:shadow-primary/50",
+                  "h-20 w-20 rounded-full shadow-2xl transition-all duration-300 bg-gradient-to-br from-primary to-accent hover:shadow-primary/50",
                   isExpanded && "rotate-90"
                 )}
                 size="icon"
               >
                 {isExpanded ? (
-                  <X className="h-7 w-7 text-white" />
+                  <X className="h-9 w-9 text-white" />
                 ) : (
-                  <Menu className="h-7 w-7 text-white animate-pulse" />
+                  <Menu className="h-9 w-9 text-white animate-pulse" />
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="left" className="font-medium">
-              <p>{isExpanded ? 'Close Menu' : 'Quick Actions'}</p>
+            <TooltipContent side="left" className="font-bold text-lg p-3">
+              <p>{isExpanded ? '❌ Close' : '⚡ Quick Menu'}</p>
             </TooltipContent>
           </Tooltip>
         </div>
