@@ -37,6 +37,7 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -190,6 +191,7 @@ const PendingTenants = () => {
                       <TableHead>Date Added</TableHead>
                       <TableHead>Current Status</TableHead>
                       <TableHead className="text-center">Change Status</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -266,6 +268,18 @@ const PendingTenants = () => {
                               </SelectItem>
                             </SelectContent>
                           </Select>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
+                            <Link to={`/tenant/${tenant.id}`}>
+                              <Eye className="h-4 w-4 mr-1" />
+                              View Details
+                            </Link>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
