@@ -39,12 +39,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
+import { Users, UserCheck, UserPlus2 } from "lucide-react";
 
 interface Agent {
   id: string;
   name: string;
   phone: string;
   is_active: boolean;
+  created_at: string;
 }
 
 const AgentManagement = () => {
@@ -144,6 +146,16 @@ const AgentManagement = () => {
     setSelectedAgent(agent);
     setDeleteDialogOpen(true);
   };
+
+  // Calculate statistics
+  const totalAgents = fullAgents.length;
+  const activeAgents = fullAgents.filter(agent => agent.is_active).length;
+  const recentlyAddedAgents = fullAgents.filter(agent => {
+    const agentDate = new Date(agent.created_at);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return agentDate >= thirtyDaysAgo;
+  }).length;
 
   // Filter agents based on search and status
   const filteredAgents = fullAgents.filter((agent) => {
@@ -292,6 +304,48 @@ const AgentManagement = () => {
               }} />
             </div>
           </div>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalAgents}</div>
+              <p className="text-xs text-muted-foreground">
+                All registered agents
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Agents</CardTitle>
+              <UserCheck className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{activeAgents}</div>
+              <p className="text-xs text-muted-foreground">
+                Currently active agents
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Recently Added</CardTitle>
+              <UserPlus2 className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{recentlyAddedAgents}</div>
+              <p className="text-xs text-muted-foreground">
+                Added in last 30 days
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>
