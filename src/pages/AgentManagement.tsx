@@ -39,7 +39,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
-import { Users, UserCheck, UserPlus2 } from "lucide-react";
+import { Users, UserCheck, UserPlus2, Activity, Clock } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 interface Agent {
   id: string;
@@ -47,6 +48,9 @@ interface Agent {
   phone: string;
   is_active: boolean;
   created_at: string;
+  last_action_at?: string;
+  last_action_type?: string;
+  last_login_at?: string;
 }
 
 const AgentManagement = () => {
@@ -156,6 +160,16 @@ const AgentManagement = () => {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     return agentDate >= thirtyDaysAgo;
   }).length;
+
+  // Get recently active agents (sorted by last action)
+  const recentlyActiveAgents = [...fullAgents]
+    .filter(agent => agent.last_action_at)
+    .sort((a, b) => {
+      const dateA = new Date(a.last_action_at!).getTime();
+      const dateB = new Date(b.last_action_at!).getTime();
+      return dateB - dateA;
+    })
+    .slice(0, 5);
 
   // Filter agents based on search and status
   const filteredAgents = fullAgents.filter((agent) => {
@@ -347,6 +361,48 @@ const AgentManagement = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Activity Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              <CardTitle>Recent Activity</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {recentlyActiveAgents.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No recent activity</p>
+            ) : (
+              <div className="space-y-4">
+                {recentlyActiveAgents.map((agent) => (
+                  <div
+                    key={agent.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{agent.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {agent.last_action_type && (
+                            <span className="capitalize">{agent.last_action_type.replace(/_/g, ' ')}</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      {agent.last_action_at && formatDistanceToNow(new Date(agent.last_action_at), { addSuffix: true })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
