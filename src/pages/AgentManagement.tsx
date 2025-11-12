@@ -64,6 +64,7 @@ const AgentManagement = () => {
   const [accessName, setAccessName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
 
   // Check if user is already authorized
   useEffect(() => {
@@ -163,13 +164,26 @@ const AgentManagement = () => {
 
   // Get recently active agents (sorted by last action)
   const recentlyActiveAgents = [...fullAgents]
-    .filter(agent => agent.last_action_at)
+    .filter(agent => {
+      if (!agent.last_action_at) return false;
+      if (activityTypeFilter === "all") return true;
+      return agent.last_action_type === activityTypeFilter;
+    })
     .sort((a, b) => {
       const dateA = new Date(a.last_action_at!).getTime();
       const dateB = new Date(b.last_action_at!).getTime();
       return dateB - dateA;
     })
     .slice(0, 5);
+
+  // Get unique activity types for filter
+  const activityTypes = Array.from(
+    new Set(
+      fullAgents
+        .filter(agent => agent.last_action_type)
+        .map(agent => agent.last_action_type!)
+    )
+  ).sort();
 
   // Filter agents based on search and status
   const filteredAgents = fullAgents.filter((agent) => {
@@ -365,14 +379,36 @@ const AgentManagement = () => {
         {/* Recent Activity Section */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
-              <CardTitle>Recent Activity</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                <CardTitle>Recent Activity</CardTitle>
+              </div>
+              <Select
+                value={activityTypeFilter}
+                onValueChange={setActivityTypeFilter}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filter by action" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Actions</SelectItem>
+                  {activityTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      <span className="capitalize">{type.replace(/_/g, ' ')}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardHeader>
           <CardContent>
             {recentlyActiveAgents.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No recent activity</p>
+              <p className="text-muted-foreground text-center py-4">
+                {activityTypeFilter === "all" 
+                  ? "No recent activity" 
+                  : `No recent ${activityTypeFilter.replace(/_/g, ' ')} activity`}
+              </p>
             ) : (
               <div className="space-y-4">
                 {recentlyActiveAgents.map((agent) => (
