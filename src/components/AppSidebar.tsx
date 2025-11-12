@@ -72,6 +72,7 @@ const navigationGroups = [
     label: "Recording",
     items: [
       { title: "Recording Activity", url: "/recording-activity", icon: Activity },
+      { title: "Earnings Analytics", url: "/agent-earnings-analytics", icon: TrendingUp },
       { title: "Monthly Summary", url: "/monthly-summary", icon: FileText },
     ],
   },

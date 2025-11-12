@@ -56,6 +56,7 @@ const ReferralDashboard = lazy(() => import("./pages/ReferralDashboard"));
 const PendingTenants = lazy(() => import("./pages/PendingTenants"));
 const UnderReviewTenants = lazy(() => import("./pages/UnderReviewTenants"));
 const StatusHistoryPage = lazy(() => import("./pages/StatusHistoryPage"));
+const AgentEarningsAnalytics = lazy(() => import("./pages/AgentEarningsAnalytics"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -152,6 +153,7 @@ const App = () => {
               <Route path="/pending-tenants" element={<PendingTenants />} />
               <Route path="/under-review-tenants" element={<UnderReviewTenants />} />
               <Route path="/status-history" element={<StatusHistoryPage />} />
+              <Route path="/agent-earnings-analytics" element={<AgentEarningsAnalytics />} />
               <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
