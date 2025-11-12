@@ -33,6 +33,10 @@ import {
   CalendarDays,
   CalendarRange,
   Infinity,
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  Sparkle,
 } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 
@@ -52,6 +56,43 @@ const ReferralDashboard = () => {
         return format(new Date(), "MMMM yyyy");
       default:
         return "All Time";
+    }
+  };
+
+  const getRankChangeBadge = (referrer: typeof referrers[0]) => {
+    if (!referrer.rankChange || period === "all") return null;
+
+    switch (referrer.rankChange) {
+      case "up":
+        return (
+          <Badge className="bg-green-600 hover:bg-green-700 text-white gap-1">
+            <ArrowUp className="h-3 w-3" />
+            Up {referrer.rankDifference}
+          </Badge>
+        );
+      case "down":
+        return (
+          <Badge className="bg-red-600 hover:bg-red-700 text-white gap-1">
+            <ArrowDown className="h-3 w-3" />
+            Down {referrer.rankDifference}
+          </Badge>
+        );
+      case "new":
+        return (
+          <Badge className="bg-blue-600 hover:bg-blue-700 text-white gap-1">
+            <Sparkle className="h-3 w-3" />
+            New Entry
+          </Badge>
+        );
+      case "same":
+        return (
+          <Badge variant="secondary" className="gap-1">
+            <Minus className="h-3 w-3" />
+            No Change
+          </Badge>
+        );
+      default:
+        return null;
     }
   };
 
@@ -234,7 +275,7 @@ Start earning now: ${shareUrl}`}
             <CardDescription>
               {period === "all" 
                 ? "All-time referral rankings. Click on a referrer to see their referred tenants."
-                : `Rankings for ${getPeriodLabel()}. Click on a referrer to see their referred tenants.`
+                : `Rankings for ${getPeriodLabel()} with changes from previous ${period}. Click to see details.`
               }
             </CardDescription>
           </CardHeader>
@@ -292,11 +333,19 @@ Start earning now: ${shareUrl}`}
                             </div>
 
                             <div>
-                              <h3 className="font-bold text-lg">{referrer.referrerName}</h3>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-lg">{referrer.referrerName}</h3>
+                                {getRankChangeBadge(referrer)}
+                              </div>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                                 <Phone className="h-3 w-3" />
                                 {referrer.referrerPhone}
                               </div>
+                              {referrer.previousRank && period !== "all" && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Previous rank: #{referrer.previousRank}
+                                </p>
+                              )}
                             </div>
                           </div>
 

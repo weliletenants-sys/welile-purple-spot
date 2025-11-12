@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfWeek, startOfMonth, endOfWeek, endOfMonth } from "date-fns";
+import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, subWeeks, subMonths } from "date-fns";
 
 export interface ReferrerStats {
   referrerName: string;
@@ -15,6 +15,9 @@ export interface ReferrerStats {
     createdAt: string;
     earnings: number;
   }[];
+  rankChange?: "up" | "down" | "new" | "same";
+  previousRank?: number;
+  rankDifference?: number;
 }
 
 export type TimePeriod = "all" | "week" | "month";
@@ -23,84 +26,152 @@ interface UseReferralStatsParams {
   period?: TimePeriod;
 }
 
+const fetchPeriodData = async (startDate: Date | null, endDate: Date | null) => {
+  let query = supabase
+    .from("agent_earnings")
+    .select(`
+      agent_name,
+      agent_phone,
+      amount,
+      created_at,
+      tenant_id,
+      tenants (
+        id,
+        name,
+        contact,
+        location_district,
+        created_at
+      )
+    `)
+    .eq("earning_type", "pipeline_referral")
+    .order("created_at", { ascending: false });
+
+  if (startDate && endDate) {
+    query = query
+      .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString());
+  }
+
+  const { data: earnings, error } = await query;
+  if (error) throw error;
+
+  const referrerMap = new Map<string, ReferrerStats>();
+
+  earnings?.forEach((earning: any) => {
+    const key = `${earning.agent_name}-${earning.agent_phone}`;
+    
+    if (!referrerMap.has(key)) {
+      referrerMap.set(key, {
+        referrerName: earning.agent_name,
+        referrerPhone: earning.agent_phone,
+        totalEarnings: 0,
+        totalTenants: 0,
+        tenants: [],
+      });
+    }
+
+    const referrer = referrerMap.get(key)!;
+    referrer.totalEarnings += Number(earning.amount);
+    referrer.totalTenants += 1;
+
+    if (earning.tenants) {
+      referrer.tenants.push({
+        id: earning.tenants.id,
+        name: earning.tenants.name,
+        contact: earning.tenants.contact,
+        district: earning.tenants.location_district || "N/A",
+        createdAt: earning.created_at,
+        earnings: Number(earning.amount),
+      });
+    }
+  });
+
+  return Array.from(referrerMap.values()).sort(
+    (a, b) => b.totalEarnings - a.totalEarnings
+  );
+};
+
 export const useReferralStats = ({ period = "all" }: UseReferralStatsParams = {}) => {
   return useQuery({
     queryKey: ["referral-stats", period],
     queryFn: async () => {
-      let query = supabase
-        .from("agent_earnings")
-        .select(`
-          agent_name,
-          agent_phone,
-          amount,
-          created_at,
-          tenant_id,
-          tenants (
-            id,
-            name,
-            contact,
-            location_district,
-            created_at
-          )
-        `)
-        .eq("earning_type", "pipeline_referral")
-        .order("created_at", { ascending: false });
+      let currentStart: Date | null = null;
+      let currentEnd: Date | null = null;
+      let previousStart: Date | null = null;
+      let previousEnd: Date | null = null;
 
-      // Apply date filtering based on period
+      // Set date ranges based on period
       if (period === "week") {
-        const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
-        const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
-        query = query
-          .gte("created_at", weekStart.toISOString())
-          .lte("created_at", weekEnd.toISOString());
+        currentStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+        currentEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+        previousStart = startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 });
+        previousEnd = endOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 });
       } else if (period === "month") {
-        const monthStart = startOfMonth(new Date());
-        const monthEnd = endOfMonth(new Date());
-        query = query
-          .gte("created_at", monthStart.toISOString())
-          .lte("created_at", monthEnd.toISOString());
+        currentStart = startOfMonth(new Date());
+        currentEnd = endOfMonth(new Date());
+        previousStart = startOfMonth(subMonths(new Date(), 1));
+        previousEnd = endOfMonth(subMonths(new Date(), 1));
       }
 
-      const { data: earnings, error } = await query;
+      // Fetch current period data
+      const currentData = await fetchPeriodData(currentStart, currentEnd);
 
-      if (error) throw error;
+      // For "all" period, no comparison needed
+      if (period === "all") {
+        return currentData;
+      }
 
-      // Group by referrer
-      const referrerMap = new Map<string, ReferrerStats>();
+      // Fetch previous period data for comparison
+      const previousData = await fetchPeriodData(previousStart, previousEnd);
 
-      earnings?.forEach((earning: any) => {
-        const key = `${earning.agent_name}-${earning.agent_phone}`;
-        
-        if (!referrerMap.has(key)) {
-          referrerMap.set(key, {
-            referrerName: earning.agent_name,
-            referrerPhone: earning.agent_phone,
-            totalEarnings: 0,
-            totalTenants: 0,
-            tenants: [],
-          });
-        }
-
-        const referrer = referrerMap.get(key)!;
-        referrer.totalEarnings += Number(earning.amount);
-        referrer.totalTenants += 1;
-
-        if (earning.tenants) {
-          referrer.tenants.push({
-            id: earning.tenants.id,
-            name: earning.tenants.name,
-            contact: earning.tenants.contact,
-            district: earning.tenants.location_district || "N/A",
-            createdAt: earning.created_at,
-            earnings: Number(earning.amount),
-          });
-        }
+      // Create a map of previous rankings
+      const previousRankings = new Map<string, number>();
+      previousData.forEach((referrer, index) => {
+        const key = `${referrer.referrerName}-${referrer.referrerPhone}`;
+        previousRankings.set(key, index + 1);
       });
 
-      // Convert map to array and sort by total earnings
-      return Array.from(referrerMap.values()).sort(
-        (a, b) => b.totalEarnings - a.totalEarnings
-      );
+      // Add rank comparison to current data
+      return currentData.map((referrer, currentIndex) => {
+        const key = `${referrer.referrerName}-${referrer.referrerPhone}`;
+        const previousRank = previousRankings.get(key);
+        const currentRank = currentIndex + 1;
+
+        if (!previousRank) {
+          // New entry
+          return {
+            ...referrer,
+            rankChange: "new" as const,
+          };
+        }
+
+        const rankDiff = previousRank - currentRank;
+
+        if (rankDiff > 0) {
+          // Moved up
+          return {
+            ...referrer,
+            rankChange: "up" as const,
+            previousRank,
+            rankDifference: rankDiff,
+          };
+        } else if (rankDiff < 0) {
+          // Moved down
+          return {
+            ...referrer,
+            rankChange: "down" as const,
+            previousRank,
+            rankDifference: Math.abs(rankDiff),
+          };
+        } else {
+          // Same position
+          return {
+            ...referrer,
+            rankChange: "same" as const,
+            previousRank,
+          };
+        }
+      });
     },
   });
 };
