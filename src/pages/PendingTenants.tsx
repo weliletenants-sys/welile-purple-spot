@@ -33,7 +33,7 @@ import {
   Search,
   Phone,
   MapPin,
-  Calendar,
+  Calendar as CalendarIcon,
   User,
   CheckCircle,
   AlertCircle,
@@ -42,8 +42,11 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  X,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 const PendingTenants = () => {
   const navigate = useNavigate();
@@ -56,12 +59,38 @@ const PendingTenants = () => {
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [sortColumn, setSortColumn] = useState<"name" | "created_at" | "location_district" | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [filterDistrict, setFilterDistrict] = useState<string>("all");
+  const [filterAgent, setFilterAgent] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
-  const filteredTenants = tenants?.filter(
-    (tenant) =>
-      tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tenant.contact.includes(searchTerm)
-  );
+  // Get unique districts and agents for filters
+  const uniqueDistricts = Array.from(new Set(tenants?.map(t => t.location_district).filter(Boolean))) as string[];
+  const uniqueAgents = Array.from(new Set(tenants?.map(t => t.agent_name).filter(Boolean))) as string[];
+
+  const filteredTenants = tenants?.filter((tenant) => {
+    // Search filter
+    const matchesSearch = tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tenant.contact.includes(searchTerm);
+    
+    // District filter
+    const matchesDistrict = filterDistrict === "all" || tenant.location_district === filterDistrict;
+    
+    // Agent filter
+    const matchesAgent = filterAgent === "all" || tenant.agent_name === filterAgent;
+    
+    // Date range filter
+    let matchesDateRange = true;
+    const tenantDate = new Date(tenant.created_at);
+    if (dateFrom && isBefore(tenantDate, startOfDay(dateFrom))) {
+      matchesDateRange = false;
+    }
+    if (dateTo && isAfter(tenantDate, endOfDay(dateTo))) {
+      matchesDateRange = false;
+    }
+    
+    return matchesSearch && matchesDistrict && matchesAgent && matchesDateRange;
+  });
 
   const sortedTenants = filteredTenants?.slice().sort((a, b) => {
     if (!sortColumn) return 0;
@@ -196,6 +225,15 @@ const PendingTenants = () => {
     );
   };
 
+  const clearFilters = () => {
+    setFilterDistrict("all");
+    setFilterAgent("all");
+    setDateFrom(undefined);
+    setDateTo(undefined);
+  };
+
+  const hasActiveFilters = filterDistrict !== "all" || filterAgent !== "all" || dateFrom || dateTo;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -304,18 +342,160 @@ const PendingTenants = () => {
           </Card>
         )}
 
-        {/* Search */}
+        {/* Search and Filters */}
         <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or phone number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Search & Filters</CardTitle>
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-8 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear Filters
+                </Button>
+              )}
             </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
+              {/* District Filter */}
+              <Select value={filterDistrict} onValueChange={setFilterDistrict}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by district" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Districts</SelectItem>
+                  {uniqueDistricts.sort().map((district) => (
+                    <SelectItem key={district} value={district}>
+                      {district}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Agent Filter */}
+              <Select value={filterAgent} onValueChange={setFilterAgent}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Agents</SelectItem>
+                  {uniqueAgents.sort().map((agent) => (
+                    <SelectItem key={agent} value={agent}>
+                      {agent}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Date Range Filter */}
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`flex-1 justify-start text-left font-normal ${!dateFrom && "text-muted-foreground"}`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFrom ? format(dateFrom, "MMM dd") : "From"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`flex-1 justify-start text-left font-normal ${!dateTo && "text-muted-foreground"}`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateTo ? format(dateTo, "MMM dd") : "To"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {/* Filter Summary */}
+            {hasActiveFilters && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {filterDistrict !== "all" && (
+                  <Badge variant="secondary" className="gap-1">
+                    District: {filterDistrict}
+                    <button
+                      className="ml-1 hover:text-destructive"
+                      onClick={() => setFilterDistrict("all")}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+                {filterAgent !== "all" && (
+                  <Badge variant="secondary" className="gap-1">
+                    Agent: {filterAgent}
+                    <button
+                      className="ml-1 hover:text-destructive"
+                      onClick={() => setFilterAgent("all")}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+                {dateFrom && (
+                  <Badge variant="secondary" className="gap-1">
+                    From: {format(dateFrom, "MMM dd, yyyy")}
+                    <button
+                      className="ml-1 hover:text-destructive"
+                      onClick={() => setDateFrom(undefined)}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+                {dateTo && (
+                  <Badge variant="secondary" className="gap-1">
+                    To: {format(dateTo, "MMM dd, yyyy")}
+                    <button
+                      className="ml-1 hover:text-destructive"
+                      onClick={() => setDateTo(undefined)}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
