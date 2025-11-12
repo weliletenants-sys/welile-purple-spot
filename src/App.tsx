@@ -54,6 +54,7 @@ const LandlordProfile = lazy(() => import("./pages/LandlordProfile"));
 const AddPipelineTenant = lazy(() => import("./pages/AddPipelineTenant"));
 const ReferralDashboard = lazy(() => import("./pages/ReferralDashboard"));
 const PendingTenants = lazy(() => import("./pages/PendingTenants"));
+const UnderReviewTenants = lazy(() => import("./pages/UnderReviewTenants"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -148,6 +149,7 @@ const App = () => {
               <Route path="/add-pipeline" element={<AddPipelineTenant />} />
               <Route path="/referral-dashboard" element={<ReferralDashboard />} />
               <Route path="/pending-tenants" element={<PendingTenants />} />
+              <Route path="/under-review-tenants" element={<UnderReviewTenants />} />
               <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>

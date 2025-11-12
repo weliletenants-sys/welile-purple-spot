@@ -318,6 +318,16 @@ const Index = () => {
                       )}
                     </DropdownMenuItem>
                     <DropdownMenuItem 
+                      className="cursor-pointer bg-yellow-50 dark:bg-yellow-950/20 hover:bg-yellow-100 dark:hover:bg-yellow-950/30 border-2 border-yellow-200 dark:border-yellow-800 font-bold text-lg py-5 mb-3 rounded-md flex items-center gap-3"
+                      onClick={() => navigate("/under-review-tenants")}
+                    >
+                      <AlertTriangle className="w-7 h-7 text-yellow-600" />
+                      <div className="flex flex-col">
+                        <span className="text-yellow-700 dark:text-yellow-400">⚠️ Under Review</span>
+                        <span className="text-xs font-normal text-muted-foreground">Review required</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
                       className="cursor-pointer flex items-center gap-3 py-4 text-base"
                       onClick={() => navigate("/executive-dashboard")}
                     >

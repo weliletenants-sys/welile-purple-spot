@@ -60,6 +60,8 @@ const navigationGroups = [
     label: "Tenants",
     items: [
       { title: "Pipeline Tenants", url: "/pipeline-tenants", icon: Target },
+      { title: "Pending Tenants", url: "/pending-tenants", icon: Clock },
+      { title: "Under Review", url: "/under-review-tenants", icon: AlertTriangle },
       { title: "Recently Added", url: "/recently-added", icon: Clock },
       { title: "Risk Dashboard", url: "/risk-dashboard", icon: AlertTriangle },
       { title: "Missed Payments", url: "/missed-payments", icon: DollarSign },
