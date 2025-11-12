@@ -27,6 +27,7 @@ import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
 import { usePendingTenantsCount } from "@/hooks/usePendingTenants";
+import { useUnderReviewTenantsCount } from "@/hooks/useUnderReviewTenants";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard, Building2, Phone, UserCog } from "lucide-react";
@@ -67,6 +68,7 @@ const Index = () => {
   const { isAdmin } = useAdminRole();
   const { data: agents, refetch: refetchAgents } = useAgents();
   const { data: pendingCount = 0 } = usePendingTenantsCount();
+  const { data: underReviewCount = 0 } = useUnderReviewTenantsCount();
   
   // Fetch all tenants and payments for agent stats
   const { data: allTenants } = useQuery({
@@ -699,7 +701,7 @@ const Index = () => {
         )}
 
         {/* Stats Section with enhanced visuals */}
-        <div data-tour="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+        <div data-tour="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 animate-fade-in">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -761,6 +763,33 @@ const Index = () => {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Click to review pending tenants</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="flex items-center gap-3 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/20 rounded-xl px-6 py-4 border-2 border-yellow-200 dark:border-yellow-800 hover-scale cursor-pointer shadow-md transition-all hover:shadow-lg"
+                  onClick={() => navigate("/under-review-tenants")}
+                >
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 relative">
+                    <AlertTriangle className="w-7 h-7 text-white" />
+                    {underReviewCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white text-xs px-1.5 py-0.5 animate-pulse">
+                        {underReviewCount}
+                      </Badge>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-yellow-700 dark:text-yellow-300">{underReviewCount}</div>
+                    <div className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Under Review</div>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click to manage tenants under review</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
