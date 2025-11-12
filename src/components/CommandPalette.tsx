@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { usePageHistory, getHistory } from "@/hooks/usePageHistory";
+import { usePageHistory, getHistory, clearHistory } from "@/hooks/usePageHistory";
 import {
   CommandDialog,
   CommandEmpty,
@@ -36,6 +36,7 @@ import {
   Hourglass,
   ChartLine,
   History,
+  Trash2,
 } from "lucide-react";
 
 interface PageItem {
@@ -89,11 +90,19 @@ const pages: PageItem[] = [
 
 export const CommandPalette = () => {
   const [open, setOpen] = useState(false);
+  const [recentPages, setRecentPages] = useState(getHistory());
   const navigate = useNavigate();
   const location = useLocation();
   
   // Track page history
   usePageHistory();
+
+  // Update recent pages when dialog opens
+  useEffect(() => {
+    if (open) {
+      setRecentPages(getHistory());
+    }
+  }, [open]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -112,8 +121,10 @@ export const CommandPalette = () => {
     navigate(url);
   };
 
-  // Get recent pages
-  const recentPages = getHistory();
+  const handleClearHistory = () => {
+    clearHistory();
+    setRecentPages([]);
+  };
 
   // Group pages by category
   const groupedPages = pages.reduce((acc, page) => {
@@ -150,9 +161,17 @@ export const CommandPalette = () => {
                     <span>{page.title}</span>
                     <span className="ml-auto text-xs text-muted-foreground">Recent</span>
                   </CommandItem>
-                );
-              })}
-            </CommandGroup>
+                  );
+                })}
+                <CommandItem
+                  value="clear recent history"
+                  onSelect={handleClearHistory}
+                  className="flex items-center gap-3 cursor-pointer text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 shrink-0" />
+                  <span>Clear recent history</span>
+                </CommandItem>
+              </CommandGroup>
             <CommandSeparator />
           </>
         )}
