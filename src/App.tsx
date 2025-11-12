@@ -9,6 +9,8 @@ import { InstallBanner } from "@/components/InstallBanner";
 import { HelpChatbot } from "@/components/HelpChatbot";
 import { WhatsNewModal } from "@/components/WhatsNewModal";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { SyncIndicator } from "@/components/SyncIndicator";
+import { OfflineQueueProvider } from "@/contexts/OfflineQueueContext";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
@@ -71,21 +73,23 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <OfflineIndicator />
-        <UpdatePrompt />
-        <InstallPrompt />
-        <WhatsNewModal 
-          open={showWhatsNew} 
-          onClose={markAsSeen} 
-          version={currentVersion}
-        />
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <HelpChatbot />
-          <InstallBanner />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+        <OfflineQueueProvider>
+          <OfflineIndicator />
+          <SyncIndicator />
+          <UpdatePrompt />
+          <InstallPrompt />
+          <WhatsNewModal 
+            open={showWhatsNew} 
+            onClose={markAsSeen} 
+            version={currentVersion}
+          />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <HelpChatbot />
+            <InstallBanner />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/tenant/:tenantId" element={<RepaymentSchedule />} />
               <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
@@ -120,6 +124,7 @@ const App = () => {
             </Routes>
           </Suspense>
         </BrowserRouter>
+        </OfflineQueueProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
