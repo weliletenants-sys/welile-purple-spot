@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { TeamChat } from "@/components/TeamChat";
+import { TeamActivityFeed } from "@/components/TeamActivityFeed";
 
 interface TeamWithEarnings {
   id: string;
@@ -214,10 +215,11 @@ export default function TeamEarningsLeaderboard() {
       )}
 
       <Tabs defaultValue="leaderboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-4 max-w-3xl">
           <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
           <TabsTrigger value="achievements">Achievements</TabsTrigger>
-          <TabsTrigger value="chat" disabled={!userTeam}>Team Chat</TabsTrigger>
+          <TabsTrigger value="activity" disabled={!userTeam}>Activity</TabsTrigger>
+          <TabsTrigger value="chat" disabled={!userTeam}>Chat</TabsTrigger>
         </TabsList>
 
         <TabsContent value="leaderboard" className="space-y-4">
@@ -383,6 +385,12 @@ export default function TeamEarningsLeaderboard() {
               })}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-4">
+          {userTeam && (
+            <TeamActivityFeed teamId={userTeam.id} />
+          )}
         </TabsContent>
 
         <TabsContent value="chat" className="space-y-4">
