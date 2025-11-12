@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePayments } from "@/hooks/usePayments";
 import { EditTenantForm } from "@/components/EditTenantForm";
 import { ContactButtons } from "@/components/ContactButtons";
+import { TenantStatusHistory } from "@/components/TenantStatusHistory";
 import { supabase } from "@/integrations/supabase/client";
 
 const ITEMS_PER_PAGE = 10;
@@ -502,6 +503,9 @@ export default function RepaymentSchedule() {
             </div>
           </Card>
         </div>
+
+        {/* Status Change History */}
+        {tenantId && <TenantStatusHistory tenantId={tenantId} />}
 
         {/* Schedule Settings */}
         <Card className="p-6">
