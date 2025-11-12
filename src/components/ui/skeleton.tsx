@@ -26,6 +26,7 @@ function Skeleton({
         "relative overflow-hidden rounded-md bg-muted animate-skeleton-fade-in",
         "[&>div]:absolute [&>div]:inset-0 [&>div]:-translate-x-full",
         "[&>div]:bg-gradient-to-r [&>div]:from-transparent [&>div]:via-muted-foreground/10 [&>div]:to-transparent",
+        "motion-reduce:animate-none motion-reduce:opacity-100",
         className
       )}
       style={{
@@ -42,7 +43,7 @@ function Skeleton({
     >
       <span className="sr-only">{ariaLabel}</span>
       <div
-        className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent"
+        className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent motion-reduce:hidden"
         style={{
           animation: `shimmer ${animationDuration} infinite`,
           animationDelay: `${delay + 200}ms`, // Shimmer starts 200ms after fade-in

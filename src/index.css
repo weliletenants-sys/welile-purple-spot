@@ -253,6 +253,37 @@ All colors MUST be HSL.
   }
 }
 
+/* Respect user's motion preferences for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Specifically disable shimmer animations */
+  .animate-shimmer,
+  .animate-shimmer-fast,
+  .animate-shimmer-slow {
+    animation: none !important;
+  }
+
+  /* Disable skeleton fade-in */
+  .animate-skeleton-fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: scale(1) !important;
+  }
+
+  /* Keep skeleton visible but without animation */
+  [role="status"][aria-busy="true"] > div {
+    animation: none !important;
+  }
+}
+
 /* Improve tap targets for mobile */
 @media (max-width: 768px) {
   button, 
