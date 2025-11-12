@@ -21,26 +21,42 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.ico"],
       manifest: {
         name: "Welile Tenants",
-        short_name: "Welile Tenants",
+        short_name: "Welile",
         description: "Monitor and manage tenant performance",
         theme_color: "#7E3AF2",
         background_color: "#ffffff",
         display: "standalone",
-        orientation: "portrait",
+        orientation: "portrait-primary",
         scope: "/",
         start_url: "/",
+        categories: ["business", "productivity"],
+        lang: "en",
+        dir: "ltr",
+        prefer_related_applications: false,
         icons: [
           {
             src: "/icon-192.png",
             sizes: "192x192",
             type: "image/png",
-            purpose: "any maskable"
+            purpose: "any"
+          },
+          {
+            src: "/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "maskable"
           },
           {
             src: "/icon-512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable"
+            purpose: "any"
+          },
+          {
+            src: "/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable"
           }
         ]
       },
