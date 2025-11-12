@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, UserPlus, ArrowLeft, Lock, Search } from "lucide-react";
+import { Pencil, Trash2, UserPlus, ArrowLeft, Lock, Search, Download, FileSpreadsheet } from "lucide-react";
 import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 interface Agent {
   id: string;
@@ -158,6 +159,55 @@ const AgentManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Export to Excel
+  const exportToExcel = () => {
+    const exportData = filteredAgents.map((agent) => ({
+      Name: agent.name,
+      "Phone Number": agent.phone || "N/A",
+      Status: agent.is_active ? "Active" : "Inactive",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Agents");
+    
+    const fileName = `agents_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    toast({
+      title: "Export Successful",
+      description: `Exported ${filteredAgents.length} agents to Excel`,
+    });
+  };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const exportData = filteredAgents.map((agent) => ({
+      Name: agent.name,
+      "Phone Number": agent.phone || "N/A",
+      Status: agent.is_active ? "Active" : "Inactive",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const csv = XLSX.utils.sheet_to_csv(ws);
+    
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `agents_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export Successful",
+      description: `Exported ${filteredAgents.length} agents to CSV`,
+    });
+  };
+
   // Show access control screen if not authorized
   if (!isAuthorized) {
     return (
@@ -273,6 +323,26 @@ const AgentManagement = () => {
                     <SelectItem value="inactive">Inactive Only</SelectItem>
                   </SelectContent>
                 </Select>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={exportToExcel}
+                    title="Export to Excel"
+                    disabled={filteredAgents.length === 0}
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={exportToCSV}
+                    title="Export to CSV"
+                    disabled={filteredAgents.length === 0}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
               {/* Results count */}
