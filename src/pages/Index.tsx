@@ -26,10 +26,12 @@ import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
+import { usePendingTenantsCount } from "@/hooks/usePendingTenants";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard, Building2, Phone, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
@@ -64,6 +66,7 @@ const Index = () => {
   const { showTour, completeTour, skipTour } = useOnboardingTour();
   const { isAdmin } = useAdminRole();
   const { data: agents, refetch: refetchAgents } = useAgents();
+  const { data: pendingCount = 0 } = usePendingTenantsCount();
   
   // Fetch all tenants and payments for agent stats
   const { data: allTenants } = useQuery({
@@ -296,6 +299,23 @@ const Index = () => {
                         <span>🚨 Late Payments</span>
                         <span className="text-xs font-normal opacity-90">Overdue tenants</span>
                       </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer bg-orange-50 dark:bg-orange-950/20 hover:bg-orange-100 dark:hover:bg-orange-950/30 border-2 border-orange-200 dark:border-orange-800 font-bold text-lg py-5 mb-3 rounded-md flex items-center justify-between"
+                      onClick={() => navigate("/pending-tenants")}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Clock className="w-7 h-7 text-orange-600" />
+                        <div className="flex flex-col">
+                          <span className="text-orange-700 dark:text-orange-400">⏳ Pending Tenants</span>
+                          <span className="text-xs font-normal text-muted-foreground">Awaiting review</span>
+                        </div>
+                      </div>
+                      {pendingCount > 0 && (
+                        <Badge className="bg-orange-600 hover:bg-orange-700 text-white text-sm px-2.5 py-1 animate-pulse">
+                          {pendingCount}
+                        </Badge>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       className="cursor-pointer flex items-center gap-3 py-4 text-base"
@@ -669,7 +689,7 @@ const Index = () => {
         )}
 
         {/* Stats Section with enhanced visuals */}
-        <div data-tour="stats" className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in">
+        <div data-tour="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -704,6 +724,33 @@ const Index = () => {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Tenants with active status</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="flex items-center gap-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 rounded-xl px-6 py-4 border-2 border-orange-200 dark:border-orange-800 hover-scale cursor-pointer shadow-md transition-all hover:shadow-lg"
+                  onClick={() => navigate("/pending-tenants")}
+                >
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 relative">
+                    <Clock className="w-7 h-7 text-white" />
+                    {pendingCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white text-xs px-1.5 py-0.5 animate-pulse">
+                        {pendingCount}
+                      </Badge>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">{pendingCount}</div>
+                    <div className="text-sm font-medium text-orange-600 dark:text-orange-400">Pending Review</div>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click to review pending tenants</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
