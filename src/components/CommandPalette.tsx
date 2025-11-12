@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { usePageHistory, getHistory } from "@/hooks/usePageHistory";
 import {
   CommandDialog,
   CommandEmpty,
@@ -34,6 +35,7 @@ import {
   Shield,
   Hourglass,
   ChartLine,
+  History,
 } from "lucide-react";
 
 interface PageItem {
@@ -88,6 +90,10 @@ const pages: PageItem[] = [
 export const CommandPalette = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Track page history
+  usePageHistory();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -106,6 +112,9 @@ export const CommandPalette = () => {
     navigate(url);
   };
 
+  // Get recent pages
+  const recentPages = getHistory();
+
   // Group pages by category
   const groupedPages = pages.reduce((acc, page) => {
     if (!acc[page.group]) {
@@ -121,6 +130,34 @@ export const CommandPalette = () => {
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         
+        {/* Recent Pages */}
+        {recentPages.length > 0 && (
+          <>
+            <CommandGroup heading="Recent">
+              {recentPages.map((page) => {
+                // Find icon for this page
+                const pageData = pages.find(p => p.url === page.url);
+                const Icon = pageData?.icon || History;
+                
+                return (
+                  <CommandItem
+                    key={page.url}
+                    value={`recent ${page.title}`}
+                    onSelect={() => handleSelect(page.url)}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span>{page.title}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">Recent</span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
+        
+        {/* All Pages */}
         {Object.entries(groupedPages).map(([group, items], index) => (
           <div key={group}>
             {index > 0 && <CommandSeparator />}
