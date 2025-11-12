@@ -12,6 +12,7 @@ import { JoinTeamDialog } from "@/components/JoinTeamDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { TeamChat } from "@/components/TeamChat";
 
 interface TeamWithEarnings {
   id: string;
@@ -213,9 +214,10 @@ export default function TeamEarningsLeaderboard() {
       )}
 
       <Tabs defaultValue="leaderboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
           <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
           <TabsTrigger value="achievements">Achievements</TabsTrigger>
+          <TabsTrigger value="chat" disabled={!userTeam}>Team Chat</TabsTrigger>
         </TabsList>
 
         <TabsContent value="leaderboard" className="space-y-4">
@@ -381,6 +383,16 @@ export default function TeamEarningsLeaderboard() {
               })}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="chat" className="space-y-4">
+          {userTeam && agentIdentifier && (
+            <TeamChat
+              teamId={userTeam.id}
+              userIdentifier={agentIdentifier}
+              userName={localStorage.getItem("agent_data") ? JSON.parse(localStorage.getItem("agent_data")!).name : "Unknown"}
+            />
+          )}
         </TabsContent>
       </Tabs>
     </div>
