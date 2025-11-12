@@ -71,19 +71,20 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
   
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20';
-      case 'pending': return 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20';
-      case 'review': return 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20';
-      default: return 'bg-muted text-muted-foreground';
+      case 'active': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-500 border-2';
+      case 'pending': return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-500 border-2';
+      case 'review': return 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-500 border-2';
+      default: return 'bg-muted text-muted-foreground border-2';
     }
   };
 
   const getPaymentColor = (status: string) => {
     switch (status) {
-      case 'paid': return 'bg-primary/10 text-primary border-primary/20';
-      case 'pending': return 'bg-accent/10 text-accent border-accent/20';
-      case 'overdue': return 'bg-destructive/10 text-destructive border-destructive/20';
-      default: return 'bg-muted text-muted-foreground';
+      case 'paid': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-500 border-2';
+      case 'cleared': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-500 border-2';
+      case 'pending': return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-500 border-2';
+      case 'overdue': return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-500 border-2';
+      default: return 'bg-muted text-muted-foreground border-2';
     }
   };
 
@@ -189,7 +190,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
         </div>
 
         {/* Status Badges with Priority Indicator */}
-        <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex gap-3 flex-wrap items-center">
           <PriorityIndicator 
             priority={priorityLevel} 
             size="sm"
@@ -201,11 +202,18 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
               'On track'
             }
           />
-          <Badge variant="outline" className={getStatusColor(tenant.status)}>
-            {tenant.status}
+          <Badge variant="outline" className={`${getStatusColor(tenant.status)} px-4 py-2 text-base font-bold shadow-sm`}>
+            {tenant.status === 'active' && '✅ '}
+            {tenant.status === 'pending' && '⏳ '}
+            {tenant.status === 'review' && '⚠️ '}
+            {tenant.status.toUpperCase()}
           </Badge>
-          <Badge variant="outline" className={getPaymentColor(tenant.paymentStatus)}>
-            {tenant.paymentStatus}
+          <Badge variant="outline" className={`${getPaymentColor(tenant.paymentStatus)} px-4 py-2 text-base font-bold shadow-sm`}>
+            {tenant.paymentStatus === 'paid' && '✅ '}
+            {tenant.paymentStatus === 'cleared' && '✅ '}
+            {tenant.paymentStatus === 'pending' && '⏳ '}
+            {tenant.paymentStatus === 'overdue' && '❌ '}
+            {tenant.paymentStatus.toUpperCase()}
           </Badge>
         </div>
 

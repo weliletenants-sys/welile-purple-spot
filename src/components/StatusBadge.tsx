@@ -13,38 +13,45 @@ interface StatusBadgeProps {
 const statusConfig = {
   active: {
     icon: CheckCircle,
+    emoji: '✅',
     label: 'Active',
-    className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border-green-300',
+    className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-500 border-2',
   },
   inactive: {
     icon: XCircle,
+    emoji: '⭕',
     label: 'Inactive',
-    className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-300',
+    className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border-gray-500 border-2',
   },
   pending: {
     icon: Clock,
+    emoji: '⏳',
     label: 'Pending',
-    className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 border-yellow-300',
+    className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-500 border-2',
   },
   approved: {
     icon: CheckCircle,
+    emoji: '✅',
     label: 'Approved',
-    className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border-green-300',
+    className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-500 border-2',
   },
   rejected: {
     icon: XCircle,
+    emoji: '❌',
     label: 'Rejected',
-    className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border-red-300',
+    className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-500 border-2',
   },
   warning: {
     icon: AlertTriangle,
+    emoji: '⚠️',
     label: 'Warning',
-    className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 border-orange-300',
+    className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border-orange-500 border-2',
   },
   info: {
     icon: Circle,
+    emoji: 'ℹ️',
     label: 'Info',
-    className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border-blue-300',
+    className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-500 border-2',
   },
 };
 
@@ -62,12 +69,12 @@ export const StatusBadge = ({
     <Badge 
       variant="outline" 
       className={cn(
-        "flex items-center gap-1 font-medium transition-all hover-scale",
+        "flex items-center gap-2 font-bold text-base transition-all hover-scale px-4 py-2 shadow-sm",
         config.className
       )}
     >
-      {showIcon && <Icon className="h-3 w-3" />}
-      <span>{displayLabel}</span>
+      <span className="text-xl">{config.emoji}</span>
+      <span>{displayLabel.toUpperCase()}</span>
     </Badge>
   );
 
