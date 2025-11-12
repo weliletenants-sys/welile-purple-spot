@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -48,6 +49,8 @@ const PendingTenants = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [updatingTenant, setUpdatingTenant] = useState<string | null>(null);
+  const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   const filteredTenants = tenants?.filter(
     (tenant) =>
@@ -91,6 +94,63 @@ const PendingTenants = () => {
     }
   };
 
+  const handleBulkStatusUpdate = async (newStatus: string) => {
+    if (selectedTenants.length === 0) return;
+
+    setIsBulkUpdating(true);
+
+    try {
+      const { error } = await supabase
+        .from("tenants")
+        .update({ 
+          status: newStatus,
+          edited_at: new Date().toISOString(),
+          edited_by: "Admin"
+        })
+        .in("id", selectedTenants);
+
+      if (error) throw error;
+
+      toast({
+        title: "Bulk Update Successful",
+        description: `${selectedTenants.length} tenant(s) updated to ${newStatus}`,
+      });
+
+      // Clear selection
+      setSelectedTenants([]);
+
+      // Refetch data
+      queryClient.invalidateQueries({ queryKey: ["pending-tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["pending-tenants-count"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+    } catch (error: any) {
+      console.error("Error updating statuses:", error);
+      toast({
+        title: "Bulk Update Failed",
+        description: error.message || "Failed to update tenant statuses",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedTenants.length === filteredTenants?.length) {
+      setSelectedTenants([]);
+    } else {
+      setSelectedTenants(filteredTenants?.map(t => t.id) || []);
+    }
+  };
+
+  const toggleSelectTenant = (tenantId: string) => {
+    setSelectedTenants(prev => 
+      prev.includes(tenantId) 
+        ? prev.filter(id => id !== tenantId)
+        : [...prev, tenantId]
+    );
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -132,6 +192,11 @@ const PendingTenants = () => {
                 <p className="text-4xl font-bold text-orange-600">
                   {tenants?.length || 0}
                 </p>
+                {selectedTenants.length > 0 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {selectedTenants.length} tenant(s) selected
+                  </p>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -145,6 +210,54 @@ const PendingTenants = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Bulk Actions */}
+        {selectedTenants.length > 0 && (
+          <Card className="mb-6 border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <p className="font-semibold text-lg mb-1">Bulk Actions</p>
+                    <p className="text-sm text-muted-foreground">
+                      Update {selectedTenants.length} selected tenant(s)
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedTenants([])}
+                    disabled={isBulkUpdating}
+                  >
+                    Clear Selection
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkStatusUpdate("under_review")}
+                    disabled={isBulkUpdating}
+                    className="border-yellow-500/50 hover:bg-yellow-500/10"
+                  >
+                    <AlertCircle className="h-4 w-4 mr-1 text-yellow-600" />
+                    Mark as Under Review
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkStatusUpdate("active")}
+                    disabled={isBulkUpdating}
+                    className="border-green-500/50 hover:bg-green-500/10"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
+                    Approve All
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Search */}
         <Card className="mb-6">
@@ -184,6 +297,12 @@ const PendingTenants = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedTenants.length === filteredTenants?.length && filteredTenants?.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </TableHead>
                       <TableHead>Tenant Name</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>District</TableHead>
@@ -198,7 +317,13 @@ const PendingTenants = () => {
                     {filteredTenants.map((tenant) => (
                       <TableRow key={tenant.id}>
                         <TableCell>
-                          <Link 
+                          <Checkbox
+                            checked={selectedTenants.includes(tenant.id)}
+                            onCheckedChange={() => toggleSelectTenant(tenant.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Link
                             to={`/tenant/${tenant.id}`}
                             className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer group"
                           >
