@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Zap, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
@@ -210,7 +211,7 @@ export const QuickAddTenantForm = () => {
           Quick Add Pipeline
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl font-bold text-primary">
             <Zap className="w-6 h-6" />
@@ -221,6 +222,7 @@ export const QuickAddTenantForm = () => {
           </p>
         </DialogHeader>
         
+        <ScrollArea className="h-[500px] pr-4">
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <Alert className="border-primary/30 bg-primary/5">
             <Zap className="h-4 w-4 text-primary" />
@@ -363,6 +365,7 @@ export const QuickAddTenantForm = () => {
             </p>
           )}
         </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

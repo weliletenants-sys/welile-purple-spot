@@ -118,3 +118,13 @@ export const getVillagesByDistrict = (district: string): string[] => {
     .map(loc => loc.village)
     .sort();
 };
+
+// Default export for convenience
+export default {
+  locations: ugandaLocations,
+  districts: getAllDistricts(),
+  counties: getAllCounties(),
+  searchVillages,
+  getLocationByVillage,
+  getVillagesByDistrict,
+};

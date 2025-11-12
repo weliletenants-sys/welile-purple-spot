@@ -50,6 +50,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const LandlordManagement = lazy(() => import("./pages/LandlordManagement"));
 const LandlordProfile = lazy(() => import("./pages/LandlordProfile"));
+const AddPipelineTenant = lazy(() => import("./pages/AddPipelineTenant"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -140,6 +141,7 @@ const App = () => {
               <Route path="/landlord/:landlordContact" element={<LandlordProfile />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/add-pipeline" element={<AddPipelineTenant />} />
               <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>

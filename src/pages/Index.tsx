@@ -411,6 +411,13 @@ const Index = () => {
                     >
                       <BulkUploadPipelineTenants />
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 text-green-700 dark:text-green-400 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-950/30 dark:hover:to-emerald-950/30 font-semibold py-3 px-4 rounded-md mt-2 flex items-center gap-2 border-2 border-green-200 dark:border-green-800"
+                      onClick={() => navigate("/add-pipeline")}
+                    >
+                      <DollarSign className="w-4 h-4" />
+                      <span>💰 Earn UGX 100 Per Tenant!</span>
+                    </DropdownMenuItem>
                   </ScrollArea>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -14,6 +14,7 @@ import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ParsedPipelineTenant {
   name?: string;
@@ -225,7 +226,7 @@ const BulkUploadPipelineTenants = () => {
           Bulk Upload Pipeline
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Bulk Upload Pipeline Tenants</DialogTitle>
           <DialogDescription>
@@ -233,7 +234,8 @@ const BulkUploadPipelineTenants = () => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <ScrollArea className="h-[600px] pr-4">
+          <div className="space-y-4">
           <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
             <input
               type="file"
@@ -334,6 +336,7 @@ const BulkUploadPipelineTenants = () => {
             </p>
           </div>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
