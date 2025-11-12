@@ -46,18 +46,20 @@ export const QuickAddTenantForm = () => {
       setPhoneError("Phone number is required");
       return false;
     }
-    if (phone.length !== 10) {
-      setPhoneError("Phone must be 10 digits");
+    
+    // Remove any spaces or dashes
+    const cleanPhone = phone.replace(/[\s-]/g, '');
+    
+    if (cleanPhone.length < 9 || cleanPhone.length > 13) {
+      setPhoneError("Phone must be 9-13 digits");
       return false;
     }
-    if (!phone.startsWith("0")) {
-      setPhoneError("Phone must start with 0");
-      return false;
-    }
-    if (!/^\d+$/.test(phone)) {
+    
+    if (!/^\d+$/.test(cleanPhone)) {
       setPhoneError("Phone must contain only digits");
       return false;
     }
+    
     setPhoneError("");
     return true;
   };
@@ -100,26 +102,26 @@ export const QuickAddTenantForm = () => {
     try {
       const tenantData = {
         name: formData.name.trim().toUpperCase(),
-        contact: formData.contact.trim(),
+        contact: formData.contact.trim().replace(/[\s-]/g, ''),
         address: formData.address.trim(),
         landlord: "TBD",
-        landlordContact: "TBD",
+        landlordContact: "0000000000",
         rentAmount,
         registrationFee: 0,
         accessFee: 0,
         repaymentDays: 60 as 30 | 60 | 90,
-        status: "pipeline" as any,
-        paymentStatus: "pending" as "paid" | "pending" | "overdue" | "cleared",
+        status: "pending" as const,
+        paymentStatus: "pending" as const,
         performance: 80,
         location: {
-          country: "",
+          country: "Uganda",
           county: "",
           district: "",
           subcountyOrWard: "",
           cellOrVillage: "",
         },
         agentName: formData.agentName.trim(),
-        agentPhone: formData.agentPhone.trim(),
+        agentPhone: formData.agentPhone.trim().replace(/[\s-]/g, ''),
         serviceCenter: formData.serviceCenter.trim(),
       };
 
@@ -146,7 +148,7 @@ export const QuickAddTenantForm = () => {
 
       toast({
         title: "✅ Pipeline Tenant Added!",
-        description: `${formData.name} added to pipeline successfully`,
+        description: `${formData.name} added as pending prospect successfully`,
       });
 
       // Reset form
@@ -223,7 +225,7 @@ export const QuickAddTenantForm = () => {
           <Alert className="border-primary/30 bg-primary/5">
             <Zap className="h-4 w-4 text-primary" />
             <AlertDescription className="text-sm">
-              Pipeline status pre-selected. Add full details later when tenant becomes active.
+              Prospect will be added with "Pending" status. Add full details when tenant becomes active.
             </AlertDescription>
           </Alert>
 
@@ -248,8 +250,8 @@ export const QuickAddTenantForm = () => {
                 id="quick-contact"
                 value={formData.contact}
                 onChange={(e) => handleChange("contact", e.target.value)}
-                placeholder="e.g., 0700000000"
-                maxLength={10}
+                placeholder="e.g., 0700000000 or 256700000000"
+                maxLength={13}
                 className={phoneError && formData.contact ? "border-destructive" : ""}
               />
               {phoneError && formData.contact && (
@@ -311,7 +313,8 @@ export const QuickAddTenantForm = () => {
                   value={formData.agentPhone}
                   onChange={(e) => handleChange("agentPhone", e.target.value)}
                   placeholder="0700000000"
-                  maxLength={10}
+                  maxLength={13}
+                  className={phoneError && formData.agentPhone ? "border-destructive" : ""}
                 />
               </div>
             </div>
