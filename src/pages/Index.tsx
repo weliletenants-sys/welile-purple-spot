@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ShareButton } from "@/components/ShareButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAgents } from "@/hooks/useAgents";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -280,130 +281,132 @@ const Index = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80 bg-card p-2">
-                  <DropdownMenuItem 
-                    className="cursor-pointer bg-red-600 text-white hover:bg-red-700 font-bold text-lg py-5 mb-3 rounded-md animate-fade-in flex items-center gap-3"
-                    onClick={() => navigate("/missed-payments")}
-                  >
-                    <AlertTriangle className="w-7 h-7 animate-bounce" />
-                    <div className="flex flex-col">
-                      <span>🚨 Late Payments</span>
-                      <span className="text-xs font-normal opacity-90">Overdue tenants</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer flex items-center gap-3 py-4 text-base"
-                    onClick={() => navigate("/executive-dashboard")}
-                  >
-                    <BarChart3 className="w-6 h-6 text-primary" />
-                    <div className="flex flex-col">
-                      <span className="font-semibold">📊 Reports</span>
-                      <span className="text-xs text-muted-foreground">View all data</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer flex items-center gap-2 py-3" 
-                    onClick={() => navigate("/admin-login")}
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>Admin Dashboard</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer flex items-center gap-2 py-3"
-                    onClick={() => navigate("/withdrawal-history")}
-                  >
-                    <DollarSign className="w-4 h-4" />
-                    <span>💰 Withdrawal History</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer flex items-center gap-2 py-3"
-                    onClick={() => navigate("/agent-dashboard")}
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    <span>Agent Dashboard</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer flex items-center gap-2 py-3"
-                    onClick={() => navigate("/agent-portal-login")}
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>🔐 Agent Portal</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer flex items-center gap-2 py-3"
-                    onClick={() => navigate("/top-performers")}
-                  >
-                    <TrendingUp className="w-4 h-4" />
-                    <span>Top Performers</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer flex items-center gap-2 py-3"
-                    onClick={() => navigate("/recording-activity")}
-                  >
-                    <Clock className="w-4 h-4" />
-                    <span>⭐ Recording Activity</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer flex items-center gap-2 py-3"
-                    onClick={() => navigate("/recently-added")}
-                  >
-                    <Plus className="w-4 w-4" />
-                    <span>📋 Recently Added</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-950/30 font-semibold py-3 rounded-md mt-2 flex items-center gap-2"
-                    onClick={() => navigate("/risk-dashboard")}
-                  >
-                    <AlertTriangle className="w-4 h-4" />
-                    <span>🚨 Risk Dashboard</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
-                    onClick={() => navigate("/pipeline-tenants")}
-                  >
-                    <Clock className="w-4 h-4" />
-                    <span>⏳ Pipeline Conversion</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer bg-purple-50 dark:bg-purple-950/20 text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
-                    onClick={() => navigate("/pipeline-analytics")}
-                  >
-                    <BarChart3 className="w-4 h-4" />
-                    <span>📊 Pipeline Analytics</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
-                    onClick={() => navigate("/agent-management")}
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>👥 Agent Management</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
-                    onClick={() => navigate("/landlord-management")}
-                  >
-                    <Building2 className="w-4 h-4" />
-                    <span>🏢 Landlord Management</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="p-0 mt-2"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <div className="w-full px-2">
-                      <LandlordGroupedExport />
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="p-0 mt-2"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <BulkUploadTenants />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="p-0 mt-2"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <BulkUploadPipelineTenants />
-                  </DropdownMenuItem>
+                  <ScrollArea className="h-[600px]">
+                    <DropdownMenuItem 
+                      className="cursor-pointer bg-red-600 text-white hover:bg-red-700 font-bold text-lg py-5 mb-3 rounded-md animate-fade-in flex items-center gap-3"
+                      onClick={() => navigate("/missed-payments")}
+                    >
+                      <AlertTriangle className="w-7 h-7 animate-bounce" />
+                      <div className="flex flex-col">
+                        <span>🚨 Late Payments</span>
+                        <span className="text-xs font-normal opacity-90">Overdue tenants</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer flex items-center gap-3 py-4 text-base"
+                      onClick={() => navigate("/executive-dashboard")}
+                    >
+                      <BarChart3 className="w-6 h-6 text-primary" />
+                      <div className="flex flex-col">
+                        <span className="font-semibold">📊 Reports</span>
+                        <span className="text-xs text-muted-foreground">View all data</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer flex items-center gap-2 py-3" 
+                      onClick={() => navigate("/admin-login")}
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Admin Dashboard</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer flex items-center gap-2 py-3"
+                      onClick={() => navigate("/withdrawal-history")}
+                    >
+                      <DollarSign className="w-4 h-4" />
+                      <span>💰 Withdrawal History</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer flex items-center gap-2 py-3"
+                      onClick={() => navigate("/agent-dashboard")}
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      <span>Agent Dashboard</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer flex items-center gap-2 py-3"
+                      onClick={() => navigate("/agent-portal-login")}
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>🔐 Agent Portal</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer flex items-center gap-2 py-3"
+                      onClick={() => navigate("/top-performers")}
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                      <span>Top Performers</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer flex items-center gap-2 py-3"
+                      onClick={() => navigate("/recording-activity")}
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span>⭐ Recording Activity</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer flex items-center gap-2 py-3"
+                      onClick={() => navigate("/recently-added")}
+                    >
+                      <Plus className="w-4 w-4" />
+                      <span>📋 Recently Added</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-950/30 font-semibold py-3 rounded-md mt-2 flex items-center gap-2"
+                      onClick={() => navigate("/risk-dashboard")}
+                    >
+                      <AlertTriangle className="w-4 h-4" />
+                      <span>🚨 Risk Dashboard</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
+                      onClick={() => navigate("/pipeline-tenants")}
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span>⏳ Pipeline Conversion</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer bg-purple-50 dark:bg-purple-950/20 text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
+                      onClick={() => navigate("/pipeline-analytics")}
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      <span>📊 Pipeline Analytics</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
+                      onClick={() => navigate("/agent-management")}
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>👥 Agent Management</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/30 font-semibold py-3 rounded-md mt-1 flex items-center gap-2"
+                      onClick={() => navigate("/landlord-management")}
+                    >
+                      <Building2 className="w-4 h-4" />
+                      <span>🏢 Landlord Management</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="p-0 mt-2"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <div className="w-full px-2">
+                        <LandlordGroupedExport />
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="p-0 mt-2"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <BulkUploadTenants />
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="p-0 mt-2"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <BulkUploadPipelineTenants />
+                    </DropdownMenuItem>
+                  </ScrollArea>
                 </DropdownMenuContent>
               </DropdownMenu>
               <QuickAddTenantForm />
