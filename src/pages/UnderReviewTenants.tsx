@@ -47,11 +47,13 @@ import {
   ChevronsLeft,
   ChevronsRight,
   FileText,
+  RotateCcw,
 } from "lucide-react";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import * as XLSX from "xlsx";
+import { RestoreTenantDialog } from "@/components/RestoreTenantDialog";
 
 const UnderReviewTenants = () => {
   const navigate = useNavigate();
@@ -68,6 +70,9 @@ const UnderReviewTenants = () => {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<{ id: string; name: string } | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Get unique districts and rejection reasons for filters
   const uniqueDistricts = Array.from(new Set(tenants?.map(t => t.location_district).filter(Boolean))) as string[];
@@ -182,6 +187,54 @@ const UnderReviewTenants = () => {
       });
     } finally {
       setUpdatingTenant(null);
+    }
+  };
+
+  const handleRestoreTenant = (tenantId: string, tenantName: string) => {
+    setSelectedTenant({ id: tenantId, name: tenantName });
+    setShowRestoreDialog(true);
+  };
+
+  const handleRestoreConfirm = async (reason: string) => {
+    if (!selectedTenant) return;
+
+    setIsRestoring(true);
+
+    try {
+      const { error } = await supabase
+        .from("tenants")
+        .update({
+          status: "pending",
+          rejection_notes: `${reason}\n\n[Previous notes: ${selectedTenant ? (tenants?.find(t => t.id === selectedTenant.id)?.rejection_notes || "None") : "None"}]`,
+          edited_at: new Date().toISOString(),
+          edited_by: "Admin"
+        })
+        .eq("id", selectedTenant.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Tenant Restored",
+        description: `${selectedTenant.name} has been restored to pending status`,
+      });
+
+      setShowRestoreDialog(false);
+      setSelectedTenant(null);
+
+      queryClient.invalidateQueries({ queryKey: ["under-review-tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["under-review-tenants-count"] });
+      queryClient.invalidateQueries({ queryKey: ["pending-tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["pending-tenants-count"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+    } catch (error: any) {
+      console.error("Error restoring tenant:", error);
+      toast({
+        title: "Restoration Failed",
+        description: error.message || "Failed to restore tenant to pending",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -506,8 +559,20 @@ const UnderReviewTenants = () => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => navigate(`/tenant/${tenant.id}`)}
+                                title="View Details"
                               >
                                 <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRestoreTenant(tenant.id, tenant.name)}
+                                disabled={isRestoring}
+                                className="text-primary hover:bg-primary/10"
+                                title="Restore to Pending"
+                              >
+                                <RotateCcw className="h-4 w-4 mr-1" />
+                                Restore
                               </Button>
                               <Select
                                 value={tenant.status}
@@ -588,6 +653,17 @@ const UnderReviewTenants = () => {
           </CardContent>
         </Card>
       </div>
+
+      <RestoreTenantDialog
+        open={showRestoreDialog}
+        onClose={() => {
+          setShowRestoreDialog(false);
+          setSelectedTenant(null);
+        }}
+        onConfirm={handleRestoreConfirm}
+        tenantName={selectedTenant?.name || ""}
+        isSubmitting={isRestoring}
+      />
     </div>
   );
 };
