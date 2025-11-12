@@ -392,15 +392,36 @@ const AgentDashboard = () => {
 
         {/* Summary Cards */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-4 mb-8">
+          <div 
+            className="grid gap-6 md:grid-cols-4 mb-8"
+            role="region"
+            aria-busy="true"
+            aria-label="Loading agent commission statistics"
+          >
+            <span className="sr-only">Loading agent earnings and commission data...</span>
             {Array.from({ length: 4 }).map((_, index) => (
               <Card key={index} className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
-                    <Skeleton variant="fast" delay={index * 100} className="h-4 w-32" />
-                    <Skeleton variant="slow" delay={index * 100 + 50} className="h-8 w-full" />
+                    <Skeleton 
+                      variant="fast" 
+                      delay={index * 100} 
+                      className="h-4 w-32"
+                      ariaLabel={`Loading statistic ${index + 1} label`}
+                    />
+                    <Skeleton 
+                      variant="slow" 
+                      delay={index * 100 + 50} 
+                      className="h-8 w-full"
+                      ariaLabel={`Loading statistic ${index + 1} value`}
+                    />
                   </div>
-                  <Skeleton variant="default" delay={index * 100 + 100} className="h-12 w-12 rounded-lg" />
+                  <Skeleton 
+                    variant="default" 
+                    delay={index * 100 + 100} 
+                    className="h-12 w-12 rounded-lg"
+                    ariaLabel="Loading icon"
+                  />
                 </div>
               </Card>
             ))}
@@ -521,9 +542,21 @@ const AgentDashboard = () => {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div 
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+            role="region"
+            aria-busy="true"
+            aria-label="Loading agent profiles"
+          >
+            <span className="sr-only">Loading agent profile cards...</span>
             {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} variant="slow" delay={i * 80} className="h-[180px]" />
+              <Skeleton 
+                key={i} 
+                variant="slow" 
+                delay={i * 80} 
+                className="h-[180px]"
+                ariaLabel={`Loading agent ${i + 1} profile`}
+              />
             ))}
           </div>
         )}
@@ -812,9 +845,21 @@ const AgentDashboard = () => {
               Tenants ({agentTenants.length})
             </h2>
             {tenantsLoading ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div 
+                className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+                role="region"
+                aria-busy="true"
+                aria-label="Loading agent tenants"
+              >
+                <span className="sr-only">Loading tenant information for this agent...</span>
                 {[...Array(6)].map((_, i) => (
-                  <Skeleton key={i} variant="slow" delay={i * 80} className="h-[300px]" />
+                  <Skeleton 
+                    key={i} 
+                    variant="slow" 
+                    delay={i * 80} 
+                    className="h-[300px]"
+                    ariaLabel={`Loading tenant ${i + 1} card`}
+                  />
                 ))}
               </div>
             ) : agentTenants.length > 0 ? (

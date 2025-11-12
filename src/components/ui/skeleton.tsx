@@ -3,9 +3,17 @@ import { cn } from "@/lib/utils";
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "fast" | "slow";
   delay?: number;
+  ariaLabel?: string;
 }
 
-function Skeleton({ className, variant = "default", delay = 0, style, ...props }: SkeletonProps) {
+function Skeleton({ 
+  className, 
+  variant = "default", 
+  delay = 0, 
+  style, 
+  ariaLabel = "Loading content",
+  ...props 
+}: SkeletonProps) {
   const animationDuration = {
     default: "2s",
     fast: "1.5s",
@@ -26,14 +34,20 @@ function Skeleton({ className, variant = "default", delay = 0, style, ...props }
         "--animation-duration": animationDuration,
         animationDelay: `${delay}ms`,
       }}
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+      aria-label={ariaLabel}
       {...props}
     >
+      <span className="sr-only">{ariaLabel}</span>
       <div
         className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent"
         style={{
           animation: `shimmer ${animationDuration} infinite`,
           animationDelay: `${delay + 200}ms`, // Shimmer starts 200ms after fade-in
         }}
+        aria-hidden="true"
       />
     </div>
   );

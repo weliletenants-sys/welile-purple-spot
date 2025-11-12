@@ -157,15 +157,36 @@ const AgentPerformanceDashboard = () => {
 
         {/* Summary Cards */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div 
+            className="grid grid-cols-1 md:grid-cols-4 gap-4"
+            role="region"
+            aria-busy="true"
+            aria-label="Loading performance metrics"
+          >
+            <span className="sr-only">Loading agent performance statistics...</span>
             {Array.from({ length: 4 }).map((_, index) => (
               <Card key={index}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <Skeleton variant="fast" delay={index * 100} className="h-4 w-24" />
-                  <Skeleton variant="fast" delay={index * 100 + 50} className="h-4 w-4 rounded" />
+                  <Skeleton 
+                    variant="fast" 
+                    delay={index * 100} 
+                    className="h-4 w-24"
+                    ariaLabel={`Loading metric ${index + 1} label`}
+                  />
+                  <Skeleton 
+                    variant="fast" 
+                    delay={index * 100 + 50} 
+                    className="h-4 w-4 rounded"
+                    ariaLabel="Loading icon"
+                  />
                 </CardHeader>
                 <CardContent>
-                  <Skeleton variant="default" delay={index * 100 + 100} className="h-8 w-32" />
+                  <Skeleton 
+                    variant="default" 
+                    delay={index * 100 + 100} 
+                    className="h-8 w-32"
+                    ariaLabel={`Loading metric ${index + 1} value`}
+                  />
                 </CardContent>
               </Card>
             ))}
@@ -240,10 +261,21 @@ const AgentPerformanceDashboard = () => {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-4">
+              <div 
+                className="space-y-4"
+                role="region"
+                aria-busy="true"
+                aria-label="Loading agent performance table"
+              >
+                <span className="sr-only">Loading detailed agent performance data...</span>
                 {Array.from({ length: 5 }).map((_, index) => (
                   <div key={index} className="flex items-center gap-4">
-                    <Skeleton variant="slow" delay={index * 100} className="h-12 w-full" />
+                    <Skeleton 
+                      variant="slow" 
+                      delay={index * 100} 
+                      className="h-12 w-full"
+                      ariaLabel={`Loading agent ${index + 1} performance row`}
+                    />
                   </div>
                 ))}
               </div>
