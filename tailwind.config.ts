@@ -103,12 +103,21 @@ export default {
             opacity: "1",
           },
         },
+        "shimmer": {
+          "0%": {
+            transform: "translateX(-100%)",
+          },
+          "100%": {
+            transform: "translateX(100%)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "slide-down": "slide-down 0.3s ease-out",
         "slide-up": "slide-up 0.3s ease-out",
+        "shimmer": "shimmer 2s infinite",
       },
     },
   },
