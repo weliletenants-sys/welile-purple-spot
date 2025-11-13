@@ -60,18 +60,18 @@ export function TeamActivityFeed({ teamId }: TeamActivityFeedProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="h-5 w-5 text-primary" />
+      <CardHeader className="px-4 sm:px-6 py-4">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg flex-wrap">
+          <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           Team Activity Feed
-          <Badge variant="secondary" className="ml-auto">
+          <Badge variant="secondary" className="ml-auto text-xs">
             Live
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[600px]">
-          <div className="px-6 py-4 space-y-4">
+        <ScrollArea className="h-[500px] sm:h-[600px]">
+          <div className="px-3 sm:px-6 py-4 space-y-3 sm:space-y-4">
             {activities.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 No activities yet. Start working together!
@@ -84,15 +84,15 @@ export function TeamActivityFeed({ teamId }: TeamActivityFeedProps) {
                 return (
                   <div
                     key={activity.id}
-                    className="flex gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className={`flex-shrink-0 ${iconColor}`}>
-                      <Icon className="h-5 w-5" />
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start gap-2">
-                        <Avatar className="h-8 w-8 flex-shrink-0">
+                        <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
                           <AvatarFallback className="text-xs">
                             {activity.user_name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
@@ -100,7 +100,7 @@ export function TeamActivityFeed({ teamId }: TeamActivityFeedProps) {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-sm">
+                            <span className="font-medium text-xs sm:text-sm">
                               {activity.user_name}
                             </span>
                             <Badge variant="outline" className="text-xs">
@@ -108,7 +108,7 @@ export function TeamActivityFeed({ teamId }: TeamActivityFeedProps) {
                             </Badge>
                           </div>
                           
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             {activity.description}
                           </p>
                           

@@ -132,15 +132,15 @@ export function TeamChat({ teamId, userIdentifier, userName }: TeamChatProps) {
   };
 
   return (
-    <Card className="h-[600px] flex flex-col">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5 text-primary" />
+    <Card className="h-[500px] sm:h-[600px] flex flex-col">
+      <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6 pt-4 sm:pt-6">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           Team Chat
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0">
-        <ScrollArea className="flex-1 px-6">
+        <ScrollArea className="flex-1 px-3 sm:px-6">
           <div className="space-y-4 pb-4">
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
@@ -152,28 +152,28 @@ export function TeamChat({ teamId, userIdentifier, userName }: TeamChatProps) {
                 return (
                   <div
                     key={msg.id}
-                    className={`flex gap-3 ${isOwnMessage ? "flex-row-reverse" : ""}`}
+                    className={`flex gap-2 sm:gap-3 ${isOwnMessage ? "flex-row-reverse" : ""}`}
                   >
-                    <Avatar className="h-8 w-8 flex-shrink-0">
+                    <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
                       <AvatarFallback className="text-xs">
                         {msg.user_name.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className={`flex-1 max-w-[70%] ${isOwnMessage ? "items-end" : ""}`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">{msg.user_name}</span>
+                    <div className={`flex-1 max-w-[85%] sm:max-w-[75%] md:max-w-[70%] ${isOwnMessage ? "items-end" : ""}`}>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-xs sm:text-sm font-medium">{msg.user_name}</span>
                         <span className="text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                         </span>
                       </div>
                       <div
-                        className={`group relative rounded-lg px-4 py-2 ${
+                        className={`group relative rounded-lg px-3 sm:px-4 py-2 ${
                           isOwnMessage
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted"
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap break-words">
+                        <p className="text-xs sm:text-sm whitespace-pre-wrap break-words">
                           {msg.message}
                         </p>
                         {isOwnMessage && (
@@ -196,7 +196,7 @@ export function TeamChat({ teamId, userIdentifier, userName }: TeamChatProps) {
           </div>
         </ScrollArea>
 
-        <div className="border-t p-4">
+        <div className="border-t p-3 sm:p-4">
           <div className="flex gap-2">
             <Input
               placeholder="Type your message..."
@@ -204,14 +204,15 @@ export function TeamChat({ teamId, userIdentifier, userName }: TeamChatProps) {
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={isLoading}
-              className="flex-1"
+              className="flex-1 text-sm"
             />
             <Button
               onClick={sendMessage}
               disabled={isLoading || !newMessage.trim()}
               size="icon"
+              className="h-9 w-9 sm:h-10 sm:w-10"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>

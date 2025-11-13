@@ -151,22 +151,22 @@ export default function TeamEarningsLeaderboard() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold flex items-center gap-2">
-            <Users className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold flex items-center gap-2">
+            <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             Team Earnings Leaderboard
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
             Form teams and compete for collective earnings milestones
           </p>
         </div>
         
         {agentIdentifier && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {userTeam ? (
-              <Button variant="outline" onClick={handleLeaveTeam}>
+              <Button variant="outline" onClick={handleLeaveTeam} className="flex-1 sm:flex-none">
                 Leave Team
               </Button>
             ) : (
@@ -191,7 +191,7 @@ export default function TeamEarningsLeaderboard() {
             )}
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-6">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">{userTeam.member_count} members</span>
@@ -214,70 +214,70 @@ export default function TeamEarningsLeaderboard() {
         </Card>
       )}
 
-      <Tabs defaultValue="leaderboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 max-w-3xl">
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
-          <TabsTrigger value="activity" disabled={!userTeam}>Activity</TabsTrigger>
-          <TabsTrigger value="chat" disabled={!userTeam}>Chat</TabsTrigger>
+      <Tabs defaultValue="leaderboard" className="space-y-4 md:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-3xl">
+          <TabsTrigger value="leaderboard" className="text-xs sm:text-sm">Leaderboard</TabsTrigger>
+          <TabsTrigger value="achievements" className="text-xs sm:text-sm">Achievements</TabsTrigger>
+          <TabsTrigger value="activity" disabled={!userTeam} className="text-xs sm:text-sm">Activity</TabsTrigger>
+          <TabsTrigger value="chat" disabled={!userTeam} className="text-xs sm:text-sm">Chat</TabsTrigger>
         </TabsList>
 
         <TabsContent value="leaderboard" className="space-y-4">
           {/* Top 3 Podium */}
           {teamEarnings && teamEarnings.length >= 3 && (
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              {/* 2nd Place */}
-              <Card className="mt-12">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8">
+              {/* 1st Place - Show first on mobile */}
+              <Card className="sm:col-start-2 sm:row-start-1 border-yellow-500 bg-gradient-to-b from-yellow-500/20 to-transparent">
                 <CardHeader className="text-center pb-3">
                   <div className="flex justify-center mb-2">
-                    <Medal className="h-12 w-12 text-gray-400" />
+                    <Crown className="h-12 sm:h-16 w-12 sm:w-16 text-yellow-500" />
                   </div>
-                  <CardTitle className="text-lg">{teamEarnings[1].name}</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">{teamEarnings[0].name}</CardTitle>
+                  <Badge className="mx-auto bg-yellow-500">Champion</Badge>
+                </CardHeader>
+                <CardContent className="text-center space-y-1">
+                  <p className="text-2xl sm:text-3xl font-bold text-yellow-500">
+                    {formatCurrency(teamEarnings[0].total_earnings)}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    {teamEarnings[0].member_count} members
+                  </p>
+                </CardContent>
+              </Card>
+              
+              {/* 2nd Place */}
+              <Card className="sm:col-start-1 sm:row-start-1 sm:mt-12">
+                <CardHeader className="text-center pb-3">
+                  <div className="flex justify-center mb-2">
+                    <Medal className="h-10 sm:h-12 w-10 sm:w-12 text-gray-400" />
+                  </div>
+                  <CardTitle className="text-base sm:text-lg">{teamEarnings[1].name}</CardTitle>
                   <Badge variant="secondary" className="mx-auto">Silver</Badge>
                 </CardHeader>
                 <CardContent className="text-center space-y-1">
-                  <p className="text-2xl font-bold text-gray-400">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-400">
                     {formatCurrency(teamEarnings[1].total_earnings)}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {teamEarnings[1].member_count} members
                   </p>
                 </CardContent>
               </Card>
 
-              {/* 1st Place */}
-              <Card className="border-yellow-500 bg-gradient-to-b from-yellow-500/20 to-transparent">
-                <CardHeader className="text-center pb-3">
-                  <div className="flex justify-center mb-2">
-                    <Crown className="h-16 w-16 text-yellow-500" />
-                  </div>
-                  <CardTitle className="text-xl">{teamEarnings[0].name}</CardTitle>
-                  <Badge className="mx-auto bg-yellow-500">Champion</Badge>
-                </CardHeader>
-                <CardContent className="text-center space-y-1">
-                  <p className="text-3xl font-bold text-yellow-500">
-                    {formatCurrency(teamEarnings[0].total_earnings)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {teamEarnings[0].member_count} members
-                  </p>
-                </CardContent>
-              </Card>
-
               {/* 3rd Place */}
-              <Card className="mt-12">
+              <Card className="sm:col-start-3 sm:row-start-1 sm:mt-12">
                 <CardHeader className="text-center pb-3">
                   <div className="flex justify-center mb-2">
-                    <Award className="h-12 w-12 text-orange-600" />
+                    <Award className="h-10 sm:h-12 w-10 sm:w-12 text-orange-600" />
                   </div>
-                  <CardTitle className="text-lg">{teamEarnings[2].name}</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">{teamEarnings[2].name}</CardTitle>
                   <Badge variant="secondary" className="mx-auto">Bronze</Badge>
                 </CardHeader>
                 <CardContent className="text-center space-y-1">
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className="text-xl sm:text-2xl font-bold text-orange-600">
                     {formatCurrency(teamEarnings[2].total_earnings)}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {teamEarnings[2].member_count} members
                   </p>
                 </CardContent>
@@ -294,40 +294,40 @@ export default function TeamEarningsLeaderboard() {
 
               return (
                 <Card key={team.id} className={isUserTeam ? "border-primary bg-primary/5" : ""}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex flex-col items-center min-w-12">
+                  <CardContent className="p-3 sm:p-4 md:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 sm:justify-between">
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <div className="flex flex-col items-center min-w-10 sm:min-w-12">
                           {team.rank <= 3 ? (
-                            <Trophy className={`h-8 w-8 ${
+                            <Trophy className={`h-6 w-6 sm:h-8 sm:w-8 ${
                               team.rank === 1 ? "text-yellow-500" :
                               team.rank === 2 ? "text-gray-400" :
                               "text-orange-600"
                             }`} />
                           ) : (
-                            <Badge variant="outline" className="text-lg font-bold">
+                            <Badge variant="outline" className="text-sm sm:text-lg font-bold">
                               #{team.rank}
                             </Badge>
                           )}
                         </div>
 
-                        <Avatar className="h-12 w-12">
-                          <AvatarFallback className="text-lg">
+                        <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
+                          <AvatarFallback className="text-base sm:text-lg">
                             {team.name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
 
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg">{team.name}</h3>
-                            {isUserTeam && <Badge variant="default">Your Team</Badge>}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-base sm:text-lg truncate">{team.name}</h3>
+                            {isUserTeam && <Badge variant="default" className="text-xs">Your Team</Badge>}
                           </div>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <div className="flex items-center gap-2 sm:gap-4 mt-1 flex-wrap">
+                            <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                               <Users className="h-3 w-3" />
                               {team.member_count} members
                             </span>
-                            <Badge variant="secondary" className="flex items-center gap-1">
+                            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                               <LevelIcon className={`h-3 w-3 ${level.color}`} />
                               {level.name}
                             </Badge>
@@ -335,11 +335,11 @@ export default function TeamEarningsLeaderboard() {
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">
+                      <div className="text-left sm:text-right ml-12 sm:ml-0">
+                        <p className="text-xl sm:text-2xl font-bold text-primary">
                           {formatCurrency(team.total_earnings)}
                         </p>
-                        <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 mt-1 text-xs sm:text-sm text-muted-foreground">
                           <span>Commission: {formatCurrency(team.total_commission)}</span>
                           <span>Bonuses: {formatCurrency(team.total_bonuses)}</span>
                         </div>
