@@ -63,21 +63,22 @@ const AgentPortal = () => {
       const startDate = format(startOfMonth(new Date()), 'yyyy-MM-dd');
       const endDate = format(endOfMonth(new Date()), 'yyyy-MM-dd');
 
-      // Fetch tenants managed by this agent
-      const { data: allTenants } = await supabase
+      // Get agent by name first
+      const { data: agentData } = await supabase
+        .from('agents')
+        .select('id')
+        .eq('name', name)
+        .maybeSingle();
+      
+      if (!agentData) {
+        throw new Error('Agent not found');
+      }
+
+      // Fetch tenants managed by this agent using agent_id
+      const { data: tenants } = await supabase
         .from('tenants')
-        .select('id, agent_name, agent_phone')
-        .eq('agent_name', name);
-      
-      // Get agent phone from session storage
-      const agentPhone = sessionStorage.getItem('agentPhone');
-      const normalizedAgentPhone = agentPhone?.replace(/\s/g, '');
-      
-      // Filter by matching agent name OR normalized phone number
-      const tenants = allTenants?.filter(t => {
-        const normalizedTenantPhone = t.agent_phone?.replace(/\s/g, '');
-        return t.agent_name === name || normalizedTenantPhone === normalizedAgentPhone;
-      });
+        .select('id')
+        .eq('agent_id', agentData.id);
 
       const tenantIds = tenants?.map(t => t.id) || [];
 

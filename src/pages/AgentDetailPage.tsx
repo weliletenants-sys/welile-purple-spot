@@ -35,16 +35,32 @@ const AgentDetailPage = () => {
   const { tenants } = useTenants();
   const [sortBy, setSortBy] = useState<"name" | "balance" | "status">("balance");
 
-  // Filter tenants for this agent (normalize phone numbers by removing spaces)
-  const agentTenants = useMemo(() => {
-    const normalizedAgentPhone = agentPhone?.replace(/\s/g, '');
-    return tenants?.filter((t) => {
-      const normalizedTenantPhone = t.agentPhone?.replace(/\s/g, '');
-      return normalizedTenantPhone === normalizedAgentPhone;
-    }) || [];
-  }, [tenants, agentPhone]);
+  // Get agent by phone and filter tenants for this agent
+  const { data: agents } = useQuery({
+    queryKey: ["agents"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agents")
+        .select("id, name, phone")
+        .eq("is_active", true);
+      if (error) throw error;
+      return data;
+    },
+  });
 
-  const agentName = agentTenants[0]?.agentName || "Unknown Agent";
+  const currentAgent = useMemo(() => {
+    if (!agents || !agentPhone) return null;
+    const normalizedAgentPhone = agentPhone.replace(/\s/g, '');
+    return agents.find(a => a.phone?.replace(/\s/g, '') === normalizedAgentPhone);
+  }, [agents, agentPhone]);
+
+  // Filter tenants for this agent using agent_id
+  const agentTenants = useMemo(() => {
+    if (!currentAgent?.id) return [];
+    return tenants?.filter((t) => (t as any).agent_id === currentAgent.id) || [];
+  }, [tenants, currentAgent]);
+
+  const agentName = currentAgent?.name || agentTenants[0]?.agentName || "Unknown Agent";
 
   // Fetch all payments for this agent's tenants
   const { data: payments } = useQuery({

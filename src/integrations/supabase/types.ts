@@ -643,6 +643,39 @@ export type Database = {
         }
         Relationships: []
       }
+      team_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string
+          id: string
+          metadata: Json | null
+          team_id: string
+          user_identifier: string
+          user_name: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description: string
+          id?: string
+          metadata?: Json | null
+          team_id: string
+          user_identifier: string
+          user_name: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          team_id?: string
+          user_identifier?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           id: string
@@ -674,6 +707,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      team_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          team_id: string
+          updated_at: string
+          user_identifier: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          team_id: string
+          updated_at?: string
+          user_identifier: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          team_id?: string
+          updated_at?: string
+          user_identifier?: string
+          user_name?: string
+        }
+        Relationships: []
       }
       teams: {
         Row: {
@@ -824,6 +887,7 @@ export type Database = {
         Row: {
           access_fee: number
           address: string
+          agent_id: string | null
           agent_name: string
           agent_phone: string
           contact: string
@@ -860,6 +924,7 @@ export type Database = {
         Insert: {
           access_fee?: number
           address: string
+          agent_id?: string | null
           agent_name?: string
           agent_phone?: string
           contact: string
@@ -896,6 +961,7 @@ export type Database = {
         Update: {
           access_fee?: number
           address?: string
+          agent_id?: string | null
           agent_name?: string
           agent_phone?: string
           contact?: string
@@ -929,7 +995,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tenants_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_achievements: {
         Row: {
