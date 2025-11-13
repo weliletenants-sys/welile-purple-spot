@@ -700,77 +700,81 @@ const Index = () => {
           </div>
         )}
 
-        {/* Agents List Section */}
-        <Card className="animate-fade-in">
-          <CardHeader>
+        {/* Agents List Section - Prominent Display */}
+        <Card className="animate-fade-in bg-gradient-to-br from-primary/10 via-background to-primary/5 border-2 border-primary/30 shadow-xl">
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <Users className="h-6 w-6 text-primary" />
-                Our Agents ({agents?.length || 0})
-              </CardTitle>
-              <Link to="/agent-management">
-                <Button variant="outline" size="sm">
-                  View Details
-                </Button>
-              </Link>
+              <div>
+                <CardTitle className="text-3xl flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-lg bg-primary/20">
+                    <Users className="h-8 w-8 text-primary" />
+                  </div>
+                  Our Agents
+                </CardTitle>
+                <p className="text-muted-foreground text-base">Click on any agent to view and manage their tenants</p>
+              </div>
+              <Badge variant="secondary" className="text-xl px-6 py-3 font-bold">
+                {agents?.length || 0} Active
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
             {!agents || agents.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No agents available</p>
+              <p className="text-center py-16 text-muted-foreground text-lg">No agents available</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {agents.map((agent) => {
-                  // Calculate agent stats
                   const agentTenants = allTenants?.filter(t => t.agent_phone === agent.phone) || [];
                   const activeTenants = agentTenants.filter(t => t.status === 'active').length;
                   
                   return (
                     <Card 
                       key={agent.id} 
-                      className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-primary/50"
+                      className="hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 hover:border-primary hover:scale-105 bg-card group"
                       onClick={() => navigate(`/agent/${encodeURIComponent(agent.phone || agent.name)}`)}
                     >
-                      <CardContent className="p-5 space-y-3">
-                        {/* Agent Name */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-lg truncate">{agent.name}</h3>
+                      <CardContent className="p-6 space-y-4">
+                        {/* Agent Avatar & Name */}
+                        <div className="flex flex-col items-center text-center gap-3">
+                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Users className="h-10 w-10 text-primary" />
+                          </div>
+                          <div className="w-full">
+                            <h3 className="font-bold text-xl mb-1 line-clamp-2">{agent.name}</h3>
                             {agent.phone && (
-                              <div className="flex items-center gap-2 mt-1">
-                                <Phone className="h-3 w-3 text-muted-foreground" />
-                                <p className="text-sm text-muted-foreground truncate">{agent.phone}</p>
+                              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                <Phone className="h-4 w-4" />
+                                <p className="text-sm truncate">{agent.phone}</p>
                               </div>
                             )}
                           </div>
-                          <Badge variant="secondary" className="flex-shrink-0">
-                            {agentTenants.length}
-                          </Badge>
                         </div>
                         
                         {/* Agent Stats */}
-                        <div className="pt-3 border-t space-y-2 text-sm">
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Total Tenants:</span>
-                            <span className="font-semibold">{agentTenants.length}</span>
+                        <div className="pt-4 border-t space-y-3">
+                          <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                            <span className="text-sm font-medium">Total Tenants</span>
+                            <Badge variant="secondary" className="text-base px-3 py-1">
+                              {agentTenants.length}
+                            </Badge>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Active:</span>
-                            <span className="font-semibold text-green-600">{activeTenants}</span>
+                          <div className="flex justify-between items-center p-3 bg-green-500/10 rounded-lg hover:bg-green-500/20 transition-colors">
+                            <span className="text-sm font-medium">Active</span>
+                            <Badge className="bg-green-600 hover:bg-green-700 text-base px-3 py-1">
+                              {activeTenants}
+                            </Badge>
                           </div>
                         </div>
                         
                         {/* View Button */}
                         <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full mt-2"
+                          className="w-full text-base py-6 font-semibold"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/agent/${encodeURIComponent(agent.phone || agent.name)}`);
                           }}
                         >
-                          View Tenants
+                          View & Manage Tenants
                         </Button>
                       </CardContent>
                     </Card>

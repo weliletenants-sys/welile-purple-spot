@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -25,6 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AgentAddTenantDialog } from "@/components/AgentAddTenantDialog";
+import { AgentQuickAddDialog } from "@/components/AgentQuickAddDialog";
+import { AgentPipelineDialog } from "@/components/AgentPipelineDialog";
 
 const AgentDetailPage = () => {
   const navigate = useNavigate();
@@ -150,21 +153,29 @@ const AgentDetailPage = () => {
   }, [agentTenants]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/agent-performance")}>
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-4xl font-bold">{agentName}</h1>
-            <p className="text-muted-foreground text-lg">{agentPhone}</p>
+            <h1 className="text-3xl font-bold">{agentName}</h1>
+            <p className="text-muted-foreground">{agentPhone}</p>
           </div>
         </div>
+        
+        {/* Action Buttons */}
+        <div className="flex gap-2 flex-wrap">
+          <AgentAddTenantDialog agentName={agentName} agentPhone={agentPhone || ""} />
+          <AgentQuickAddDialog agentName={agentName} agentPhone={agentPhone || ""} />
+          <AgentPipelineDialog agentName={agentName} agentPhone={agentPhone || ""} />
+        </div>
+      </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
@@ -213,8 +224,8 @@ const AgentDetailPage = () => {
           </Card>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="portfolio" className="space-y-4">
+      {/* Tabs */}
+      <Tabs defaultValue="portfolio" className="space-y-4">
           <TabsList>
             <TabsTrigger value="portfolio">Tenant Portfolio</TabsTrigger>
             <TabsTrigger value="trends">Performance Trends</TabsTrigger>
@@ -537,8 +548,7 @@ const AgentDetailPage = () => {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
-      </div>
+      </Tabs>
     </div>
   );
 };
