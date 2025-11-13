@@ -33,7 +33,7 @@ const AgentDetailPage = () => {
   const navigate = useNavigate();
   const { agentPhone } = useParams<{ agentPhone: string }>();
   const { tenants } = useTenants();
-  const [sortBy, setSortBy] = useState<"name" | "balance" | "status">("balance");
+  const [sortBy, setSortBy] = useState<"name" | "balance-high" | "balance-low" | "status">("balance-high");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
 
   // Get agent by phone and filter tenants for this agent
@@ -277,7 +277,8 @@ const AgentDetailPage = () => {
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
-                  <SelectItem value="balance">Sort by Balance</SelectItem>
+                  <SelectItem value="balance-high">Balance: Highest First</SelectItem>
+                  <SelectItem value="balance-low">Balance: Lowest First</SelectItem>
                   <SelectItem value="name">Sort by Name</SelectItem>
                   <SelectItem value="status">Sort by Status</SelectItem>
                 </SelectContent>
@@ -320,8 +321,10 @@ const AgentDetailPage = () => {
 
                         // Sort based on selected option
                         const sortedTenants = [...tenantsWithBalances].sort((a, b) => {
-                          if (sortBy === "balance") {
-                            return b.balance - a.balance;
+                          if (sortBy === "balance-high") {
+                            return b.balance - a.balance; // Highest first
+                          } else if (sortBy === "balance-low") {
+                            return a.balance - b.balance; // Lowest first
                           } else if (sortBy === "name") {
                             return a.tenant.name.localeCompare(b.tenant.name);
                           } else if (sortBy === "status") {
@@ -383,8 +386,10 @@ const AgentDetailPage = () => {
 
                       // Sort based on selected option
                       const sortedTenants = [...tenantsWithBalances].sort((a, b) => {
-                        if (sortBy === "balance") {
-                          return b.balance - a.balance; // Highest balance first
+                        if (sortBy === "balance-high") {
+                          return b.balance - a.balance; // Highest first
+                        } else if (sortBy === "balance-low") {
+                          return a.balance - b.balance; // Lowest first
                         } else if (sortBy === "name") {
                           return a.tenant.name.localeCompare(b.tenant.name);
                         } else if (sortBy === "status") {
