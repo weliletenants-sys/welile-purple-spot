@@ -116,9 +116,9 @@ export const AddTenantForm = () => {
       rentAmount: "",
       registrationFee: "",
       accessFee: "",
-      repaymentDays: "60",
-      status: "pipeline",
-      paymentStatus: "pending",
+    repaymentDays: "60",
+    status: "pipeline",
+    paymentStatus: "pending",
       guarantor1Name: "",
       guarantor1Contact: "",
       guarantor2Name: "",
@@ -344,11 +344,8 @@ export const AddTenantForm = () => {
     if (!formData.agentName.trim()) missingFields.push("Agent Name");
     if (!formData.agentPhone.trim()) missingFields.push("Agent Phone");
     if (!formData.serviceCenter.trim()) missingFields.push("Service Center");
-    
-    if (formData.status !== "pipeline") {
-      if (!formData.landlord.trim()) missingFields.push("Landlord Name");
-      if (!formData.landlordContact.trim()) missingFields.push("Landlord Contact");
-    }
+    if (!formData.landlord.trim()) missingFields.push("Landlord Name");
+    if (!formData.landlordContact.trim()) missingFields.push("Landlord Contact");
 
     if (missingFields.length > 0) {
       toast({
@@ -393,7 +390,7 @@ export const AddTenantForm = () => {
         registrationFee: isPipeline ? 0 : parseFloat(formData.registrationFee || "0"),
         accessFee: isPipeline ? 0 : parseFloat(formData.accessFee || "0"),
         repaymentDays: isPipeline ? 60 : (parseInt(formData.repaymentDays) as 30 | 60 | 90),
-        status: formData.status as any,
+        status: (isPipeline ? "pending" : formData.status) as "active" | "pending" | "review" | "cleared" | "overdue",
         paymentStatus: formData.paymentStatus,
         performance: 80,
         guarantor1: (!isPipeline && formData.guarantor1Name.trim()) ? {
