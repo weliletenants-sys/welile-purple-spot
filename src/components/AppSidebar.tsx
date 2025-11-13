@@ -16,7 +16,8 @@ import {
   Target,
   Wallet,
   UserCog,
-  Activity
+  Activity,
+  Database
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -99,6 +100,7 @@ const navigationGroups = [
     items: [
       { title: "Landlord Management", url: "/landlord-management", icon: Building2 },
       { title: "Withdrawal History", url: "/withdrawal-history", icon: Wallet },
+      { title: "Data Cleanup", url: "/data-cleanup", icon: Database },
     ],
   },
 ];
