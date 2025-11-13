@@ -31,8 +31,6 @@ export const AgentAddTenantDialog = ({ agentName, agentPhone }: AgentAddTenantDi
     registrationFee: "10000",
     accessFee: "0",
     repaymentDays: "60" as "30" | "60" | "90",
-    status: "pending" as const,
-    paymentStatus: "pending" as const,
     serviceCenter: "",
   });
 
@@ -87,8 +85,8 @@ export const AgentAddTenantDialog = ({ agentName, agentPhone }: AgentAddTenantDi
         registrationFee: parseFloat(formData.registrationFee),
         accessFee: parseFloat(formData.accessFee),
         repaymentDays: parseInt(formData.repaymentDays) as 30 | 60 | 90,
-        status: formData.status,
-        paymentStatus: formData.paymentStatus,
+        status: "pending",
+        paymentStatus: "pending",
         performance: 80,
         location: {
           country: "Uganda",

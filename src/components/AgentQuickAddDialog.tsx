@@ -74,8 +74,8 @@ export const AgentQuickAddDialog = ({ agentName, agentPhone }: AgentQuickAddDial
         registrationFee: 0,
         accessFee: 0,
         repaymentDays: 60 as 30 | 60 | 90,
-        status: "pending" as const,
-        paymentStatus: "pending" as const,
+        status: "pending",
+        paymentStatus: "pending",
         performance: 80,
         location: {
           country: "Uganda",
