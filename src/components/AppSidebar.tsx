@@ -104,16 +104,19 @@ const navigationGroups = [
 ];
 
 export function AppSidebar() {
-  const { open } = useSidebar();
+  const { open, isMobile } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Track which groups are expanded
+  // Track which groups are expanded - default to collapsed on mobile
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     navigationGroups.forEach(group => {
-      const hasActiveRoute = group.items.some(item => currentPath.startsWith(item.url) && item.url !== "/");
-      initial[group.label] = hasActiveRoute || currentPath === "/" && group.label === "Overview";
+      const hasActiveRoute = group.items.some(item => 
+        item.url === "/" ? currentPath === "/" : currentPath.startsWith(item.url)
+      );
+      // On mobile, only expand the group with active route
+      initial[group.label] = !isMobile && (hasActiveRoute || currentPath === "/" && group.label === "Overview");
     });
     return initial;
   });
@@ -126,8 +129,8 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-border">
-      <SidebarContent className="px-2 py-4">
+    <Sidebar className="border-r border-border" collapsible="icon">
+      <SidebarContent className="px-2 py-2 sm:py-4">
         {navigationGroups.map((group) => {
           const isExpanded = expandedGroups[group.label];
           const hasActiveRoute = group.items.some(item => 
@@ -142,13 +145,13 @@ export function AppSidebar() {
             >
               <SidebarGroup>
                 <CollapsibleTrigger asChild>
-                  <SidebarGroupLabel className="cursor-pointer hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors flex items-center justify-between group">
-                    <span className={hasActiveRoute ? "text-primary font-semibold" : ""}>
-                      {group.label}
+                  <SidebarGroupLabel className="cursor-pointer hover:bg-accent/50 rounded-md px-2 py-1.5 sm:py-2 transition-colors flex items-center justify-between group">
+                    <span className={`text-xs sm:text-sm ${hasActiveRoute ? "text-primary font-semibold" : ""}`}>
+                      {open ? group.label : group.label.charAt(0)}
                     </span>
                     {open && (
                       <ChevronDown 
-                        className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} 
+                        className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} 
                       />
                     )}
                   </SidebarGroupLabel>
@@ -164,15 +167,15 @@ export function AppSidebar() {
 
                         return (
                           <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton asChild>
+                            <SidebarMenuButton asChild isActive={isActive}>
                               <NavLink 
                                 to={item.url} 
                                 end={item.url === "/"}
-                                className="flex items-center gap-3 hover:bg-accent/50 rounded-md transition-colors"
+                                className="flex items-center gap-2 sm:gap-3 hover:bg-accent/50 rounded-md transition-colors py-2"
                                 activeClassName="bg-primary/10 text-primary font-medium"
                               >
-                                <item.icon className="h-4 w-4 shrink-0" />
-                                {open && <span>{item.title}</span>}
+                                <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                                {open && <span className="text-xs sm:text-sm">{item.title}</span>}
                               </NavLink>
                             </SidebarMenuButton>
                           </SidebarMenuItem>

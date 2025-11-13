@@ -103,14 +103,14 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <CommandPalette />
-            <SidebarProvider>
+            <SidebarProvider defaultOpen={false}>
               <div className="flex min-h-screen w-full">
                 <AppSidebar />
-                <div className="flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col w-full">
                   <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                    <div className="flex h-14 items-center px-4 gap-4">
-                      <SidebarTrigger />
-                      <div className="flex-1">
+                    <div className="flex h-14 sm:h-16 items-center px-3 sm:px-4 gap-2 sm:gap-4">
+                      <SidebarTrigger className="h-9 w-9 sm:h-10 sm:w-10" />
+                      <div className="flex-1 min-w-0">
                         <HelpChatbot />
                       </div>
                     </div>
