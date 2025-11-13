@@ -700,6 +700,87 @@ const Index = () => {
           </div>
         )}
 
+        {/* Agents List Section */}
+        <Card className="animate-fade-in">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Users className="h-6 w-6 text-primary" />
+                Our Agents ({agents?.length || 0})
+              </CardTitle>
+              <Link to="/agent-management">
+                <Button variant="outline" size="sm">
+                  View Details
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {!agents || agents.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground">No agents available</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {agents.map((agent) => {
+                  // Calculate agent stats
+                  const agentTenants = allTenants?.filter(t => t.agent_phone === agent.phone) || [];
+                  const activeTenants = agentTenants.filter(t => t.status === 'active').length;
+                  
+                  return (
+                    <Card 
+                      key={agent.id} 
+                      className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-primary/50"
+                      onClick={() => navigate(`/agent/${encodeURIComponent(agent.phone || agent.name)}`)}
+                    >
+                      <CardContent className="p-5 space-y-3">
+                        {/* Agent Name */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-lg truncate">{agent.name}</h3>
+                            {agent.phone && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <Phone className="h-3 w-3 text-muted-foreground" />
+                                <p className="text-sm text-muted-foreground truncate">{agent.phone}</p>
+                              </div>
+                            )}
+                          </div>
+                          <Badge variant="secondary" className="flex-shrink-0">
+                            {agentTenants.length}
+                          </Badge>
+                        </div>
+                        
+                        {/* Agent Stats */}
+                        <div className="pt-3 border-t space-y-2 text-sm">
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Total Tenants:</span>
+                            <span className="font-semibold">{agentTenants.length}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Active:</span>
+                            <span className="font-semibold text-green-600">{activeTenants}</span>
+                          </div>
+                        </div>
+                        
+                        {/* View Button */}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/agent/${encodeURIComponent(agent.phone || agent.name)}`);
+                          }}
+                        >
+                          View Tenants
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Stats Section with enhanced visuals */}
         <div data-tour="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 animate-fade-in">
           <TooltipProvider>
