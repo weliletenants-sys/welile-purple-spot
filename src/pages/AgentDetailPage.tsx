@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search, UserCog, Wallet, ChevronDown } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
 import { AssignTenantToAgentDialog } from "@/components/AssignTenantToAgentDialog";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
 import { useToast } from "@/hooks/use-toast";
@@ -297,34 +297,34 @@ const AgentDetailPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Collapsible open={isEarningsOpen} onOpenChange={setIsEarningsOpen}>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
-                <span>{isEarningsOpen ? "Hide" : "View"} Earnings Breakdown</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${isEarningsOpen ? "rotate-180" : ""}`} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 pt-4">
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Total Earned</span>
-                <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  UGX {(agentEarnings?.earnedCommission || 0).toLocaleString()}
-                </span>
+          <div>
+            <Button variant="outline" className="w-full justify-between" onClick={() => setIsEarningsOpen((v) => !v)}>
+              <span>{isEarningsOpen ? "Hide" : "View"} Earnings Breakdown</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${isEarningsOpen ? "rotate-180" : ""}`} />
+            </Button>
+            {isEarningsOpen && (
+              <div className="space-y-2 pt-4">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-muted-foreground">Total Earned</span>
+                  <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    UGX {(agentEarnings?.earnedCommission || 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-muted-foreground">Withdrawn</span>
+                  <span className="text-lg font-semibold text-muted-foreground">
+                    UGX {(agentEarnings?.withdrawnCommission || 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="pt-2 border-t flex justify-between items-baseline">
+                  <span className="text-sm font-medium">Available Balance</span>
+                  <span className="text-3xl font-bold text-green-700 dark:text-green-300">
+                    UGX {availableBalance.toLocaleString()}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Withdrawn</span>
-                <span className="text-lg font-semibold text-muted-foreground">
-                  UGX {(agentEarnings?.withdrawnCommission || 0).toLocaleString()}
-                </span>
-              </div>
-              <div className="pt-2 border-t flex justify-between items-baseline">
-                <span className="text-sm font-medium">Available Balance</span>
-                <span className="text-3xl font-bold text-green-700 dark:text-green-300">
-                  UGX {availableBalance.toLocaleString()}
-                </span>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+            )}
+          </div>
 
           <div className="flex gap-2 pt-2">
             <Input
