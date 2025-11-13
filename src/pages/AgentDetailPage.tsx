@@ -196,15 +196,15 @@ const AgentDetailPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalTenants}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.activeTenants} active
+              <div className="text-3xl font-bold text-primary">{stats.totalTenants}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.activeTenants} active • {stats.totalTenants - stats.activeTenants} inactive
               </p>
             </CardContent>
           </Card>

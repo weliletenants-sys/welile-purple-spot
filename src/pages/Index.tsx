@@ -100,10 +100,11 @@ const Index = () => {
   const agentStats = useMemo(() => {
     if (!agents || !allTenants || !allPayments) return {};
     
-    const statsMap: Record<string, { activeTenants: number; totalCollected: number }> = {};
+    const statsMap: Record<string, { totalTenants: number; activeTenants: number; totalCollected: number }> = {};
     
     agents.forEach((agent) => {
       const agentTenants = allTenants.filter((t) => (t as any).agent_id === agent.id);
+      const totalTenants = agentTenants.length;
       const activeTenants = agentTenants.filter(
         (t) => t.status === "active" || t.status === "pending"
       ).length;
@@ -113,7 +114,7 @@ const Index = () => {
         .filter((p) => tenantIds.includes(p.tenant_id))
         .reduce((sum, p) => sum + (Number(p.paid_amount) || Number(p.amount) || 0), 0);
       
-      statsMap[agent.id] = { activeTenants, totalCollected };
+      statsMap[agent.id] = { totalTenants, activeTenants, totalCollected };
     });
     
     return statsMap;
@@ -636,13 +637,13 @@ const Index = () => {
                           );
                         })
                         .sort((a, b) => {
-                          const aStats = agentStats[a.id] || { activeTenants: 0, totalCollected: 0 };
-                          const bStats = agentStats[b.id] || { activeTenants: 0, totalCollected: 0 };
+                          const aStats = agentStats[a.id] || { totalTenants: 0, activeTenants: 0, totalCollected: 0 };
+                          const bStats = agentStats[b.id] || { totalTenants: 0, activeTenants: 0, totalCollected: 0 };
                           
                           if (agentSortBy === "name") {
                             return a.name.localeCompare(b.name);
                           } else if (agentSortBy === "tenants") {
-                            return bStats.activeTenants - aStats.activeTenants;
+                            return bStats.totalTenants - aStats.totalTenants;
                           } else if (agentSortBy === "active") {
                             return bStats.activeTenants - aStats.activeTenants;
                           }
@@ -652,7 +653,7 @@ const Index = () => {
 
                       return filteredAndSortedAgents.length > 0 ? (
                         filteredAndSortedAgents.map((agent) => {
-                          const stats = agentStats[agent.id] || { activeTenants: 0, totalCollected: 0 };
+                          const stats = agentStats[agent.id] || { totalTenants: 0, activeTenants: 0, totalCollected: 0 };
                           return (
                             <Card key={agent.id} className="hover:shadow-lg transition-shadow">
                               <CardContent className="pt-6">
@@ -666,25 +667,29 @@ const Index = () => {
                                       </div>
                                     )}
                                     
-                                    {/* Agent Stats */}
-                                    <div className="space-y-2 mt-3 pt-3 border-t">
-                                      <div className="flex items-center justify-between text-sm">
-                                        <span className="text-muted-foreground flex items-center gap-1">
-                                          <Users className="h-3 w-3" />
-                                          Active Tenants
-                                        </span>
-                                        <span className="font-semibold">{stats.activeTenants}</span>
-                                      </div>
-                                      <div className="flex items-center justify-between text-sm">
-                                        <span className="text-muted-foreground flex items-center gap-1">
-                                          <DollarSign className="h-3 w-3" />
-                                          Total Collected
-                                        </span>
-                                        <span className="font-semibold text-green-600">
-                                          UGX {stats.totalCollected.toLocaleString()}
-                                        </span>
-                                      </div>
-                                    </div>
+                                     {/* Agent Stats */}
+                                     <div className="space-y-2 mt-3 pt-3 border-t">
+                                       <div className="flex items-center justify-between text-sm">
+                                         <span className="text-muted-foreground flex items-center gap-1">
+                                           <Users className="h-4 w-4 text-primary" />
+                                           Total Tenants
+                                         </span>
+                                         <span className="font-bold text-lg text-primary">{stats.totalTenants}</span>
+                                       </div>
+                                       <div className="flex items-center justify-between text-xs">
+                                         <span className="text-muted-foreground">Active</span>
+                                         <span className="font-semibold">{stats.activeTenants}</span>
+                                       </div>
+                                       <div className="flex items-center justify-between text-sm pt-2 border-t">
+                                         <span className="text-muted-foreground flex items-center gap-1">
+                                           <DollarSign className="h-3 w-3" />
+                                           Total Collected
+                                         </span>
+                                         <span className="font-semibold text-green-600">
+                                           UGX {stats.totalCollected.toLocaleString()}
+                                         </span>
+                                       </div>
+                                     </div>
                                   </div>
                                   <EditAgentDialog 
                                     agent={{ 

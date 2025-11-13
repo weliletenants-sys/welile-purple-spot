@@ -223,16 +223,16 @@ const AgentPortal = () => {
         {stats && (
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
+              <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <Users className="h-4 w-4 text-primary" />
-                    Tenants Managed
+                    Total Tenants
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-bold">{stats.tenantsManaged}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Active tenants</p>
+                  <p className="text-4xl font-bold text-primary">{stats.tenantsManaged}</p>
+                  <p className="text-xs text-muted-foreground mt-1">All tenants under your management</p>
                 </CardContent>
               </Card>
 
