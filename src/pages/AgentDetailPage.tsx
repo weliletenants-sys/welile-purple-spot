@@ -13,16 +13,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const AgentDetailPage = () => {
   const navigate = useNavigate();
   const { agentPhone } = useParams<{ agentPhone: string }>();
   const { tenants } = useTenants();
+  const [sortBy, setSortBy] = useState<"name" | "balance" | "status">("balance");
 
   // Filter tenants for this agent
   const agentTenants = useMemo(() => {
@@ -234,7 +242,22 @@ const AgentDetailPage = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Tenant Balances</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Tenant Balances</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger className="w-[180px] bg-background">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="balance">Sort by Balance</SelectItem>
+                        <SelectItem value="name">Sort by Name</SelectItem>
+                        <SelectItem value="status">Sort by Status</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {agentTenants.length === 0 ? (
@@ -243,18 +266,37 @@ const AgentDetailPage = () => {
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {agentTenants.map((tenant) => {
-                      // Calculate tenant balance
-                      const tenantPayments = payments?.filter(p => p.tenant_id === tenant.id) || [];
-                      const totalPaid = tenantPayments.reduce((sum, p) => {
-                        return p.paid ? sum + (Number(p.paid_amount) || Number(p.amount) || 0) : sum;
-                      }, 0);
-                      const totalExpected = tenantPayments.reduce((sum, p) => {
-                        return sum + (Number(p.amount) || 0);
-                      }, 0);
-                      const balance = totalExpected - totalPaid;
-                      
-                      return (
+                    {(() => {
+                      // Calculate balances for all tenants first
+                      const tenantsWithBalances = agentTenants.map((tenant) => {
+                        const tenantPayments = payments?.filter(p => p.tenant_id === tenant.id) || [];
+                        const totalPaid = tenantPayments.reduce((sum, p) => {
+                          return p.paid ? sum + (Number(p.paid_amount) || Number(p.amount) || 0) : sum;
+                        }, 0);
+                        const totalExpected = tenantPayments.reduce((sum, p) => {
+                          return sum + (Number(p.amount) || 0);
+                        }, 0);
+                        const balance = totalExpected - totalPaid;
+                        return { tenant, balance, totalPaid, totalExpected };
+                      });
+
+                      // Sort based on selected option
+                      const sortedTenants = [...tenantsWithBalances].sort((a, b) => {
+                        if (sortBy === "balance") {
+                          return b.balance - a.balance; // Highest balance first
+                        } else if (sortBy === "name") {
+                          return a.tenant.name.localeCompare(b.tenant.name);
+                        } else if (sortBy === "status") {
+                          const statusOrder = { active: 0, pending: 1, cleared: 2, rejected: 3 };
+                          const aStatus = a.tenant.status as keyof typeof statusOrder;
+                          const bStatus = b.tenant.status as keyof typeof statusOrder;
+                          return (statusOrder[aStatus] || 99) - (statusOrder[bStatus] || 99);
+                        }
+                        return 0;
+                      });
+
+                      return sortedTenants.map(({ tenant, balance, totalPaid, totalExpected }) => {
+                        return (
                         <Card key={tenant.id} className="hover:shadow-lg transition-shadow">
                           <CardContent className="p-6 space-y-4">
                             {/* Tenant Name */}
@@ -305,8 +347,9 @@ const AgentDetailPage = () => {
                             </div>
                           </CardContent>
                         </Card>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
                 )}
               </CardContent>
