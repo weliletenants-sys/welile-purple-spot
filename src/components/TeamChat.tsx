@@ -71,7 +71,7 @@ export function TeamChat({ teamId, userIdentifier, userName }: TeamChatProps) {
   };
 
   const fetchMessages = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("team_messages")
       .select("*")
       .eq("team_id", teamId)
@@ -82,14 +82,14 @@ export function TeamChat({ teamId, userIdentifier, userName }: TeamChatProps) {
       return;
     }
 
-    setMessages(data || []);
+    setMessages((data || []) as TeamMessage[]);
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
     setIsLoading(true);
-    const { error } = await supabase.from("team_messages").insert({
+    const { error } = await (supabase as any).from("team_messages").insert({
       team_id: teamId,
       user_identifier: userIdentifier,
       user_name: userName,
@@ -110,7 +110,7 @@ export function TeamChat({ teamId, userIdentifier, userName }: TeamChatProps) {
   };
 
   const deleteMessage = async (messageId: string) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("team_messages")
       .delete()
       .eq("id", messageId);

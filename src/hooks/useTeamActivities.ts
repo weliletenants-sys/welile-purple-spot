@@ -21,7 +21,7 @@ export const useTeamActivities = (teamId: string | undefined) => {
     queryFn: async () => {
       if (!teamId) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("team_activities")
         .select("*")
         .eq("team_id", teamId)
@@ -29,7 +29,7 @@ export const useTeamActivities = (teamId: string | undefined) => {
         .limit(50);
 
       if (error) throw error;
-      return data as TeamActivity[];
+      return (data || []) as TeamActivity[];
     },
     enabled: !!teamId,
   });
@@ -67,7 +67,7 @@ export const useTeamActivities = (teamId: string | undefined) => {
       description: string;
       metadata?: Record<string, any>;
     }) => {
-      const { error } = await supabase.from("team_activities").insert(activity);
+      const { error } = await (supabase as any).from("team_activities").insert(activity);
       if (error) throw error;
     },
     onSuccess: () => {
