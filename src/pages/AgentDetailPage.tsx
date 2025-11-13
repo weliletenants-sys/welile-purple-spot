@@ -35,9 +35,13 @@ const AgentDetailPage = () => {
   const { tenants } = useTenants();
   const [sortBy, setSortBy] = useState<"name" | "balance" | "status">("balance");
 
-  // Filter tenants for this agent
+  // Filter tenants for this agent (normalize phone numbers by removing spaces)
   const agentTenants = useMemo(() => {
-    return tenants?.filter((t) => t.agentPhone === agentPhone) || [];
+    const normalizedAgentPhone = agentPhone?.replace(/\s/g, '');
+    return tenants?.filter((t) => {
+      const normalizedTenantPhone = t.agentPhone?.replace(/\s/g, '');
+      return normalizedTenantPhone === normalizedAgentPhone;
+    }) || [];
   }, [tenants, agentPhone]);
 
   const agentName = agentTenants[0]?.agentName || "Unknown Agent";
