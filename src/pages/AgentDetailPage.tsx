@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -28,6 +28,7 @@ import {
 import { AgentAddTenantDialog } from "@/components/AgentAddTenantDialog";
 import { AgentQuickAddDialog } from "@/components/AgentQuickAddDialog";
 import { AgentPipelineDialog } from "@/components/AgentPipelineDialog";
+import { Input } from "@/components/ui/input";
 
 const AgentDetailPage = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const AgentDetailPage = () => {
   const { tenants } = useTenants();
   const [sortBy, setSortBy] = useState<"name" | "balance-high" | "balance-low" | "status">("balance-high");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Get agent by phone and filter tenants for this agent
   const { data: agents } = useQuery({
@@ -248,9 +250,10 @@ const AgentDetailPage = () => {
       {/* Tenant List - Primary View */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">All Tenants ({agentTenants.length})</CardTitle>
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl">All Tenants ({agentTenants.length})</CardTitle>
+              <div className="flex items-center gap-2">
               {/* View Mode Toggle */}
               <div className="flex items-center gap-1 border rounded-md p-1">
                 <Button
@@ -283,6 +286,18 @@ const AgentDetailPage = () => {
                   <SelectItem value="status">Sort by Status</SelectItem>
                 </SelectContent>
               </Select>
+              </div>
+            </div>
+            
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tenants by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </div>
         </CardHeader>
@@ -306,8 +321,13 @@ const AgentDetailPage = () => {
                     </TableHeader>
                     <TableBody>
                       {(() => {
-                        // Calculate balances for all tenants first
-                        const tenantsWithBalances = agentTenants.map((tenant) => {
+                        // Filter tenants based on search query
+                        const filteredTenants = agentTenants.filter((tenant) =>
+                          tenant.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                        
+                        // Calculate balances for filtered tenants
+                        const tenantsWithBalances = filteredTenants.map((tenant) => {
                           const tenantPayments = payments?.filter(p => p.tenant_id === tenant.id) || [];
                           const totalPaid = tenantPayments.reduce((sum, p) => {
                             return p.paid ? sum + (Number(p.paid_amount) || Number(p.amount) || 0) : sum;
@@ -336,6 +356,16 @@ const AgentDetailPage = () => {
                           return 0;
                         });
 
+                        if (sortedTenants.length === 0) {
+                          return (
+                            <TableRow>
+                              <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                                {searchQuery ? "No tenants found matching your search" : "No tenants found"}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                        
                         return sortedTenants.map(({ tenant, balance }) => (
                           <TableRow 
                             key={tenant.id} 
@@ -371,8 +401,13 @@ const AgentDetailPage = () => {
                 // Grid View
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {(() => {
-                      // Calculate balances for all tenants first
-                      const tenantsWithBalances = agentTenants.map((tenant) => {
+                      // Filter tenants based on search query
+                      const filteredTenants = agentTenants.filter((tenant) =>
+                        tenant.name.toLowerCase().includes(searchQuery.toLowerCase())
+                      );
+                      
+                      // Calculate balances for filtered tenants
+                      const tenantsWithBalances = filteredTenants.map((tenant) => {
                         const tenantPayments = payments?.filter(p => p.tenant_id === tenant.id) || [];
                         const totalPaid = tenantPayments.reduce((sum, p) => {
                           return p.paid ? sum + (Number(p.paid_amount) || Number(p.amount) || 0) : sum;
@@ -401,6 +436,14 @@ const AgentDetailPage = () => {
                         return 0;
                       });
 
+              if (sortedTenants.length === 0) {
+                return (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    {searchQuery ? "No tenants found matching your search" : "No tenants found"}
+                  </div>
+                );
+              }
+              
               return sortedTenants.map(({ tenant, balance, totalPaid, totalExpected }) => {
                 return (
                   <Card 
