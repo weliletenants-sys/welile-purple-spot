@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search, UserCog, Wallet, ChevronDown } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search, UserCog, Wallet, ChevronDown, Eye, EyeOff } from "lucide-react";
 
 import { AssignTenantToAgentDialog } from "@/components/AssignTenantToAgentDialog";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -55,6 +55,7 @@ const AgentDetailPage = () => {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isEarningsOpen, setIsEarningsOpen] = useState(false);
+  const [showEarnings, setShowEarnings] = useState(false);
   const itemsPerPage = 20;
   const { toast } = useToast();
   
@@ -282,8 +283,14 @@ const AgentDetailPage = () => {
           <AgentPipelineDialog agentName={agentName} agentPhone={agentPhone || ""} />
         </div>
       </div>
+      {/* Earnings Toggle */}
+      <Button variant="outline" className="w-full justify-between" onClick={() => setShowEarnings((v) => !v)}>
+        <span>{showEarnings ? "Hide Earnings" : "Show Earnings"}</span>
+        {showEarnings ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </Button>
 
       {/* Commission Card */}
+      {showEarnings && (
       <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -355,6 +362,8 @@ const AgentDetailPage = () => {
           </div>
         </CardContent>
       </Card>
+      )}
+
 
       {/* Tenant List - Primary View */}
       <Card>
