@@ -29,6 +29,15 @@ import { AgentAddTenantDialog } from "@/components/AgentAddTenantDialog";
 import { AgentQuickAddDialog } from "@/components/AgentQuickAddDialog";
 import { AgentPipelineDialog } from "@/components/AgentPipelineDialog";
 import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const AgentDetailPage = () => {
   const navigate = useNavigate();
@@ -37,6 +46,8 @@ const AgentDetailPage = () => {
   const [sortBy, setSortBy] = useState<"name" | "balance-high" | "balance-low" | "status">("balance-high");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   // Get agent by phone and filter tenants for this agent
   const { data: agents } = useQuery({
@@ -295,7 +306,10 @@ const AgentDetailPage = () => {
               <Input
                 placeholder="Search tenants by name..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1); // Reset to first page on search
+                }}
                 className="pl-10"
               />
             </div>
@@ -309,7 +323,8 @@ const AgentDetailPage = () => {
           ) : (
             <>
               {viewMode === "table" ? (
-                // Simple Table View
+                <>
+                {/* Simple Table View */}
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
@@ -353,8 +368,14 @@ const AgentDetailPage = () => {
                             const bStatus = b.tenant.status as keyof typeof statusOrder;
                             return (statusOrder[aStatus] || 99) - (statusOrder[bStatus] || 99);
                           }
-                          return 0;
+                        return 0;
                         });
+
+                        // Pagination
+                        const totalPages = Math.ceil(sortedTenants.length / itemsPerPage);
+                        const startIndex = (currentPage - 1) * itemsPerPage;
+                        const endIndex = startIndex + itemsPerPage;
+                        const paginatedTenants = sortedTenants.slice(startIndex, endIndex);
 
                         if (sortedTenants.length === 0) {
                           return (
@@ -366,7 +387,7 @@ const AgentDetailPage = () => {
                           );
                         }
                         
-                        return sortedTenants.map(({ tenant, balance }) => (
+                        return paginatedTenants.map(({ tenant, balance }) => (
                           <TableRow 
                             key={tenant.id} 
                             className="cursor-pointer hover:bg-muted/50"
@@ -397,8 +418,70 @@ const AgentDetailPage = () => {
                     </TableBody>
                   </Table>
                 </div>
+                
+                {/* Table Pagination */}
+                {(() => {
+                  const filteredTenants = agentTenants.filter((tenant) =>
+                    tenant.name.toLowerCase().includes(searchQuery.toLowerCase())
+                  );
+                  const totalPages = Math.ceil(filteredTenants.length / itemsPerPage);
+                  
+                  if (totalPages <= 1) return null;
+                  
+                  return (
+                    <div className="mt-4 flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredTenants.length)} of {filteredTenants.length} tenants
+                      </p>
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                              className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                          
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum;
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = currentPage - 2 + i;
+                            }
+                            
+                            return (
+                              <PaginationItem key={pageNum}>
+                                <PaginationLink
+                                  onClick={() => setCurrentPage(pageNum)}
+                                  isActive={currentPage === pageNum}
+                                  className="cursor-pointer"
+                                >
+                                  {pageNum}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          })}
+                          
+                          <PaginationItem>
+                            <PaginationNext 
+                              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                              className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  );
+                })()}
+                </>
               ) : (
-                // Grid View
+                <>
+                {/* Grid View */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {(() => {
                       // Filter tenants based on search query
@@ -436,6 +519,12 @@ const AgentDetailPage = () => {
                         return 0;
                       });
 
+                      // Pagination
+                      const totalPages = Math.ceil(sortedTenants.length / itemsPerPage);
+                      const startIndex = (currentPage - 1) * itemsPerPage;
+                      const endIndex = startIndex + itemsPerPage;
+                      const paginatedTenants = sortedTenants.slice(startIndex, endIndex);
+
               if (sortedTenants.length === 0) {
                 return (
                   <div className="col-span-full text-center py-8 text-muted-foreground">
@@ -444,7 +533,7 @@ const AgentDetailPage = () => {
                 );
               }
               
-              return sortedTenants.map(({ tenant, balance, totalPaid, totalExpected }) => {
+              return paginatedTenants.map(({ tenant, balance, totalPaid, totalExpected }) => {
                 return (
                   <Card 
                     key={tenant.id} 
@@ -503,7 +592,69 @@ const AgentDetailPage = () => {
               });
             })()}
             </div>
-              )}
+            
+            {/* Grid Pagination */}
+            {(() => {
+              const filteredTenants = agentTenants.filter((tenant) =>
+                tenant.name.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+              const totalPages = Math.ceil(filteredTenants.length / itemsPerPage);
+              
+              if (totalPages <= 1) return null;
+              
+              return (
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredTenants.length)} of {filteredTenants.length} tenants
+                  </p>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              onClick={() => setCurrentPage(pageNum)}
+                              isActive={currentPage === pageNum}
+                              className="cursor-pointer"
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              );
+            })()}
+            </>
+              )
+            }
             </>
           )}
         </CardContent>
