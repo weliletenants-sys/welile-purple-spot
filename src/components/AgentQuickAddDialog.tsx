@@ -97,9 +97,10 @@ export const AgentQuickAddDialog = ({ agentName, agentPhone }: AgentQuickAddDial
       });
       setOpen(false);
     } catch (error) {
+      console.error("Error adding tenant:", error);
       toast({
         title: "Error",
-        description: "Failed to add tenant",
+        description: error instanceof Error ? error.message : "Failed to add tenant",
         variant: "destructive",
       });
     }
