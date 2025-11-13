@@ -128,8 +128,51 @@ const Index = () => {
   const [feeFilter, setFeeFilter] = useState<string>("all");
   const [agentFilter, setAgentFilter] = useState<string>("");
   const [agentSearchTerm, setAgentSearchTerm] = useState("");
-  const [agentSortBy, setAgentSortBy] = useState<"name" | "tenants" | "collections">("name");
+  const [agentSortBy, setAgentSortBy] = useState<"name" | "tenants" | "active">("name");
+  const [agentTenantCountFilter, setAgentTenantCountFilter] = useState<"all" | "active" | "inactive">("all");
   const pageSize = 10;
+
+  // Filter and sort agents
+  const filteredAndSortedAgents = useMemo(() => {
+    if (!agents) return [];
+    
+    let filtered = agents.filter((agent) => {
+      // Search filter
+      const matchesSearch = agentSearchTerm === "" || 
+        agent.name.toLowerCase().includes(agentSearchTerm.toLowerCase()) ||
+        (agent.phone && agent.phone.includes(agentSearchTerm));
+      
+      if (!matchesSearch) return false;
+      
+      // Tenant count filter
+      const agentTenants = allTenants?.filter(t => t.agent_phone === agent.phone) || [];
+      const activeTenants = agentTenants.filter(t => t.status === 'active').length;
+      
+      if (agentTenantCountFilter === "active" && activeTenants === 0) return false;
+      if (agentTenantCountFilter === "inactive" && activeTenants > 0) return false;
+      
+      return true;
+    });
+    
+    // Sort agents
+    filtered.sort((a, b) => {
+      const aTenantsAll = allTenants?.filter(t => t.agent_phone === a.phone) || [];
+      const bTenantsAll = allTenants?.filter(t => t.agent_phone === b.phone) || [];
+      const aActiveTenants = aTenantsAll.filter(t => t.status === 'active').length;
+      const bActiveTenants = bTenantsAll.filter(t => t.status === 'active').length;
+      
+      if (agentSortBy === "name") {
+        return a.name.localeCompare(b.name);
+      } else if (agentSortBy === "tenants") {
+        return bTenantsAll.length - aTenantsAll.length;
+      } else if (agentSortBy === "active") {
+        return bActiveTenants - aActiveTenants;
+      }
+      return 0;
+    });
+    
+    return filtered;
+  }, [agents, allTenants, agentSearchTerm, agentSortBy, agentTenantCountFilter]);
 
   // Handle URL parameters for filtering
   useEffect(() => {
@@ -600,8 +643,8 @@ const Index = () => {
                             return a.name.localeCompare(b.name);
                           } else if (agentSortBy === "tenants") {
                             return bStats.activeTenants - aStats.activeTenants;
-                          } else if (agentSortBy === "collections") {
-                            return bStats.totalCollected - aStats.totalCollected;
+                          } else if (agentSortBy === "active") {
+                            return bStats.activeTenants - aStats.activeTenants;
                           }
                           return 0;
                         })
@@ -703,27 +746,74 @@ const Index = () => {
         {/* Agents List Section - Prominent Display */}
         <Card className="animate-fade-in bg-gradient-to-br from-primary/10 via-background to-primary/5 border-2 border-primary/30 shadow-xl">
           <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-3xl flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-primary/20">
-                    <Users className="h-8 w-8 text-primary" />
-                  </div>
-                  Our Agents
-                </CardTitle>
-                <p className="text-muted-foreground text-base">Click on any agent to view and manage their tenants</p>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-3xl flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-primary/20">
+                      <Users className="h-8 w-8 text-primary" />
+                    </div>
+                    Our Agents
+                  </CardTitle>
+                  <p className="text-muted-foreground text-base">Click on any agent to view and manage their tenants</p>
+                </div>
+                <Badge variant="secondary" className="text-xl px-6 py-3 font-bold">
+                  {filteredAndSortedAgents.length} of {agents?.length || 0}
+                </Badge>
               </div>
-              <Badge variant="secondary" className="text-xl px-6 py-3 font-bold">
-                {agents?.length || 0} Active
-              </Badge>
+              
+              {/* Search and Filter Controls */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search agents by name or phone..."
+                    value={agentSearchTerm}
+                    onChange={(e) => setAgentSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                
+                <Select
+                  value={agentSortBy}
+                  onValueChange={(value: "name" | "tenants" | "active") => setAgentSortBy(value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Sort by Name</SelectItem>
+                    <SelectItem value="tenants">Sort by Total Tenants</SelectItem>
+                    <SelectItem value="active">Sort by Active Tenants</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select
+                  value={agentTenantCountFilter}
+                  onValueChange={(value: "all" | "active" | "inactive") => setAgentTenantCountFilter(value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Agents</SelectItem>
+                    <SelectItem value="active">With Active Tenants</SelectItem>
+                    <SelectItem value="inactive">No Active Tenants</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
-            {!agents || agents.length === 0 ? (
-              <p className="text-center py-16 text-muted-foreground text-lg">No agents available</p>
+            {filteredAndSortedAgents.length === 0 ? (
+              <div className="text-center py-16">
+                <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+                <p className="text-muted-foreground text-lg mb-2">No agents found</p>
+                <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {agents.map((agent) => {
+                {filteredAndSortedAgents.map((agent) => {
                   const agentTenants = allTenants?.filter(t => t.agent_phone === agent.phone) || [];
                   const activeTenants = agentTenants.filter(t => t.status === 'active').length;
                   
