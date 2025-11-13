@@ -302,7 +302,11 @@ const AgentDetailPage = () => {
 
               return sortedTenants.map(({ tenant, balance, totalPaid, totalExpected }) => {
                 return (
-                  <Card key={tenant.id} className="hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer">
+                  <Card 
+                    key={tenant.id} 
+                    className="hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
+                    onClick={() => navigate(`/tenant/${tenant.id}`)}
+                  >
                     <CardContent className="p-5 space-y-3">
                       {/* Tenant Name & Status */}
                       <div className="flex items-start justify-between gap-2">
