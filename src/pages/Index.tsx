@@ -76,7 +76,7 @@ const Index = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, agent_phone, status");
+        .select("id, agent_id, status");
       if (error) throw error;
       return data;
     },
@@ -96,14 +96,14 @@ const Index = () => {
     enabled: isAdmin,
   });
 
-  // Calculate agent stats
+  // Calculate agent stats using agent_id
   const agentStats = useMemo(() => {
     if (!agents || !allTenants || !allPayments) return {};
     
     const statsMap: Record<string, { activeTenants: number; totalCollected: number }> = {};
     
     agents.forEach((agent) => {
-      const agentTenants = allTenants.filter((t) => t.agent_phone === agent.phone);
+      const agentTenants = allTenants.filter((t) => (t as any).agent_id === agent.id);
       const activeTenants = agentTenants.filter(
         (t) => t.status === "active" || t.status === "pending"
       ).length;
@@ -113,7 +113,7 @@ const Index = () => {
         .filter((p) => tenantIds.includes(p.tenant_id))
         .reduce((sum, p) => sum + (Number(p.paid_amount) || Number(p.amount) || 0), 0);
       
-      statsMap[agent.phone] = { activeTenants, totalCollected };
+      statsMap[agent.id] = { activeTenants, totalCollected };
     });
     
     return statsMap;
@@ -145,7 +145,7 @@ const Index = () => {
       if (!matchesSearch) return false;
       
       // Tenant count filter
-      const agentTenants = allTenants?.filter(t => t.agent_phone === agent.phone) || [];
+      const agentTenants = allTenants?.filter(t => (t as any).agent_id === agent.id) || [];
       const activeTenants = agentTenants.filter(t => t.status === 'active').length;
       
       if (agentTenantCountFilter === "active" && activeTenants === 0) return false;
@@ -156,8 +156,8 @@ const Index = () => {
     
     // Sort agents
     filtered.sort((a, b) => {
-      const aTenantsAll = allTenants?.filter(t => t.agent_phone === a.phone) || [];
-      const bTenantsAll = allTenants?.filter(t => t.agent_phone === b.phone) || [];
+      const aTenantsAll = allTenants?.filter(t => (t as any).agent_id === a.id) || [];
+      const bTenantsAll = allTenants?.filter(t => (t as any).agent_id === b.id) || [];
       const aActiveTenants = aTenantsAll.filter(t => t.status === 'active').length;
       const bActiveTenants = bTenantsAll.filter(t => t.status === 'active').length;
       
@@ -636,8 +636,8 @@ const Index = () => {
                           );
                         })
                         .sort((a, b) => {
-                          const aStats = agentStats[a.phone] || { activeTenants: 0, totalCollected: 0 };
-                          const bStats = agentStats[b.phone] || { activeTenants: 0, totalCollected: 0 };
+                          const aStats = agentStats[a.id] || { activeTenants: 0, totalCollected: 0 };
+                          const bStats = agentStats[b.id] || { activeTenants: 0, totalCollected: 0 };
                           
                           if (agentSortBy === "name") {
                             return a.name.localeCompare(b.name);
@@ -652,7 +652,7 @@ const Index = () => {
 
                       return filteredAndSortedAgents.length > 0 ? (
                         filteredAndSortedAgents.map((agent) => {
-                          const stats = agentStats[agent.phone] || { activeTenants: 0, totalCollected: 0 };
+                          const stats = agentStats[agent.id] || { activeTenants: 0, totalCollected: 0 };
                           return (
                             <Card key={agent.id} className="hover:shadow-lg transition-shadow">
                               <CardContent className="pt-6">
@@ -814,7 +814,7 @@ const Index = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredAndSortedAgents.map((agent) => {
-                  const agentTenants = allTenants?.filter(t => t.agent_phone === agent.phone) || [];
+                  const agentTenants = allTenants?.filter(t => (t as any).agent_id === agent.id) || [];
                   const activeTenants = agentTenants.filter(t => t.status === 'active').length;
                   
                   return (
