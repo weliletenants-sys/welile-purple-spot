@@ -240,6 +240,74 @@ const AgentDetailPage = () => {
               </CardContent>
             </Card>
 
+            {/* Balance Summary Card */}
+            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-primary" />
+                  Balance Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {(() => {
+                    // Calculate summary metrics
+                    const tenantsWithBalances = agentTenants.map((tenant) => {
+                      const tenantPayments = payments?.filter(p => p.tenant_id === tenant.id) || [];
+                      const totalPaid = tenantPayments.reduce((sum, p) => {
+                        return p.paid ? sum + (Number(p.paid_amount) || Number(p.amount) || 0) : sum;
+                      }, 0);
+                      const totalExpected = tenantPayments.reduce((sum, p) => {
+                        return sum + (Number(p.amount) || 0);
+                      }, 0);
+                      return totalExpected - totalPaid;
+                    });
+
+                    const totalOutstanding = tenantsWithBalances.reduce((sum, balance) => sum + Math.max(0, balance), 0);
+                    const totalTenants = agentTenants.length;
+                    const averageBalance = totalTenants > 0 ? tenantsWithBalances.reduce((sum, balance) => sum + balance, 0) / totalTenants : 0;
+
+                    return (
+                      <>
+                        {/* Total Outstanding */}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground font-medium">Total Outstanding</p>
+                          <p className="text-3xl font-bold text-red-600">
+                            UGX {totalOutstanding.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Amount owed by tenants
+                          </p>
+                        </div>
+
+                        {/* Total Tenants */}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground font-medium">Total Tenants</p>
+                          <p className="text-3xl font-bold text-primary">
+                            {totalTenants}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Active and managed tenants
+                          </p>
+                        </div>
+
+                        {/* Average Balance */}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground font-medium">Average Balance</p>
+                          <p className={`text-3xl font-bold ${averageBalance > 0 ? 'text-orange-600' : averageBalance < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                            UGX {Math.abs(averageBalance).toLocaleString()}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {averageBalance > 0 ? 'Average owing per tenant' : averageBalance < 0 ? 'Average credit per tenant' : 'No balance'}
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
