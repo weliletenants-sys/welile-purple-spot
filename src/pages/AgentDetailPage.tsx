@@ -13,8 +13,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search, UserCog } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search, UserCog, Wallet } from "lucide-react";
 import { AssignTenantToAgentDialog } from "@/components/AssignTenantToAgentDialog";
+import { useAgentEarnings } from "@/hooks/useAgentEarnings";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -49,7 +51,13 @@ const AgentDetailPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [assigningTenant, setAssigningTenant] = useState<any>(null);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const itemsPerPage = 20;
+  const { toast } = useToast();
+  
+  // Fetch agent earnings
+  const { data: agentEarningsData } = useAgentEarnings("all");
 
   // Get agent by phone and filter tenants for this agent
   const { data: agents } = useQuery({
@@ -77,6 +85,69 @@ const AgentDetailPage = () => {
   }, [tenants, currentAgent]);
 
   const agentName = currentAgent?.name || agentTenants[0]?.agentName || "Unknown Agent";
+
+  // Get agent earnings for this specific agent
+  const agentEarnings = useMemo(() => {
+    if (!agentEarningsData || !agentName) return null;
+    return agentEarningsData.find(e => 
+      e.agentName.toUpperCase() === agentName.toUpperCase()
+    );
+  }, [agentEarningsData, agentName]);
+
+  const availableBalance = useMemo(() => {
+    if (!agentEarnings) return 0;
+    return agentEarnings.earnedCommission - agentEarnings.withdrawnCommission;
+  }, [agentEarnings]);
+
+  const handleWithdraw = async () => {
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid withdrawal amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (amount > availableBalance) {
+      toast({
+        title: "Insufficient Balance",
+        description: `Available balance: UGX ${availableBalance.toLocaleString()}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsWithdrawing(true);
+    try {
+      const { error } = await supabase
+        .from("withdrawal_requests")
+        .insert({
+          agent_name: agentName,
+          agent_phone: agentPhone || "",
+          amount: amount,
+          status: "pending",
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Withdrawal Request Submitted",
+        description: `Request for UGX ${amount.toLocaleString()} has been submitted for approval`,
+      });
+      setWithdrawAmount("");
+    } catch (error) {
+      console.error("Withdrawal error:", error);
+      toast({
+        title: "Withdrawal Failed",
+        description: "Failed to submit withdrawal request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
 
   // Fetch all payments for this agent's tenants
   const { data: payments } = useQuery({
@@ -209,6 +280,68 @@ const AgentDetailPage = () => {
           <AgentPipelineDialog agentName={agentName} agentPhone={agentPhone || ""} />
         </div>
       </div>
+
+      {/* Commission Card */}
+      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <span>Total Commission</span>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-baseline">
+              <span className="text-sm text-muted-foreground">Total Earned</span>
+              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                UGX {(agentEarnings?.earnedCommission || 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-sm text-muted-foreground">Withdrawn</span>
+              <span className="text-lg font-semibold text-muted-foreground">
+                UGX {(agentEarnings?.withdrawnCommission || 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="pt-2 border-t flex justify-between items-baseline">
+              <span className="text-sm font-medium">Available Balance</span>
+              <span className="text-3xl font-bold text-green-700 dark:text-green-300">
+                UGX {availableBalance.toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Input
+              type="number"
+              placeholder="Enter amount"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              disabled={isWithdrawing || availableBalance <= 0}
+              className="flex-1"
+            />
+            <Button
+              onClick={handleWithdraw}
+              disabled={isWithdrawing || !withdrawAmount || availableBalance <= 0}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isWithdrawing ? (
+                <>
+                  <Wallet className="mr-2 h-4 w-4 animate-pulse" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Withdraw
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tenant List - Primary View */}
       <Card>
@@ -636,56 +769,6 @@ const AgentDetailPage = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Performance Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
-              <Users className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">{stats.totalTenants}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.activeTenants} active • {stats.totalTenants - stats.activeTenants} inactive
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Rent</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                UGX {stats.totalMonthlyRent.toLocaleString()}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Collected</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                UGX {stats.totalCollected.toLocaleString()}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.successRate.toFixed(1)}%</div>
-            </CardContent>
-          </Card>
-        </div>
 
       {/* Assign Tenant Dialog */}
       {assigningTenant && (
