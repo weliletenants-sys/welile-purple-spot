@@ -13,7 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search, UserCog } from "lucide-react";
+import { AssignTenantToAgentDialog } from "@/components/AssignTenantToAgentDialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -47,6 +48,7 @@ const AgentDetailPage = () => {
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [assigningTenant, setAssigningTenant] = useState<any>(null);
   const itemsPerPage = 20;
 
   // Get agent by phone and filter tenants for this agent
@@ -332,6 +334,7 @@ const AgentDetailPage = () => {
                         <TableHead>Tenant Name</TableHead>
                         <TableHead className="text-right">Amount Owed</TableHead>
                         <TableHead className="text-center">Status</TableHead>
+                        <TableHead className="text-center">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -390,16 +393,26 @@ const AgentDetailPage = () => {
                         return paginatedTenants.map(({ tenant, balance }) => (
                           <TableRow 
                             key={tenant.id} 
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => navigate(`/tenant/${tenant.id}`)}
+                            className="hover:bg-muted/50"
                           >
-                            <TableCell className="font-medium">{tenant.name}</TableCell>
-                            <TableCell className="text-right">
+                            <TableCell 
+                              className="font-medium cursor-pointer"
+                              onClick={() => navigate(`/tenant/${tenant.id}`)}
+                            >
+                              {tenant.name}
+                            </TableCell>
+                            <TableCell 
+                              className="text-right cursor-pointer"
+                              onClick={() => navigate(`/tenant/${tenant.id}`)}
+                            >
                               <span className={`font-semibold ${balance > 0 ? 'text-red-600' : balance < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
                                 UGX {Math.abs(balance).toLocaleString()}
                               </span>
                             </TableCell>
-                            <TableCell className="text-center">
+                            <TableCell 
+                              className="text-center cursor-pointer"
+                              onClick={() => navigate(`/tenant/${tenant.id}`)}
+                            >
                               <Badge
                                 variant={
                                   tenant.status === "active"
@@ -411,6 +424,20 @@ const AgentDetailPage = () => {
                               >
                                 {tenant.status}
                               </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAssigningTenant(tenant);
+                                }}
+                                className="gap-1"
+                              >
+                                <UserCog className="h-3 w-3" />
+                                Reassign
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ));
@@ -659,6 +686,19 @@ const AgentDetailPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Assign Tenant Dialog */}
+      {assigningTenant && (
+        <AssignTenantToAgentDialog
+          tenant={assigningTenant}
+          open={!!assigningTenant}
+          onOpenChange={(open) => !open && setAssigningTenant(null)}
+          onSuccess={() => {
+            setAssigningTenant(null);
+            window.location.reload(); // Refresh to show updated assignment
+          }}
+        />
+      )}
     </div>
   );
 };
