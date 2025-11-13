@@ -234,7 +234,7 @@ const AgentDetailPage = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Complete Tenant List</CardTitle>
+                <CardTitle>Tenant Balances</CardTitle>
               </CardHeader>
               <CardContent>
                 {agentTenants.length === 0 ? (
@@ -242,54 +242,71 @@ const AgentDetailPage = () => {
                     No tenants found
                   </p>
                 ) : (
-                  <div className="space-y-3">
-                    {agentTenants.map((tenant, index) => (
-                      <div
-                        key={tenant.id}
-                        className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                      >
-                        {/* Number */}
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-base font-bold text-primary">{index + 1}</span>
-                        </div>
-                        
-                        {/* Tenant Info */}
-                        <div className="flex-1 min-w-0 space-y-2">
-                          <div className="flex items-start justify-between gap-4 flex-wrap">
-                            <div>
-                              <h4 className="font-semibold text-base">{tenant.name}</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {agentTenants.map((tenant) => {
+                      // Calculate tenant balance
+                      const tenantPayments = payments?.filter(p => p.tenant_id === tenant.id) || [];
+                      const totalPaid = tenantPayments.reduce((sum, p) => {
+                        return p.paid ? sum + (Number(p.paid_amount) || Number(p.amount) || 0) : sum;
+                      }, 0);
+                      const totalExpected = tenantPayments.reduce((sum, p) => {
+                        return sum + (Number(p.amount) || 0);
+                      }, 0);
+                      const balance = totalExpected - totalPaid;
+                      
+                      return (
+                        <Card key={tenant.id} className="hover:shadow-lg transition-shadow">
+                          <CardContent className="p-6 space-y-4">
+                            {/* Tenant Name */}
+                            <div className="space-y-1">
+                              <h4 className="font-bold text-lg">{tenant.name}</h4>
                               <p className="text-sm text-muted-foreground">{tenant.contact}</p>
                             </div>
-                            <Badge
-                              variant={
-                                tenant.status === "active"
-                                  ? "default"
-                                  : tenant.status === "cleared"
-                                  ? "secondary"
-                                  : "outline"
-                              }
-                            >
-                              {tenant.status}
-                            </Badge>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">Rent:</span>
-                              <p className="font-semibold">UGX {Number(tenant.rentAmount).toLocaleString()}</p>
+                            
+                            {/* Balance Display */}
+                            <div className="pt-3 border-t space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Total Expected:</span>
+                                <span className="font-semibold">UGX {totalExpected.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Total Paid:</span>
+                                <span className="font-semibold text-green-600">UGX {totalPaid.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between items-center pt-2 border-t">
+                                <span className="text-sm font-semibold">Balance:</span>
+                                <span className={`font-bold text-lg ${balance > 0 ? 'text-red-600' : balance < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                  UGX {Math.abs(balance).toLocaleString()}
+                                  {balance > 0 ? ' (owing)' : balance < 0 ? ' (credit)' : ''}
+                                </span>
+                              </div>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Days:</span>
-                              <p className="font-semibold">{tenant.repaymentDays}</p>
+                            
+                            {/* Additional Info */}
+                            <div className="pt-3 border-t space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Rent:</span>
+                                <span className="font-medium">UGX {Number(tenant.rentAmount).toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Status:</span>
+                                <Badge
+                                  variant={
+                                    tenant.status === "active"
+                                      ? "default"
+                                      : tenant.status === "cleared"
+                                      ? "secondary"
+                                      : "outline"
+                                  }
+                                >
+                                  {tenant.status}
+                                </Badge>
+                              </div>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Performance:</span>
-                              <p className="font-semibold">{tenant.performance}%</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
