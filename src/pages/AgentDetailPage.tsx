@@ -244,127 +244,33 @@ const AgentDetailPage = () => {
           </Card>
         </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="portfolio" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="portfolio">Tenant Portfolio</TabsTrigger>
-            <TabsTrigger value="trends">Performance Trends</TabsTrigger>
-            <TabsTrigger value="payments">Payment History</TabsTrigger>
-          </TabsList>
-
-          {/* Tenant Portfolio */}
-          <TabsContent value="portfolio" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tenant Status Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={statusBreakdown}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="status" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="hsl(var(--primary))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Balance Summary Card */}
-            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-primary" />
-                  Balance Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  {(() => {
-                    // Calculate summary metrics
-                    const tenantsWithBalances = agentTenants.map((tenant) => {
-                      const tenantPayments = payments?.filter(p => p.tenant_id === tenant.id) || [];
-                      const totalPaid = tenantPayments.reduce((sum, p) => {
-                        return p.paid ? sum + (Number(p.paid_amount) || Number(p.amount) || 0) : sum;
-                      }, 0);
-                      const totalExpected = tenantPayments.reduce((sum, p) => {
-                        return sum + (Number(p.amount) || 0);
-                      }, 0);
-                      return totalExpected - totalPaid;
-                    });
-
-                    const totalOutstanding = tenantsWithBalances.reduce((sum, balance) => sum + Math.max(0, balance), 0);
-                    const totalTenants = agentTenants.length;
-                    const averageBalance = totalTenants > 0 ? tenantsWithBalances.reduce((sum, balance) => sum + balance, 0) / totalTenants : 0;
-
-                    return (
-                      <>
-                        {/* Total Outstanding */}
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground font-medium">Total Outstanding</p>
-                          <p className="text-3xl font-bold text-red-600">
-                            UGX {totalOutstanding.toLocaleString()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Amount owed by tenants
-                          </p>
-                        </div>
-
-                        {/* Total Tenants */}
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground font-medium">Total Tenants</p>
-                          <p className="text-3xl font-bold text-primary">
-                            {totalTenants}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Active and managed tenants
-                          </p>
-                        </div>
-
-                        {/* Average Balance */}
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground font-medium">Average Balance</p>
-                          <p className={`text-3xl font-bold ${averageBalance > 0 ? 'text-orange-600' : averageBalance < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
-                            UGX {Math.abs(averageBalance).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {averageBalance > 0 ? 'Average owing per tenant' : averageBalance < 0 ? 'Average credit per tenant' : 'No balance'}
-                          </p>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Tenant Balances</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                      <SelectTrigger className="w-[180px] bg-background">
-                        <SelectValue placeholder="Sort by" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="balance">Sort by Balance</SelectItem>
-                        <SelectItem value="name">Sort by Name</SelectItem>
-                        <SelectItem value="status">Sort by Status</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {agentTenants.length === 0 ? (
-                  <p className="text-center py-8 text-muted-foreground">
-                    No tenants found
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Tenant Grid - Primary View */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">All Tenants ({agentTenants.length})</CardTitle>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                <SelectTrigger className="w-[180px] bg-background">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="balance">Sort by Balance</SelectItem>
+                  <SelectItem value="name">Sort by Name</SelectItem>
+                  <SelectItem value="status">Sort by Status</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {agentTenants.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">
+              No tenants found
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {(() => {
                       // Calculate balances for all tenants first
                       const tenantsWithBalances = agentTenants.map((tenant) => {
@@ -394,181 +300,64 @@ const AgentDetailPage = () => {
                         return 0;
                       });
 
-                      return sortedTenants.map(({ tenant, balance, totalPaid, totalExpected }) => {
-                        return (
-                        <Card key={tenant.id} className="hover:shadow-lg transition-shadow">
-                          <CardContent className="p-6 space-y-4">
-                            {/* Tenant Name */}
-                            <div className="space-y-1">
-                              <h4 className="font-bold text-lg">{tenant.name}</h4>
-                              <p className="text-sm text-muted-foreground">{tenant.contact}</p>
-                            </div>
-                            
-                            {/* Balance Display */}
-                            <div className="pt-3 border-t space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">Total Expected:</span>
-                                <span className="font-semibold">UGX {totalExpected.toLocaleString()}</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">Total Paid:</span>
-                                <span className="font-semibold text-green-600">UGX {totalPaid.toLocaleString()}</span>
-                              </div>
-                              <div className="flex justify-between items-center pt-2 border-t">
-                                <span className="text-sm font-semibold">Balance:</span>
-                                <span className={`font-bold text-lg ${balance > 0 ? 'text-red-600' : balance < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                  UGX {Math.abs(balance).toLocaleString()}
-                                  {balance > 0 ? ' (owing)' : balance < 0 ? ' (credit)' : ''}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            {/* Additional Info */}
-                            <div className="pt-3 border-t space-y-2 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Rent:</span>
-                                <span className="font-medium">UGX {Number(tenant.rentAmount).toLocaleString()}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Status:</span>
-                                <Badge
-                                  variant={
-                                    tenant.status === "active"
-                                      ? "default"
-                                      : tenant.status === "cleared"
-                                      ? "secondary"
-                                      : "outline"
-                                  }
-                                >
-                                  {tenant.status}
-                                </Badge>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        );
-                      });
-                    })()}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Performance Trends */}
-          <TabsContent value="trends" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Collection Trends (Last 6 Months)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={performanceTrends}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="collected"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      name="Collected"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="expected"
-                      stroke="hsl(var(--muted-foreground))"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      name="Expected"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Success Rate Trends</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={performanceTrends}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="rate"
-                      stroke="hsl(var(--chart-2))"
-                      strokeWidth={2}
-                      name="Success Rate %"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Payment History */}
-          <TabsContent value="payments" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Payment History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Tenant</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Recorded By</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentPayments.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                          No payments found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      recentPayments.map((payment) => (
-                        <TableRow key={payment.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-muted-foreground" />
-                              {format(new Date(payment.date), "MMM dd, yyyy")}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">{payment.tenantName}</TableCell>
-                          <TableCell className="text-right">
-                            UGX{" "}
-                            {(
-                              Number(payment.paid_amount) ||
-                              Number(payment.amount) ||
-                              0
-                            ).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={payment.paid ? "default" : "secondary"}>
-                              {payment.paid ? "Paid" : "Pending"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{payment.recorded_by || "-"}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-      </Tabs>
+              return sortedTenants.map(({ tenant, balance, totalPaid, totalExpected }) => {
+                return (
+                  <Card key={tenant.id} className="hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer">
+                    <CardContent className="p-5 space-y-3">
+                      {/* Tenant Name & Status */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <h4 className="font-bold text-base truncate">{tenant.name}</h4>
+                          <p className="text-xs text-muted-foreground truncate">{tenant.contact}</p>
+                        </div>
+                        <Badge
+                          variant={
+                            tenant.status === "active"
+                              ? "default"
+                              : tenant.status === "cleared"
+                              ? "secondary"
+                              : "outline"
+                          }
+                          className="shrink-0"
+                        >
+                          {tenant.status}
+                        </Badge>
+                      </div>
+                      
+                      {/* Balance Display */}
+                      <div className="pt-3 border-t space-y-2">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground">Expected:</span>
+                          <span className="font-medium">UGX {totalExpected.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground">Paid:</span>
+                          <span className="font-medium text-green-600">UGX {totalPaid.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-2 border-t">
+                          <span className="text-sm font-semibold">Balance:</span>
+                          <span className={`font-bold ${balance > 0 ? 'text-red-600' : balance < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                            UGX {Math.abs(balance).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Rent Amount */}
+                      <div className="pt-2 border-t">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground">Monthly Rent:</span>
+                          <span className="font-semibold">UGX {Number(tenant.rentAmount).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              });
+            })()}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
