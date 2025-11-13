@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -34,6 +34,7 @@ const AgentDetailPage = () => {
   const { agentPhone } = useParams<{ agentPhone: string }>();
   const { tenants } = useTenants();
   const [sortBy, setSortBy] = useState<"name" | "balance" | "status">("balance");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
 
   // Get agent by phone and filter tenants for this agent
   const { data: agents } = useQuery({
@@ -244,12 +245,32 @@ const AgentDetailPage = () => {
           </Card>
         </div>
 
-      {/* Tenant Grid - Primary View */}
+      {/* Tenant List - Primary View */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl">All Tenants ({agentTenants.length})</CardTitle>
             <div className="flex items-center gap-2">
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-1 border rounded-md p-1">
+                <Button
+                  variant={viewMode === "table" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                  className="h-8 w-8 p-0"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className="h-8 w-8 p-0"
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+              </div>
+              
               <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                 <SelectTrigger className="w-[180px] bg-background">
@@ -270,6 +291,81 @@ const AgentDetailPage = () => {
               No tenants found
             </p>
           ) : (
+            <>
+              {viewMode === "table" ? (
+                // Simple Table View
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tenant Name</TableHead>
+                        <TableHead className="text-right">Amount Owed</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(() => {
+                        // Calculate balances for all tenants first
+                        const tenantsWithBalances = agentTenants.map((tenant) => {
+                          const tenantPayments = payments?.filter(p => p.tenant_id === tenant.id) || [];
+                          const totalPaid = tenantPayments.reduce((sum, p) => {
+                            return p.paid ? sum + (Number(p.paid_amount) || Number(p.amount) || 0) : sum;
+                          }, 0);
+                          const totalExpected = tenantPayments.reduce((sum, p) => {
+                            return sum + (Number(p.amount) || 0);
+                          }, 0);
+                          const balance = totalExpected - totalPaid;
+                          return { tenant, balance, totalPaid, totalExpected };
+                        });
+
+                        // Sort based on selected option
+                        const sortedTenants = [...tenantsWithBalances].sort((a, b) => {
+                          if (sortBy === "balance") {
+                            return b.balance - a.balance;
+                          } else if (sortBy === "name") {
+                            return a.tenant.name.localeCompare(b.tenant.name);
+                          } else if (sortBy === "status") {
+                            const statusOrder = { active: 0, pending: 1, cleared: 2, rejected: 3 };
+                            const aStatus = a.tenant.status as keyof typeof statusOrder;
+                            const bStatus = b.tenant.status as keyof typeof statusOrder;
+                            return (statusOrder[aStatus] || 99) - (statusOrder[bStatus] || 99);
+                          }
+                          return 0;
+                        });
+
+                        return sortedTenants.map(({ tenant, balance }) => (
+                          <TableRow 
+                            key={tenant.id} 
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => navigate(`/tenant/${tenant.id}`)}
+                          >
+                            <TableCell className="font-medium">{tenant.name}</TableCell>
+                            <TableCell className="text-right">
+                              <span className={`font-semibold ${balance > 0 ? 'text-red-600' : balance < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                UGX {Math.abs(balance).toLocaleString()}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge
+                                variant={
+                                  tenant.status === "active"
+                                    ? "default"
+                                    : tenant.status === "cleared"
+                                    ? "secondary"
+                                    : "outline"
+                                }
+                              >
+                                {tenant.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ));
+                      })()}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                // Grid View
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {(() => {
                       // Calculate balances for all tenants first
@@ -359,6 +455,8 @@ const AgentDetailPage = () => {
               });
             })()}
             </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
