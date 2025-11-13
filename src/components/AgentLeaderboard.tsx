@@ -295,7 +295,15 @@ export const AgentLeaderboard = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">{agent.agentName}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/agent/${encodeURIComponent(agent.agentPhone || agent.agentName)}`);
+                          }}
+                          className="font-semibold text-primary hover:underline"
+                        >
+                          {agent.agentName}
+                        </button>
                         {agent.hasRecentRecordingActivity && (
                           <Badge variant="default" className="bg-gradient-to-r from-primary to-accent text-primary-foreground px-2 py-0.5 text-xs animate-pulse">
                             <Zap className="w-3 h-3 mr-1" />

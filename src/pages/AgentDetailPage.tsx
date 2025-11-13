@@ -237,30 +237,29 @@ const AgentDetailPage = () => {
                 <CardTitle>Complete Tenant List</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Rent Amount</TableHead>
-                      <TableHead className="text-right">Days</TableHead>
-                      <TableHead className="text-right">Performance</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {agentTenants.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          No tenants found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      agentTenants.map((tenant) => (
-                        <TableRow key={tenant.id}>
-                          <TableCell className="font-medium">{tenant.name}</TableCell>
-                          <TableCell>{tenant.contact}</TableCell>
-                          <TableCell>
+                {agentTenants.length === 0 ? (
+                  <p className="text-center py-8 text-muted-foreground">
+                    No tenants found
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {agentTenants.map((tenant, index) => (
+                      <div
+                        key={tenant.id}
+                        className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        {/* Number */}
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-base font-bold text-primary">{index + 1}</span>
+                        </div>
+                        
+                        {/* Tenant Info */}
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex items-start justify-between gap-4 flex-wrap">
+                            <div>
+                              <h4 className="font-semibold text-base">{tenant.name}</h4>
+                              <p className="text-sm text-muted-foreground">{tenant.contact}</p>
+                            </div>
                             <Badge
                               variant={
                                 tenant.status === "active"
@@ -272,17 +271,27 @@ const AgentDetailPage = () => {
                             >
                               {tenant.status}
                             </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            UGX {Number(tenant.rentAmount).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right">{tenant.repaymentDays}</TableCell>
-                          <TableCell className="text-right">{tenant.performance}%</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Rent:</span>
+                              <p className="font-semibold">UGX {Number(tenant.rentAmount).toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Days:</span>
+                              <p className="font-semibold">{tenant.repaymentDays}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Performance:</span>
+                              <p className="font-semibold">{tenant.performance}%</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
