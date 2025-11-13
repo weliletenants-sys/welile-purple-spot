@@ -70,7 +70,7 @@ const Index = () => {
   const { data: pendingCount = 0 } = usePendingTenantsCount();
   const { data: underReviewCount = 0 } = useUnderReviewTenantsCount();
   
-  // Fetch all tenants and payments for agent stats
+  // Fetch all tenants and payments for agent stats (visible to all users)
   const { data: allTenants } = useQuery({
     queryKey: ["all-tenants-for-stats"],
     queryFn: async () => {
@@ -80,7 +80,6 @@ const Index = () => {
       if (error) throw error;
       return data;
     },
-    enabled: isAdmin,
   });
 
   const { data: allPayments } = useQuery({
@@ -93,7 +92,6 @@ const Index = () => {
       if (error) throw error;
       return data;
     },
-    enabled: isAdmin,
   });
 
   // Calculate agent stats using agent_id
@@ -667,26 +665,26 @@ const Index = () => {
                                       </div>
                                     )}
                                     
-                                     {/* Agent Stats */}
-                                     <div className="space-y-2 mt-3 pt-3 border-t">
-                                       <div className="flex items-center justify-between text-sm">
-                                         <span className="text-muted-foreground flex items-center gap-1">
+                                     {/* Agent Stats - Always visible */}
+                                     <div className="space-y-3 mt-3 pt-3 border-t border-border/50">
+                                       <div className="flex items-center justify-between">
+                                         <span className="text-sm text-muted-foreground flex items-center gap-2">
                                            <Users className="h-4 w-4 text-primary" />
                                            Total Tenants
                                          </span>
-                                         <span className="font-bold text-lg text-primary">{stats.totalTenants}</span>
+                                         <span className="font-bold text-2xl text-primary">{stats.totalTenants}</span>
                                        </div>
-                                       <div className="flex items-center justify-between text-xs">
+                                       <div className="flex items-center justify-between text-xs bg-muted/50 p-2 rounded">
                                          <span className="text-muted-foreground">Active</span>
-                                         <span className="font-semibold">{stats.activeTenants}</span>
+                                         <span className="font-semibold text-green-600">{stats.activeTenants}</span>
                                        </div>
-                                       <div className="flex items-center justify-between text-sm pt-2 border-t">
-                                         <span className="text-muted-foreground flex items-center gap-1">
-                                           <DollarSign className="h-3 w-3" />
-                                           Total Collected
+                                       <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                                         <span className="text-sm text-muted-foreground flex items-center gap-2">
+                                           <DollarSign className="h-4 w-4 text-green-600" />
+                                           Collected
                                          </span>
-                                         <span className="font-semibold text-green-600">
-                                           UGX {stats.totalCollected.toLocaleString()}
+                                         <span className="font-bold text-sm text-green-600">
+                                           {stats.totalCollected.toLocaleString()}
                                          </span>
                                        </div>
                                      </div>
