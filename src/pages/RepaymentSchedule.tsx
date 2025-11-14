@@ -16,7 +16,7 @@ import { EditTenantForm } from "@/components/EditTenantForm";
 import { ContactButtons } from "@/components/ContactButtons";
 import { TenantStatusHistory } from "@/components/TenantStatusHistory";
 import { supabase } from "@/integrations/supabase/client";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { format, startOfWeek, parseISO } from "date-fns";
 
 const ITEMS_PER_PAGE = 10;
@@ -198,15 +198,15 @@ export default function RepaymentSchedule() {
   const totalActual = actualPayments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
   const totalAdjustment = adjustmentPayments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
   
-  // Calculate weekly payment trends
+  // Calculate weekly payment trends with cumulative totals
   const weeklyData = payments
     .filter(p => p.paid && p.recordedAt)
-    .reduce((acc: Record<string, { week: string; actual: number; adjustment: number }>, payment) => {
+    .reduce((acc: Record<string, { week: string; weekStart: Date; actual: number; adjustment: number }>, payment) => {
       const weekStart = startOfWeek(parseISO(payment.recordedAt!), { weekStartsOn: 1 });
       const weekKey = format(weekStart, 'MMM dd');
       
       if (!acc[weekKey]) {
-        acc[weekKey] = { week: weekKey, actual: 0, adjustment: 0 };
+        acc[weekKey] = { week: weekKey, weekStart, actual: 0, adjustment: 0 };
       }
       
       if (payment.paymentType === 'actual') {
@@ -218,10 +218,24 @@ export default function RepaymentSchedule() {
       return acc;
     }, {});
   
-  const weeklyChartData = Object.values(weeklyData).sort((a, b) => {
-    const dateA = new Date(a.week + ' 2024');
-    const dateB = new Date(b.week + ' 2024');
-    return dateA.getTime() - dateB.getTime();
+  const sortedWeeklyData = Object.values(weeklyData).sort((a, b) => 
+    a.weekStart.getTime() - b.weekStart.getTime()
+  );
+  
+  // Add cumulative totals
+  let cumulativeActual = 0;
+  let cumulativeAdjustment = 0;
+  const weeklyChartData = sortedWeeklyData.map(week => {
+    cumulativeActual += week.actual;
+    cumulativeAdjustment += week.adjustment;
+    return {
+      week: week.week,
+      actual: week.actual,
+      adjustment: week.adjustment,
+      cumulativeActual,
+      cumulativeAdjustment,
+      cumulativeTotal: cumulativeActual + cumulativeAdjustment
+    };
   });
   
   const progressPercentage = (totalPaid / repaymentDetails.totalAmount) * 100;
@@ -620,12 +634,12 @@ export default function RepaymentSchedule() {
                 </ResponsiveContainer>
               </div>
 
-              {/* Bar Chart - Weekly Trends */}
+              {/* Combined Chart - Weekly Trends with Cumulative */}
               {weeklyChartData.length > 0 && (
                 <div className="bg-muted/30 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold mb-2 text-center">Weekly Payment Trends</h4>
+                  <h4 className="text-sm font-semibold mb-2 text-center">Weekly Payments & Cumulative Growth</h4>
                   <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={weeklyChartData}>
+                    <ComposedChart data={weeklyChartData}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                       <XAxis 
                         dataKey="week" 
@@ -635,6 +649,13 @@ export default function RepaymentSchedule() {
                         height={60}
                       />
                       <YAxis 
+                        yAxisId="left"
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                      />
+                      <YAxis 
+                        yAxisId="right"
+                        orientation="right"
                         tick={{ fontSize: 11 }}
                         tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
                       />
@@ -649,18 +670,29 @@ export default function RepaymentSchedule() {
                       />
                       <Legend />
                       <Bar 
+                        yAxisId="left"
                         dataKey="actual" 
                         name="Actual Payments" 
                         fill="hsl(142, 71%, 45%)" 
                         radius={[4, 4, 0, 0]}
                       />
                       <Bar 
+                        yAxisId="left"
                         dataKey="adjustment" 
                         name="Adjustment Payments" 
                         fill="hsl(38, 92%, 50%)" 
                         radius={[4, 4, 0, 0]}
                       />
-                    </BarChart>
+                      <Line 
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey="cumulativeTotal" 
+                        name="Cumulative Total" 
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={3}
+                        dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                      />
+                    </ComposedChart>
                   </ResponsiveContainer>
                 </div>
               )}
