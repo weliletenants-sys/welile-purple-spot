@@ -287,9 +287,27 @@ export const BulkEditAgentsDialog = ({ agents, onSuccess }: BulkEditAgentsDialog
 
       let completed = 0;
       const total = editsToApply.length;
+      
+      // Generate a unique batch ID for this edit operation
+      const editBatchId = crypto.randomUUID();
 
       // Apply updates one by one with progress tracking
       for (const edit of editsToApply) {
+        // Save edit history first
+        const { error: historyError } = await supabase
+          .from("agent_edit_history")
+          .insert({
+            edit_batch_id: editBatchId,
+            agent_id: edit.id,
+            old_name: edit.originalName,
+            old_phone: edit.originalPhone,
+            new_name: edit.newName.toUpperCase(),
+            new_phone: edit.newPhone,
+            edited_by: "Admin", // You can replace this with actual user info
+          });
+
+        if (historyError) throw historyError;
+
         // Update agents table
         const { error: agentError } = await supabase
           .from("agents")
@@ -340,7 +358,7 @@ export const BulkEditAgentsDialog = ({ agents, onSuccess }: BulkEditAgentsDialog
 
       toast({
         title: "Success",
-        description: `Successfully updated ${editsToApply.length} agent${editsToApply.length > 1 ? "s" : ""}`,
+        description: `Successfully updated ${editsToApply.length} agent${editsToApply.length > 1 ? "s" : ""}. Changes can be undone within 24 hours.`,
       });
 
       setOpen(false);

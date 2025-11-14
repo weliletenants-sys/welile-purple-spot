@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { BulkEditAgentsDialog } from "@/components/BulkEditAgentsDialog";
+import { BulkEditUndoHistory } from "@/components/BulkEditUndoHistory";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgents } from "@/hooks/useAgents";
 import {
@@ -119,6 +120,9 @@ export const AgentLeaderboard = () => {
 
   return (
     <div className="space-y-8">
+      {/* Undo History */}
+      <BulkEditUndoHistory />
+
       {/* Pagination Controls - Top */}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card/50 p-4 rounded-lg border border-border">

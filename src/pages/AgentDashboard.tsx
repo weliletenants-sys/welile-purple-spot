@@ -23,6 +23,7 @@ import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
 import { EarningsNotificationDemo } from "@/components/EarningsNotificationDemo";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { BulkEditAgentsDialog } from "@/components/BulkEditAgentsDialog";
+import { BulkEditUndoHistory } from "@/components/BulkEditUndoHistory";
 import { useAgents } from "@/hooks/useAgents";
 
 const AgentDashboard = () => {
@@ -427,6 +428,9 @@ const AgentDashboard = () => {
             </Card>
           </div>
         )}
+
+        {/* Undo History */}
+        {!routeAgentName && <BulkEditUndoHistory />}
 
         {/* Pagination Controls - Top */}
         {!isLoading && sortedAgents && sortedAgents.length > itemsPerPage && (
