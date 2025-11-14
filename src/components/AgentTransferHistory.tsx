@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useAgentTransferHistory } from "@/hooks/useAgentTransferHistory";
-import { Loader2, ArrowRight, ArrowLeft, Search, CalendarIcon, X } from "lucide-react";
+import { Loader2, ArrowRight, ArrowLeft, Search, CalendarIcon, X, TrendingUp, TrendingDown, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AgentTransferHistoryProps {
@@ -55,6 +55,25 @@ export function AgentTransferHistory({ agentName }: AgentTransferHistoryProps) {
     setDateTo(undefined);
   };
 
+  // Calculate statistics
+  const totalTransfersOut = transfers?.filter((t) => t.action_type === "tenant_transfer_out").length || 0;
+  const totalTransfersIn = transfers?.filter((t) => t.action_type === "tenant_transfer_in").length || 0;
+  
+  const getMostFrequentReason = () => {
+    if (!transfers || transfers.length === 0) return "N/A";
+    
+    const reasonCounts: Record<string, number> = {};
+    transfers.forEach((transfer) => {
+      const reason = transfer.metadata.reason || "No reason provided";
+      reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
+    });
+    
+    const mostFrequent = Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0];
+    return mostFrequent ? mostFrequent[0] : "N/A";
+  };
+
+  const mostFrequentReason = getMostFrequentReason();
+
   if (isLoading) {
     return (
       <Card>
@@ -72,6 +91,50 @@ export function AgentTransferHistory({ agentName }: AgentTransferHistoryProps) {
         <CardDescription>View all tenant transfers you've made or received</CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                <ArrowRight className="h-4 w-4 text-orange-600" />
+                Transferred Out
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-orange-600">{totalTransfersOut}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total tenants transferred</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                <ArrowLeft className="h-4 w-4 text-green-600" />
+                Received
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-green-600">{totalTransfersIn}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total tenants received</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                <FileText className="h-4 w-4 text-blue-600" />
+                Most Frequent Reason
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm font-semibold text-blue-600 line-clamp-2" title={mostFrequentReason}>
+                {mostFrequentReason}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Common transfer reason</p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Filters */}
         <div className="mb-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
