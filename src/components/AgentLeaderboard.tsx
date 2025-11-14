@@ -8,7 +8,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
+import { BulkEditAgentsDialog } from "@/components/BulkEditAgentsDialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAgents } from "@/hooks/useAgents";
 import {
   Table,
   TableBody,
@@ -31,6 +33,7 @@ export const AgentLeaderboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const { data: agents, isLoading } = useAgentEarnings("all");
+  const { data: allAgents } = useAgents();
 
   // Reset to page 1 when page size changes
   const handlePageSizeChange = (newSize: string) => {
@@ -252,19 +255,30 @@ export const AgentLeaderboard = () => {
 
       {/* Detailed Earnings Breakdown Table */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <DollarSign className="w-6 h-6 text-primary" />
             Detailed Earnings Breakdown
           </h2>
-          <Button
-            onClick={handleExportToExcel}
-            className="flex items-center gap-2"
-            variant="outline"
-          >
-            <Download className="w-4 h-4" />
-            Export to Excel
-          </Button>
+          <div className="flex gap-2">
+            {allAgents && allAgents.length > 0 && (
+              <BulkEditAgentsDialog
+                agents={allAgents}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ["agent-earnings"] });
+                  queryClient.invalidateQueries({ queryKey: ["agents"] });
+                }}
+              />
+            )}
+            <Button
+              onClick={handleExportToExcel}
+              className="flex items-center gap-2"
+              variant="outline"
+            >
+              <Download className="w-4 h-4" />
+              Export to Excel
+            </Button>
+          </div>
         </div>
         
         <Card className="overflow-hidden">

@@ -22,6 +22,8 @@ import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
 import { EarningsNotificationDemo } from "@/components/EarningsNotificationDemo";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
+import { BulkEditAgentsDialog } from "@/components/BulkEditAgentsDialog";
+import { useAgents } from "@/hooks/useAgents";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ const AgentDashboard = () => {
   const [sortDirection, setSortDirection] = useState<"desc" | "asc">("desc");
   const { data: allAgents, isLoading } = useAgentEarnings(period);
   const { createRequest } = useWithdrawalRequests();
+  const { data: agentsList } = useAgents();
   
   // Enable real-time earnings notifications for specific agent view
   useEarningsNotifications({
@@ -229,7 +232,16 @@ const AgentDashboard = () => {
                 title="Keyboard shortcut: Ctrl/Cmd + K"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              {agentsList && agentsList.length > 0 && !routeAgentName && (
+                <BulkEditAgentsDialog
+                  agents={agentsList}
+                  onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
+                    queryClient.invalidateQueries({ queryKey: ["agents"] });
+                  }}
+                />
+              )}
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                 <SelectTrigger className="w-full sm:w-[200px] bg-card">
                   <ArrowUpDown className="h-4 w-4 mr-2" />
