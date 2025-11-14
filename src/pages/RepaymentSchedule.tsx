@@ -242,6 +242,7 @@ export default function RepaymentSchedule() {
           recordedAt: new Date().toISOString(),
           serviceCenter: selectedServiceCenter.trim(),
           paymentMode: selectedPaymentMode.trim(),
+          paymentType: selectedPaymentType,
         },
       });
 
@@ -249,6 +250,7 @@ export default function RepaymentSchedule() {
       setRecordedByName("");
       setSelectedServiceCenter("");
       setSelectedPaymentMode("");
+      setSelectedPaymentType('actual');
       setSelectedPaymentIndex(null);
       
       toast({
@@ -272,6 +274,7 @@ export default function RepaymentSchedule() {
     setRecordedByName("");
     setSelectedServiceCenter(payment.serviceCenter || "");
     setSelectedPaymentMode(payment.paymentMode || "");
+    setSelectedPaymentType(payment.paymentType || 'actual');
     setEditingPaymentIndex(index);
   };
 
@@ -326,6 +329,7 @@ export default function RepaymentSchedule() {
           modifiedAt: new Date().toISOString(),
           serviceCenter: selectedServiceCenter.trim(),
           paymentMode: selectedPaymentMode.trim(),
+          paymentType: selectedPaymentType,
         },
       });
 
@@ -333,6 +337,7 @@ export default function RepaymentSchedule() {
       setRecordedByName("");
       setSelectedServiceCenter("");
       setSelectedPaymentMode("");
+      setSelectedPaymentType('actual');
       setEditingPaymentIndex(null);
       
       toast({
