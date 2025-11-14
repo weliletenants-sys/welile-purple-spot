@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, TrendingUp, Users, DollarSign, Award, Download, Target, Trophy, History, ChevronDown, ChevronUp } from "lucide-react";
+import { LogOut, TrendingUp, Users, DollarSign, Award, Download, Target, Trophy, History, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
@@ -38,6 +38,8 @@ const AgentPortal = () => {
   const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
   const [showTenants, setShowTenants] = useState(false);
   const [tenantsList, setTenantsList] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const tenantsPerPage = 10;
 
   // Enable real-time earnings notifications
   useEarningsNotifications({
@@ -250,32 +252,65 @@ const AgentPortal = () => {
           </CardHeader>
           {showTenants && (
             <CardContent>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {tenantsList.length === 0 ? (
-                  <p className="text-primary-foreground/70">No tenants found</p>
-                ) : (
-                  tenantsList.map((tenant) => (
-                    <div key={tenant.id} className="bg-background/10 backdrop-blur p-3 rounded-lg border border-primary-foreground/20">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-primary-foreground">{tenant.name}</p>
-                          <p className="text-sm text-primary-foreground/70">{tenant.contact}</p>
-                          <p className="text-xs text-primary-foreground/60 mt-1">{tenant.address}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-primary-foreground">UGX {Number(tenant.rent_amount).toLocaleString()}</p>
-                          <div className="flex gap-1 mt-1">
-                            <Badge variant={tenant.status === 'active' ? 'default' : 'secondary'} className="text-xs">
-                              {tenant.status}
-                            </Badge>
-                            <Badge variant={tenant.payment_status === 'paid' ? 'default' : 'destructive'} className="text-xs">
-                              {tenant.payment_status}
-                            </Badge>
+              <div className="space-y-4">
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {tenantsList.length === 0 ? (
+                    <p className="text-primary-foreground/70">No tenants found</p>
+                  ) : (
+                    tenantsList
+                      .slice((currentPage - 1) * tenantsPerPage, currentPage * tenantsPerPage)
+                      .map((tenant) => (
+                        <div key={tenant.id} className="bg-background/10 backdrop-blur p-3 rounded-lg border border-primary-foreground/20">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold text-primary-foreground">{tenant.name}</p>
+                              <p className="text-sm text-primary-foreground/70">{tenant.contact}</p>
+                              <p className="text-xs text-primary-foreground/60 mt-1">{tenant.address}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-primary-foreground">UGX {Number(tenant.rent_amount).toLocaleString()}</p>
+                              <div className="flex gap-1 mt-1">
+                                <Badge variant={tenant.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                                  {tenant.status}
+                                </Badge>
+                                <Badge variant={tenant.payment_status === 'paid' ? 'default' : 'destructive'} className="text-xs">
+                                  {tenant.payment_status}
+                                </Badge>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ))
+                  )}
+                </div>
+                
+                {tenantsList.length > tenantsPerPage && (
+                  <div className="flex items-center justify-between pt-2 border-t border-primary-foreground/20">
+                    <p className="text-sm text-primary-foreground/70">
+                      Showing {((currentPage - 1) * tenantsPerPage) + 1} - {Math.min(currentPage * tenantsPerPage, tenantsList.length)} of {tenantsList.length}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="flex items-center px-3 text-sm font-medium text-primary-foreground">
+                        {currentPage} / {Math.ceil(tenantsList.length / tenantsPerPage)}
+                      </span>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(tenantsList.length / tenantsPerPage), p + 1))}
+                        disabled={currentPage === Math.ceil(tenantsList.length / tenantsPerPage)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
                     </div>
-                  ))
+                  </div>
                 )}
               </div>
             </CardContent>
