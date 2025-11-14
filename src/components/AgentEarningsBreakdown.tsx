@@ -1,9 +1,20 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, Zap, Gift, Database, CheckCircle2, XCircle } from "lucide-react";
+import { DollarSign, TrendingUp, Zap, Gift, Database, CheckCircle2, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface AgentEarningsBreakdownProps {
   agentName: string;
@@ -21,6 +32,10 @@ interface EarningRecord {
 }
 
 export const AgentEarningsBreakdown = ({ agentName, period = "all" }: AgentEarningsBreakdownProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const { data: earnings, isLoading } = useQuery({
     queryKey: ["agentEarningsBreakdown", agentName, period],
     queryFn: async () => {
@@ -182,6 +197,16 @@ export const AgentEarningsBreakdown = ({ agentName, period = "all" }: AgentEarni
   const totalRecordingBonus = recordingBonuses.reduce((sum, e) => sum + e.amount, 0);
   const withdrawnRecordingBonuses = recordingBonuses.filter(e => e.isWithdrawn);
 
+  // Pagination logic
+  const totalPages = Math.ceil(earnings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedEarnings = earnings.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-4">
       {/* Summary Card for Recording Bonuses */}
@@ -212,12 +237,36 @@ export const AgentEarningsBreakdown = ({ agentName, period = "all" }: AgentEarni
 
       {/* Detailed Earnings List */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-primary" />
-          Earnings Breakdown
-        </h3>
-        <div className="space-y-3">
-          {earnings.map((earning) => (
+        <div 
+          className="flex items-center justify-between cursor-pointer mb-4"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            Commission Breakdown
+            <Badge variant="outline" className="ml-2">
+              {earnings.length} entries
+            </Badge>
+          </h3>
+          <Button variant="ghost" size="sm">
+            {isOpen ? (
+              <>
+                <ChevronUp className="w-4 h-4 mr-1" />
+                Hide
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4 mr-1" />
+                Show
+              </>
+            )}
+          </Button>
+        </div>
+
+        {isOpen && (
+          <>
+            <div className="space-y-3 mb-4">
+              {paginatedEarnings.map((earning) => (
             <div
               key={earning.id}
               className={`p-4 rounded-lg border transition-all duration-200 ${
@@ -266,8 +315,58 @@ export const AgentEarningsBreakdown = ({ agentName, period = "all" }: AgentEarni
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination className="mt-4">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (page === currentPage - 2 || page === currentPage + 2) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </>
+        )}
       </Card>
     </div>
   );
