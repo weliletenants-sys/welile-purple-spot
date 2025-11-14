@@ -79,6 +79,7 @@ export default function RepaymentSchedule() {
   const [recordedByName, setRecordedByName] = useState<string>("");
   const [selectedServiceCenter, setSelectedServiceCenter] = useState<string>("");
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<string>("");
+  const [selectedPaymentType, setSelectedPaymentType] = useState<'actual' | 'adjustment'>('actual');
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
   const [authorizedRecorders, setAuthorizedRecorders] = useState<string[]>([]);
@@ -634,6 +635,15 @@ export default function RepaymentSchedule() {
                             <SelectItem value="MTN Mobile Money">MTN Mobile Money</SelectItem>
                             <SelectItem value="Airtel Mobile Money">Airtel Mobile Money</SelectItem>
                             <SelectItem value="Cash">Cash</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <Select value={selectedPaymentType} onValueChange={(value) => setSelectedPaymentType(value as 'actual' | 'adjustment')}>
+                          <SelectTrigger className="h-12 text-lg">
+                            <SelectValue placeholder="📋 Select Payment Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="actual">💰 Actual Payment</SelectItem>
+                            <SelectItem value="adjustment">⚙️ Adjustment Payment</SelectItem>
                           </SelectContent>
                         </Select>
                         <div className="flex gap-2">
@@ -656,12 +666,13 @@ export default function RepaymentSchedule() {
                            <Button 
                             size="lg" 
                             variant="ghost" 
-                             onClick={() => {
+                            onClick={() => {
                               setEditingPaymentIndex(null);
                               setPaymentAmount("");
                               setRecordedByName("");
                               setSelectedServiceCenter("");
                               setSelectedPaymentMode("");
+                              setSelectedPaymentType('actual');
                             }}
                             className="h-12"
                           >
@@ -730,6 +741,15 @@ export default function RepaymentSchedule() {
                           <SelectItem value="Cash">Cash</SelectItem>
                         </SelectContent>
                       </Select>
+                      <Select value={selectedPaymentType} onValueChange={(value) => setSelectedPaymentType(value as 'actual' | 'adjustment')}>
+                        <SelectTrigger className="h-14 text-lg">
+                          <SelectValue placeholder="📋 Select Payment Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="actual">💰 Actual Payment (with commission)</SelectItem>
+                          <SelectItem value="adjustment">⚙️ Adjustment Payment (no commission)</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <div className="flex gap-3">
                         <Button 
                           size="lg" 
@@ -748,6 +768,7 @@ export default function RepaymentSchedule() {
                             setRecordedByName("");
                             setSelectedServiceCenter("");
                             setSelectedPaymentMode("");
+                            setSelectedPaymentType('actual');
                           }}
                           className="h-14 px-6"
                         >
