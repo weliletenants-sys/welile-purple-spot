@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, TrendingUp, Users, DollarSign, Award, Download, Target, Trophy, History, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { LogOut, TrendingUp, Users, DollarSign, Award, Download, Target, Trophy, History, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ArrowRightLeft } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
 import { EarningsNotificationDemo } from "@/components/EarningsNotificationDemo";
+import { AgentTransferTenantDialog } from "@/components/AgentTransferTenantDialog";
 
 interface AgentStats {
   tenantsManaged: number;
@@ -40,6 +41,8 @@ const AgentPortal = () => {
   const [tenantsList, setTenantsList] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const tenantsPerPage = 10;
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<any>(null);
 
   // Enable real-time earnings notifications
   useEarningsNotifications({
@@ -261,15 +264,15 @@ const AgentPortal = () => {
                       .slice((currentPage - 1) * tenantsPerPage, currentPage * tenantsPerPage)
                       .map((tenant) => (
                         <div key={tenant.id} className="bg-background/10 backdrop-blur p-3 rounded-lg border border-primary-foreground/20">
-                          <div className="flex justify-between items-start">
-                            <div>
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="flex-1">
                               <p className="font-semibold text-primary-foreground">{tenant.name}</p>
                               <p className="text-sm text-primary-foreground/70">{tenant.contact}</p>
                               <p className="text-xs text-primary-foreground/60 mt-1">{tenant.address}</p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right space-y-2">
                               <p className="font-semibold text-primary-foreground">UGX {Number(tenant.rent_amount).toLocaleString()}</p>
-                              <div className="flex gap-1 mt-1">
+                              <div className="flex gap-1">
                                 <Badge variant={tenant.status === 'active' ? 'default' : 'secondary'} className="text-xs">
                                   {tenant.status}
                                 </Badge>
@@ -277,6 +280,18 @@ const AgentPortal = () => {
                                   {tenant.payment_status}
                                 </Badge>
                               </div>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                className="w-full"
+                                onClick={() => {
+                                  setSelectedTenant(tenant);
+                                  setTransferDialogOpen(true);
+                                }}
+                              >
+                                <ArrowRightLeft className="h-3 w-3 mr-1" />
+                                Transfer
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -482,6 +497,20 @@ const AgentPortal = () => {
           </div>
         )}
       </div>
+
+      {/* Transfer Dialog */}
+      {selectedTenant && (
+        <AgentTransferTenantDialog
+          open={transferDialogOpen}
+          onOpenChange={setTransferDialogOpen}
+          tenant={selectedTenant}
+          currentAgentName={agentName}
+          onTransferComplete={() => {
+            fetchTenantsList(agentName);
+            setCurrentPage(1);
+          }}
+        />
+      )}
     </div>
   );
 };
