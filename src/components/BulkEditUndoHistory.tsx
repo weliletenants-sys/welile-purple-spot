@@ -55,7 +55,7 @@ export const BulkEditUndoHistory = () => {
       cutoffTime.setHours(cutoffTime.getHours() - UNDO_WINDOW_HOURS);
 
       const { data, error } = await supabase
-        .from("agent_edit_history")
+        .from("agent_edit_history" as any)
         .select("*")
         .is("undone_at", null)
         .gte("edited_at", cutoffTime.toISOString())
@@ -64,7 +64,7 @@ export const BulkEditUndoHistory = () => {
       if (error) throw error;
 
       // Group by batch ID
-      const batches = data.reduce((acc, edit) => {
+      const batches = (data as any[]).reduce((acc: any, edit: any) => {
         if (!acc[edit.edit_batch_id]) {
           acc[edit.edit_batch_id] = {
             edit_batch_id: edit.edit_batch_id,
@@ -164,8 +164,8 @@ export const BulkEditUndoHistory = () => {
 
       // Mark all edits in this batch as undone
       const { error: markError } = await supabase
-        .from("agent_edit_history")
-        .update({ undone_at: new Date().toISOString() })
+        .from("agent_edit_history" as any)
+        .update({ undone_at: new Date().toISOString() } as any)
         .eq("edit_batch_id", batch.edit_batch_id);
 
       if (markError) throw markError;
@@ -209,14 +209,14 @@ export const BulkEditUndoHistory = () => {
     try {
       // Fetch all edit history (including undone records for complete audit trail)
       const { data: allHistory, error } = await supabase
-        .from("agent_edit_history")
+        .from("agent_edit_history" as any)
         .select("*")
         .order("edited_at", { ascending: false });
 
       if (error) throw error;
 
       // Prepare data for export
-      const exportData = allHistory.map((edit) => ({
+      const exportData = (allHistory as any[]).map((edit: any) => ({
         "Batch ID": edit.edit_batch_id,
         "Edit Date": format(new Date(edit.edited_at), "yyyy-MM-dd HH:mm:ss"),
         "Agent Name (Old)": edit.old_name,
