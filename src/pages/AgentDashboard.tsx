@@ -3,7 +3,7 @@ import { WelileLogo } from "@/components/WelileLogo";
 import { BackToHome } from "@/components/BackToHome";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, Check, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter, Wallet } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter, Wallet } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
 import { EarningsNotificationDemo } from "@/components/EarningsNotificationDemo";
+import { EditAgentDialog } from "@/components/EditAgentDialog";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -28,9 +29,6 @@ const AgentDashboard = () => {
   const { agentName: routeAgentName } = useParams();
   const [period, setPeriod] = useState<string>("all");
   const [withdrawingAgent, setWithdrawingAgent] = useState<string | null>(null);
-  const [editingAgent, setEditingAgent] = useState<string | null>(null);
-  const [editedName, setEditedName] = useState<string>("");
-  const [editedPhone, setEditedPhone] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
@@ -165,66 +163,6 @@ const AgentDashboard = () => {
       case "weekly": return "Last 7 Days";
       case "monthly": return "Last 30 Days";
       default: return p;
-    }
-  };
-
-  const handleEdit = (agentPhone: string, agentName: string) => {
-    setEditingAgent(agentPhone);
-    setEditedName(agentName);
-    setEditedPhone(agentPhone);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingAgent(null);
-    setEditedName("");
-    setEditedPhone("");
-  };
-
-  const handleSaveEdit = async (oldPhone: string) => {
-    if (!editedName.trim()) {
-      toast.error("Agent name is required");
-      return;
-    }
-
-    if (!editedPhone.trim()) {
-      toast.error("Agent phone is required");
-      return;
-    }
-
-    if (!/^[0-9+\s-()]+$/.test(editedPhone)) {
-      toast.error("Invalid phone format");
-      return;
-    }
-
-    try {
-      // Update tenants table
-      const { error: tenantsError } = await supabase
-        .from("tenants")
-        .update({
-          agent_name: editedName,
-          agent_phone: editedPhone,
-        })
-        .eq("agent_phone", oldPhone);
-
-      if (tenantsError) throw tenantsError;
-
-      // Update agent_earnings table
-      const { error: earningsError } = await supabase
-        .from("agent_earnings")
-        .update({
-          agent_name: editedName,
-          agent_phone: editedPhone,
-        })
-        .eq("agent_phone", oldPhone);
-
-      if (earningsError) throw earningsError;
-
-      toast.success("Agent information updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
-      handleCancelEdit();
-    } catch (error) {
-      console.error("Error updating agent:", error);
-      toast.error("Failed to update agent information");
     }
   };
 
@@ -576,60 +514,30 @@ const AgentDashboard = () => {
                       <UserCheck className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      {editingAgent === agent.agentPhone ? (
-                        <div className="space-y-2">
-                          <Input
-                            value={editedName}
-                            onChange={(e) => setEditedName(e.target.value)}
-                            placeholder="Agent name"
-                            className="h-8"
-                          />
-                          <Input
-                            value={editedPhone}
-                            onChange={(e) => setEditedPhone(e.target.value)}
-                            placeholder="Phone number"
-                            className="h-8"
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => handleSaveEdit(agent.agentPhone)}
-                              className="flex-1"
-                            >
-                              <Check className="w-4 h-4 mr-1" />
-                              Save
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={handleCancelEdit}
-                              className="flex-1"
-                            >
-                              <X className="w-4 h-4 mr-1" />
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-foreground truncate">{agent.agentName}</h3>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleEdit(agent.agentPhone, agent.agentName)}
-                              className="h-8 w-8"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <p className="text-sm text-muted-foreground">{agent.agentPhone}</p>
-                            <ContactButtons phoneNumber={agent.agentPhone} iconOnly />
-                          </div>
-                        </>
-                      )}
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-bold text-foreground truncate">{agent.agentName}</h3>
+                        <EditAgentDialog
+                          agent={{
+                            id: agent.agentPhone,
+                            name: agent.agentName,
+                            phone: agent.agentPhone,
+                            is_active: true,
+                          }}
+                          onSuccess={() => queryClient.invalidateQueries({ queryKey: ["agentEarnings"] })}
+                        >
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </EditAgentDialog>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-sm text-muted-foreground">{agent.agentPhone}</p>
+                        <ContactButtons phoneNumber={agent.agentPhone} iconOnly />
+                      </div>
                     </div>
                   </div>
 

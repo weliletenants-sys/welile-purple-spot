@@ -3,10 +3,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
-import { ChevronLeft, ChevronRight, Trophy, Award, Medal, DollarSign, Gift, FileText, Star, Download, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trophy, Award, Medal, DollarSign, Gift, FileText, Star, Download, Zap, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { EditAgentDialog } from "@/components/EditAgentDialog";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -25,6 +27,7 @@ import {
 
 export const AgentLeaderboard = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const { data: agents, isLoading } = useAgentEarnings("all");
@@ -167,56 +170,80 @@ export const AgentLeaderboard = () => {
           {paginatedAgents.map((agent, index) => (
             <Card 
               key={agent.agentName}
-              className="p-6 bg-gradient-to-br from-card to-primary/5 border-border hover:shadow-[var(--shadow-card)] transition-all duration-300 cursor-pointer"
-              onClick={() => navigate(`/agent/${encodeURIComponent(agent.agentName)}`)}
+              className="p-6 bg-gradient-to-br from-card to-primary/5 border-border hover:shadow-[var(--shadow-card)] transition-all duration-300 relative group"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold">
-                    {startIndex + index + 1}
+              <div 
+                className="cursor-pointer"
+                onClick={() => navigate(`/agent/${encodeURIComponent(agent.agentName)}`)}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold">
+                      {startIndex + index + 1}
+                    </div>
+                    {getRankIcon(index)}
                   </div>
-                  {getRankIcon(index)}
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-foreground">{agent.tenantsCount}</div>
+                    <div className="text-xs text-muted-foreground">Tenants</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-foreground">{agent.tenantsCount}</div>
-                  <div className="text-xs text-muted-foreground">Tenants</div>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-foreground truncate" title={agent.agentName}>
-                    {agent.agentName}
-                  </p>
-                  {agent.hasRecentRecordingActivity && (
-                    <Badge variant="default" className="bg-gradient-to-r from-primary to-accent text-primary-foreground px-2 py-0.5 text-xs animate-pulse">
-                      <Zap className="w-3 h-3 mr-1" />
-                      Active
-                    </Badge>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-foreground truncate" title={agent.agentName}>
+                      {agent.agentName}
+                    </p>
+                    {agent.hasRecentRecordingActivity && (
+                      <Badge variant="default" className="bg-gradient-to-r from-primary to-accent text-primary-foreground px-2 py-0.5 text-xs animate-pulse">
+                        <Zap className="w-3 h-3 mr-1" />
+                        Active
+                      </Badge>
+                    )}
+                  </div>
+                  {agent.agentPhone && (
+                    <p className="text-xs text-muted-foreground truncate" title={agent.agentPhone}>
+                      {agent.agentPhone}
+                    </p>
                   )}
                 </div>
-                {agent.agentPhone && (
-                  <p className="text-xs text-muted-foreground truncate" title={agent.agentPhone}>
-                    {agent.agentPhone}
-                  </p>
-                )}
+                <div className="mt-4 pt-4 border-t border-border space-y-2">
+                  <div>
+                    <div className="text-xs text-muted-foreground">
+                      Earned Commission
+                    </div>
+                    <div className="text-lg font-bold text-primary">
+                      UGX {agent.earnedCommission.toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">
+                      Expected Commission
+                    </div>
+                    <div className="text-sm font-semibold text-muted-foreground">
+                      UGX {agent.expectedCommission.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-border space-y-2">
-                <div>
-                  <div className="text-xs text-muted-foreground">
-                    Earned Commission
-                  </div>
-                  <div className="text-lg font-bold text-primary">
-                    UGX {agent.earnedCommission.toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">
-                    Expected Commission
-                  </div>
-                  <div className="text-sm font-semibold text-muted-foreground">
-                    UGX {agent.expectedCommission.toLocaleString()}
-                  </div>
-                </div>
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <EditAgentDialog
+                  agent={{
+                    id: agent.agentPhone,
+                    name: agent.agentName,
+                    phone: agent.agentPhone,
+                    is_active: true,
+                  }}
+                  onSuccess={() => queryClient.invalidateQueries({ queryKey: ["agent-earnings"] })}
+                >
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-8 w-8 bg-card/80 backdrop-blur-sm hover:bg-card"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </EditAgentDialog>
               </div>
             </Card>
           ))}
