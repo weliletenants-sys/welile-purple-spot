@@ -686,6 +686,26 @@ export default function RepaymentSchedule() {
                       <Line 
                         yAxisId="right"
                         type="monotone"
+                        dataKey="cumulativeActual" 
+                        name="Cumulative Actual" 
+                        stroke="hsl(142, 71%, 45%)"
+                        strokeWidth={2.5}
+                        strokeDasharray="5 5"
+                        dot={{ fill: 'hsl(142, 71%, 45%)', r: 3 }}
+                      />
+                      <Line 
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey="cumulativeAdjustment" 
+                        name="Cumulative Adjustment" 
+                        stroke="hsl(38, 92%, 50%)"
+                        strokeWidth={2.5}
+                        strokeDasharray="5 5"
+                        dot={{ fill: 'hsl(38, 92%, 50%)', r: 3 }}
+                      />
+                      <Line 
+                        yAxisId="right"
+                        type="monotone"
                         dataKey="cumulativeTotal" 
                         name="Cumulative Total" 
                         stroke="hsl(var(--primary))"
