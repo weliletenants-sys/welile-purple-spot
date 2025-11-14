@@ -16,6 +16,7 @@ import { EditTenantForm } from "@/components/EditTenantForm";
 import { ContactButtons } from "@/components/ContactButtons";
 import { TenantStatusHistory } from "@/components/TenantStatusHistory";
 import { supabase } from "@/integrations/supabase/client";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -557,6 +558,38 @@ export default function RepaymentSchedule() {
               <Wallet className="w-5 h-5" />
               Payment Type Breakdown
             </h3>
+            
+            {/* Chart Visualization */}
+            <div className="mb-6 bg-muted/30 rounded-lg p-4">
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Actual Payments', value: totalActual, count: actualPayments.length },
+                      { name: 'Adjustment Payments', value: totalAdjustment, count: adjustmentPayments.length }
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    <Cell fill="hsl(142, 71%, 45%)" />
+                    <Cell fill="hsl(38, 92%, 50%)" />
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number, name: string, props: any) => [
+                      `UGX ${value.toLocaleString()} (${props.payload.count} payments)`,
+                      name
+                    ]}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Actual Payments */}
               <div className="p-4 rounded-lg bg-green-500/10 border-2 border-green-500/30">
