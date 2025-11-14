@@ -9,6 +9,7 @@ export interface DailyPayment {
   modifiedAt?: string;
   serviceCenter?: string;
   paymentMode?: string;
+  paymentType?: 'actual' | 'adjustment';
 }
 
 export interface Guarantor {

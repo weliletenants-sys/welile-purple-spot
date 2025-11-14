@@ -31,6 +31,7 @@ export const usePayments = (tenantId: string) => {
         modifiedAt: payment.modified_at,
         serviceCenter: payment.service_center,
         paymentMode: payment.payment_mode,
+        paymentType: payment.payment_type || 'actual',
         _id: payment.id,
       })) as (DailyPayment & { _id: string })[];
     },
@@ -82,6 +83,7 @@ export const usePayments = (tenantId: string) => {
           ...(updates.modifiedAt && { modified_at: updates.modifiedAt }),
           ...(updates.serviceCenter && { service_center: updates.serviceCenter }),
           ...(updates.paymentMode && { payment_mode: updates.paymentMode }),
+          ...(updates.paymentType && { payment_type: updates.paymentType }),
         })
         .eq("id", paymentId)
         .select()
@@ -89,8 +91,11 @@ export const usePayments = (tenantId: string) => {
 
       if (error) throw error;
 
-      // If payment is marked as paid, create agent commission (5% of paid amount)
-      if (updates.paid === true && updates.paidAmount) {
+      // Only create commissions for actual payments, not adjustments
+      const isActualPayment = updates.paymentType !== 'adjustment';
+      
+      // If payment is marked as paid and is actual payment, create agent commission (5% of paid amount)
+      if (updates.paid === true && updates.paidAmount && isActualPayment) {
         const { data: tenant, error: tenantError } = await supabase
           .from("tenants")
           .select("agent_name, agent_phone, status")
