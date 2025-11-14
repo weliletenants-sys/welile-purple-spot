@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,14 +32,18 @@ export function AgentTransferTenantDialog({
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
   const [reason, setReason] = useState("");
   const [isTransferring, setIsTransferring] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const { data: agents, isLoading: isLoadingAgents } = useAgents();
 
-  const handleTransfer = async () => {
+  const handleTransfer = () => {
     if (!selectedAgentId) {
       toast.error("Please select an agent");
       return;
     }
+    setShowConfirmation(true);
+  };
 
+  const executeTransfer = async () => {
     setIsTransferring(true);
     try {
       const selectedAgent = agents?.find(a => a.id === selectedAgentId);
@@ -122,6 +127,7 @@ export function AgentTransferTenantDialog({
       onOpenChange(false);
       setSelectedAgentId("");
       setReason("");
+      setShowConfirmation(false);
     } catch (error) {
       console.error('Error transferring tenant:', error);
       toast.error("Failed to transfer tenant");
@@ -130,76 +136,99 @@ export function AgentTransferTenantDialog({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Transfer Tenant</DialogTitle>
-          <DialogDescription>
-            Transfer {tenant.name} to another agent
-          </DialogDescription>
-        </DialogHeader>
+  const selectedAgent = agents?.find(a => a.id === selectedAgentId);
 
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Tenant</Label>
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="font-semibold">{tenant.name}</p>
-              <p className="text-sm text-muted-foreground">{tenant.contact}</p>
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Transfer Tenant</DialogTitle>
+            <DialogDescription>
+              Transfer {tenant.name} to another agent
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Tenant</Label>
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="font-semibold">{tenant.name}</p>
+                <p className="text-sm text-muted-foreground">{tenant.contact}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="agent">Transfer to Agent *</Label>
+              <Select
+                value={selectedAgentId}
+                onValueChange={setSelectedAgentId}
+                disabled={isLoadingAgents}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  {agents
+                    ?.filter(agent => agent.name !== currentAgentName)
+                    .map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        {agent.name} {agent.phone && `(${agent.phone})`}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason (Optional)</Label>
+              <Textarea
+                id="reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Why are you transferring this tenant?"
+                rows={3}
+              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="agent">Transfer to Agent *</Label>
-            <Select
-              value={selectedAgentId}
-              onValueChange={setSelectedAgentId}
-              disabled={isLoadingAgents}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isTransferring}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an agent" />
-              </SelectTrigger>
-              <SelectContent>
-                {agents
-                  ?.filter(agent => agent.name !== currentAgentName)
-                  .map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name} {agent.phone && `(${agent.phone})`}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleTransfer}
+              disabled={isTransferring || !selectedAgentId}
+            >
+              {isTransferring && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Transfer Tenant
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          <div className="space-y-2">
-            <Label htmlFor="reason">Reason (Optional)</Label>
-            <Textarea
-              id="reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Why are you transferring this tenant?"
-              rows={3}
-            />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isTransferring}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleTransfer}
-            disabled={isTransferring || !selectedAgentId}
-          >
-            {isTransferring && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Transfer Tenant
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Transfer</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to transfer <span className="font-semibold">{tenant.name}</span> to{" "}
+              <span className="font-semibold">{selectedAgent?.name}</span>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isTransferring}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeTransfer} disabled={isTransferring}>
+              {isTransferring && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm Transfer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
