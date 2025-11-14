@@ -295,7 +295,7 @@ export const BulkEditAgentsDialog = ({ agents, onSuccess }: BulkEditAgentsDialog
       for (const edit of editsToApply) {
         // Save edit history first
         const { error: historyError } = await supabase
-          .from("agent_edit_history")
+          .from("agent_edit_history" as any)
           .insert({
             edit_batch_id: editBatchId,
             agent_id: edit.id,
@@ -304,7 +304,7 @@ export const BulkEditAgentsDialog = ({ agents, onSuccess }: BulkEditAgentsDialog
             new_name: edit.newName.toUpperCase(),
             new_phone: edit.newPhone,
             edited_by: "Admin", // You can replace this with actual user info
-          });
+          } as any);
 
         if (historyError) throw historyError;
 
