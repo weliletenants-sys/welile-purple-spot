@@ -17,6 +17,10 @@ export const UpdatePrompt = () => {
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [newWorker, setNewWorker] = useState<ServiceWorker | null>(null);
   const [lastCheckTime, setLastCheckTime] = useState<Date>(new Date());
+  const [postponeCount, setPostponeCount] = useState(() => {
+    const saved = localStorage.getItem('update_postpone_count');
+    return saved ? parseInt(saved, 10) : 0;
+  });
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -79,6 +83,9 @@ export const UpdatePrompt = () => {
 
   const handleUpdate = () => {
     if (newWorker) {
+      // Reset postpone count on update
+      localStorage.removeItem('update_postpone_count');
+      setPostponeCount(0);
       newWorker.postMessage({ type: 'SKIP_WAITING' });
       setShowUpdateDialog(false);
       window.location.reload();
@@ -86,7 +93,11 @@ export const UpdatePrompt = () => {
   };
 
   const handleLater = () => {
+    const newCount = postponeCount + 1;
+    setPostponeCount(newCount);
+    localStorage.setItem('update_postpone_count', newCount.toString());
     setShowUpdateDialog(false);
+    
     // Show reminder after 1 minute (very persistent to ensure all devices update)
     setTimeout(() => {
       setShowUpdateDialog(true);
@@ -104,13 +115,26 @@ export const UpdatePrompt = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-full bg-gradient-to-r from-primary to-accent">
+              <div className="p-2 rounded-full bg-gradient-to-r from-primary to-accent relative">
                 <Sparkles className="w-6 h-6 text-primary-foreground animate-pulse" />
+                {postponeCount > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold animate-bounce">
+                    {postponeCount}
+                  </div>
+                )}
               </div>
               <DialogTitle className="text-2xl">New Features Available!</DialogTitle>
             </div>
             <DialogDescription className="text-base pt-2">
               <strong>Important:</strong> We've added new features and improvements to the app. Please update now to ensure the best experience and access to all new features!
+              {postponeCount > 0 && (
+                <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <p className="text-sm font-semibold text-destructive">
+                    ⚠️ You've postponed this update {postponeCount} time{postponeCount > 1 ? 's' : ''}. 
+                    {postponeCount >= 3 && ' Please update now to avoid issues!'}
+                  </p>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col gap-2 pt-4">
