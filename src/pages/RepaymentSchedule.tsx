@@ -189,6 +189,13 @@ export default function RepaymentSchedule() {
   
   const paidPayments = payments.filter(p => p.paid).length;
   const totalPaid = payments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+  
+  // Calculate payment type breakdown
+  const actualPayments = payments.filter(p => p.paid && p.paymentType === 'actual');
+  const adjustmentPayments = payments.filter(p => p.paid && p.paymentType === 'adjustment');
+  const totalActual = actualPayments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+  const totalAdjustment = adjustmentPayments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+  
   const progressPercentage = (totalPaid / repaymentDetails.totalAmount) * 100;
   const balance = repaymentDetails.totalAmount - totalPaid;
 
@@ -542,6 +549,67 @@ export default function RepaymentSchedule() {
             </div>
           </div>
         </Card>
+
+        {/* Payment Type Summary */}
+        {paidPayments > 0 && (
+          <Card className="p-6">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Wallet className="w-5 h-5" />
+              Payment Type Breakdown
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Actual Payments */}
+              <div className="p-4 rounded-lg bg-green-500/10 border-2 border-green-500/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-green-600 text-white">💰 Actual Payments</Badge>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                    UGX {totalActual.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {actualPayments.length} payment{actualPayments.length !== 1 ? 's' : ''} with commission
+                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                    ✓ Agent commission (5%) & Recording bonus (0.5%) applied
+                  </p>
+                </div>
+              </div>
+
+              {/* Adjustment Payments */}
+              <div className="p-4 rounded-lg bg-amber-500/10 border-2 border-amber-500/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-amber-600 text-white">⚙️ Adjustment Payments</Badge>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">
+                    UGX {totalAdjustment.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {adjustmentPayments.length} payment{adjustmentPayments.length !== 1 ? 's' : ''} without commission
+                  </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                    ⚠️ No commissions generated from these payments
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Summary */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Total Recorded:</span>
+                <span className="text-xl font-bold text-foreground">UGX {totalPaid.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between mt-2 text-sm">
+                <span className="text-muted-foreground">Commission-eligible amount:</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">
+                  UGX {totalActual.toLocaleString()} ({((totalActual / totalPaid) * 100).toFixed(1)}%)
+                </span>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Daily Payments Table */}
         <Card className="p-6">
