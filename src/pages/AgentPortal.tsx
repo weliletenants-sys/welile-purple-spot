@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, TrendingUp, Users, DollarSign, Award, Download, Target, Trophy, History } from "lucide-react";
+import { LogOut, TrendingUp, Users, DollarSign, Award, Download, Target, Trophy, History, ChevronDown, ChevronUp } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
@@ -36,6 +36,8 @@ const AgentPortal = () => {
   const [loading, setLoading] = useState(true);
   const [goals, setGoals] = useState<any[]>([]);
   const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+  const [showTenants, setShowTenants] = useState(false);
+  const [tenantsList, setTenantsList] = useState<any[]>([]);
 
   // Enable real-time earnings notifications
   useEarningsNotifications({
@@ -55,7 +57,30 @@ const AgentPortal = () => {
 
     setAgentName(storedAgentName);
     fetchAgentData(storedAgentName);
+    fetchTenantsList(storedAgentName);
   }, [navigate]);
+
+  const fetchTenantsList = async (name: string) => {
+    try {
+      const { data: agentData } = await supabase
+        .from('agents')
+        .select('id')
+        .eq('name', name)
+        .maybeSingle();
+      
+      if (!agentData) return;
+
+      const { data: tenants } = await supabase
+        .from('tenants')
+        .select('id, name, contact, address, rent_amount, status, payment_status')
+        .eq('agent_id', agentData.id)
+        .order('created_at', { ascending: false });
+
+      setTenantsList(tenants || []);
+    } catch (error) {
+      console.error('Error fetching tenants list:', error);
+    }
+  };
 
   const fetchAgentData = async (name: string) => {
     setLoading(true);
@@ -206,9 +231,15 @@ const AgentPortal = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-2xl">Welcome, {agentName}! 👋</CardTitle>
+                <button 
+                  onClick={() => setShowTenants(!showTenants)}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                >
+                  <CardTitle className="text-2xl">Welcome, {agentName}! 👋</CardTitle>
+                  {showTenants ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </button>
                 <CardDescription className="text-primary-foreground/80 mt-2">
-                  Your Performance Dashboard
+                  {showTenants ? "Your Tenants" : "Your Performance Dashboard"}
                 </CardDescription>
               </div>
               <Button variant="secondary" onClick={handleLogout}>
@@ -217,6 +248,38 @@ const AgentPortal = () => {
               </Button>
             </div>
           </CardHeader>
+          {showTenants && (
+            <CardContent>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {tenantsList.length === 0 ? (
+                  <p className="text-primary-foreground/70">No tenants found</p>
+                ) : (
+                  tenantsList.map((tenant) => (
+                    <div key={tenant.id} className="bg-background/10 backdrop-blur p-3 rounded-lg border border-primary-foreground/20">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold text-primary-foreground">{tenant.name}</p>
+                          <p className="text-sm text-primary-foreground/70">{tenant.contact}</p>
+                          <p className="text-xs text-primary-foreground/60 mt-1">{tenant.address}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-primary-foreground">UGX {Number(tenant.rent_amount).toLocaleString()}</p>
+                          <div className="flex gap-1 mt-1">
+                            <Badge variant={tenant.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                              {tenant.status}
+                            </Badge>
+                            <Badge variant={tenant.payment_status === 'paid' ? 'default' : 'destructive'} className="text-xs">
+                              {tenant.payment_status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         {/* Main Content */}
