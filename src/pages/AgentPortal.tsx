@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
 import { EarningsNotificationDemo } from "@/components/EarningsNotificationDemo";
 import { AgentTransferTenantDialog } from "@/components/AgentTransferTenantDialog";
+import { AgentTransferHistory } from "@/components/AgentTransferHistory";
 
 interface AgentStats {
   tenantsManaged: number;
@@ -457,6 +458,9 @@ const AgentPortal = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Transfer History */}
+            <AgentTransferHistory agentName={agentName} />
 
             {/* Certificates */}
             {certificates.length > 0 && (

@@ -9,6 +9,7 @@ import { useAgents } from "@/hooks/useAgents";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AgentTransferTenantDialogProps {
   open: boolean;
@@ -34,6 +35,7 @@ export function AgentTransferTenantDialog({
   const [isTransferring, setIsTransferring] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const { data: agents, isLoading: isLoadingAgents } = useAgents();
+  const queryClient = useQueryClient();
 
   const handleTransfer = () => {
     if (!selectedAgentId) {
@@ -123,6 +125,11 @@ export function AgentTransferTenantDialog({
         });
 
       toast.success(`Tenant transferred to ${selectedAgent.name} successfully`);
+      
+      // Invalidate transfer history queries for both agents
+      queryClient.invalidateQueries({ queryKey: ["agent-transfer-history", currentAgentName] });
+      queryClient.invalidateQueries({ queryKey: ["agent-transfer-history", selectedAgent.name] });
+      
       onTransferComplete();
       onOpenChange(false);
       setSelectedAgentId("");
