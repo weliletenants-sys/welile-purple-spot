@@ -545,7 +545,17 @@ export default function RepaymentSchedule() {
 
         {/* Daily Payments Table */}
         <Card className="p-6">
-          <h3 className="text-xl font-bold mb-4">Daily Installments</h3>
+          <h3 className="text-xl font-bold mb-2">Daily Installments</h3>
+          <div className="flex items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Badge className="bg-green-600 text-white">💰 Actual</Badge>
+              <span className="text-sm text-muted-foreground">With commission</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-amber-600 text-white">⚙️ Adjustment</Badge>
+              <span className="text-sm text-muted-foreground">No commission</span>
+            </div>
+          </div>
           <div className="space-y-3">
             {currentPayments.map((payment, index) => (
               <div 
@@ -565,7 +575,20 @@ export default function RepaymentSchedule() {
                     {payment.paid ? <Check className="w-7 h-7" /> : startIndex + index + 1}
                   </div>
                   <div className="flex-1">
-                    <p className="text-2xl font-bold text-foreground">UGX {payment.amount.toLocaleString()}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-2xl font-bold text-foreground">UGX {payment.amount.toLocaleString()}</p>
+                      {payment.paid && payment.paymentType && (
+                        <Badge 
+                          variant={payment.paymentType === 'actual' ? 'default' : 'secondary'}
+                          className={payment.paymentType === 'actual' 
+                            ? 'bg-green-600 text-white hover:bg-green-700' 
+                            : 'bg-amber-600 text-white hover:bg-amber-700'
+                          }
+                        >
+                          {payment.paymentType === 'actual' ? '💰 Actual' : '⚙️ Adjustment'}
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-base text-muted-foreground font-medium">{payment.date}</p>
                     {payment.recordedBy && (
                       <p className="text-sm text-muted-foreground mt-1">
@@ -581,6 +604,17 @@ export default function RepaymentSchedule() {
                     {payment.paymentMode && (
                       <p className="text-sm text-muted-foreground mt-1">
                         💳 Payment Mode: {payment.paymentMode}
+                      </p>
+                    )}
+                    {payment.paid && payment.paymentType && (
+                      <p className={`text-sm mt-1 font-medium ${
+                        payment.paymentType === 'actual' 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-amber-600 dark:text-amber-400'
+                      }`}>
+                        {payment.paymentType === 'actual' 
+                          ? '💰 Actual Payment (commission applied)' 
+                          : '⚙️ Adjustment Payment (no commission)'}
                       </p>
                     )}
                     {payment.modifiedBy && (
