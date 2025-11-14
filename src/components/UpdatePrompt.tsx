@@ -23,11 +23,11 @@ export const UpdatePrompt = () => {
       navigator.serviceWorker.ready.then((reg) => {
         setRegistration(reg);
         
-        // Check for updates every 2 minutes for faster detection
+        // Check for updates every minute for immediate detection across all devices
         setInterval(() => {
           reg.update();
           setLastCheckTime(new Date());
-        }, 2 * 60 * 1000);
+        }, 60 * 1000);
         
         // Also check immediately on page load
         reg.update();
@@ -87,10 +87,10 @@ export const UpdatePrompt = () => {
 
   const handleLater = () => {
     setShowUpdateDialog(false);
-    // Show reminder after 2 minutes (more persistent)
+    // Show reminder after 1 minute (very persistent to ensure all devices update)
     setTimeout(() => {
       setShowUpdateDialog(true);
-    }, 2 * 60 * 1000);
+    }, 60 * 1000);
   };
 
   return (
@@ -110,17 +110,17 @@ export const UpdatePrompt = () => {
               <DialogTitle className="text-2xl">New Features Available!</DialogTitle>
             </div>
             <DialogDescription className="text-base pt-2">
-              We've added new features and improvements to the app. Update now to get the latest version and enjoy the enhanced experience!
+              <strong>Important:</strong> We've added new features and improvements to the app. Please update now to ensure the best experience and access to all new features!
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col gap-2 pt-4">
             <Button 
               onClick={handleUpdate} 
               size="lg" 
-              className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+              className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 animate-pulse"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              Update Now
+              Update Now (Recommended)
             </Button>
             <Button 
               onClick={handleLater} 
