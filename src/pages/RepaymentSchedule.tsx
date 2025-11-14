@@ -16,7 +16,8 @@ import { EditTenantForm } from "@/components/EditTenantForm";
 import { ContactButtons } from "@/components/ContactButtons";
 import { TenantStatusHistory } from "@/components/TenantStatusHistory";
 import { supabase } from "@/integrations/supabase/client";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { format, startOfWeek, parseISO } from "date-fns";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -196,6 +197,32 @@ export default function RepaymentSchedule() {
   const adjustmentPayments = payments.filter(p => p.paid && p.paymentType === 'adjustment');
   const totalActual = actualPayments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
   const totalAdjustment = adjustmentPayments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+  
+  // Calculate weekly payment trends
+  const weeklyData = payments
+    .filter(p => p.paid && p.recordedAt)
+    .reduce((acc: Record<string, { week: string; actual: number; adjustment: number }>, payment) => {
+      const weekStart = startOfWeek(parseISO(payment.recordedAt!), { weekStartsOn: 1 });
+      const weekKey = format(weekStart, 'MMM dd');
+      
+      if (!acc[weekKey]) {
+        acc[weekKey] = { week: weekKey, actual: 0, adjustment: 0 };
+      }
+      
+      if (payment.paymentType === 'actual') {
+        acc[weekKey].actual += payment.paidAmount || 0;
+      } else if (payment.paymentType === 'adjustment') {
+        acc[weekKey].adjustment += payment.paidAmount || 0;
+      }
+      
+      return acc;
+    }, {});
+  
+  const weeklyChartData = Object.values(weeklyData).sort((a, b) => {
+    const dateA = new Date(a.week + ' 2024');
+    const dateB = new Date(b.week + ' 2024');
+    return dateA.getTime() - dateB.getTime();
+  });
   
   const progressPercentage = (totalPaid / repaymentDetails.totalAmount) * 100;
   const balance = repaymentDetails.totalAmount - totalPaid;
@@ -560,34 +587,83 @@ export default function RepaymentSchedule() {
             </h3>
             
             {/* Chart Visualization */}
-            <div className="mb-6 bg-muted/30 rounded-lg p-4">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Actual Payments', value: totalActual, count: actualPayments.length },
-                      { name: 'Adjustment Payments', value: totalAdjustment, count: adjustmentPayments.length }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    <Cell fill="hsl(142, 71%, 45%)" />
-                    <Cell fill="hsl(38, 92%, 50%)" />
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number, name: string, props: any) => [
-                      `UGX ${value.toLocaleString()} (${props.payload.count} payments)`,
-                      name
-                    ]}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+              {/* Pie Chart - Distribution */}
+              <div className="bg-muted/30 rounded-lg p-4">
+                <h4 className="text-sm font-semibold mb-2 text-center">Payment Type Distribution</h4>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Actual Payments', value: totalActual, count: actualPayments.length },
+                        { name: 'Adjustment Payments', value: totalAdjustment, count: adjustmentPayments.length }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      <Cell fill="hsl(142, 71%, 45%)" />
+                      <Cell fill="hsl(38, 92%, 50%)" />
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number, name: string, props: any) => [
+                        `UGX ${value.toLocaleString()} (${props.payload.count} payments)`,
+                        name
+                      ]}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Bar Chart - Weekly Trends */}
+              {weeklyChartData.length > 0 && (
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold mb-2 text-center">Weekly Payment Trends</h4>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={weeklyChartData}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis 
+                        dataKey="week" 
+                        tick={{ fontSize: 11 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                      />
+                      <Tooltip 
+                        formatter={(value: number) => `UGX ${value.toLocaleString()}`}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--background))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '6px'
+                        }}
+                      />
+                      <Legend />
+                      <Bar 
+                        dataKey="actual" 
+                        name="Actual Payments" 
+                        fill="hsl(142, 71%, 45%)" 
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar 
+                        dataKey="adjustment" 
+                        name="Adjustment Payments" 
+                        fill="hsl(38, 92%, 50%)" 
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
