@@ -9,8 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Undo2, Clock, AlertCircle, Loader2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Undo2, Clock, AlertCircle, Loader2, Download } from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import * as XLSX from "xlsx";
 
 interface EditBatch {
   edit_batch_id: string;
@@ -45,6 +46,7 @@ export const BulkEditUndoHistory = () => {
   const [loading, setLoading] = useState(true);
   const [undoingBatchId, setUndoingBatchId] = useState<string | null>(null);
   const [confirmBatchId, setConfirmBatchId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
 
   const fetchEditHistory = async () => {
@@ -202,6 +204,75 @@ export const BulkEditUndoHistory = () => {
     return Math.ceil(hoursRemaining);
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      // Fetch all edit history (including undone records for complete audit trail)
+      const { data: allHistory, error } = await supabase
+        .from("agent_edit_history")
+        .select("*")
+        .order("edited_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Prepare data for export
+      const exportData = allHistory.map((edit) => ({
+        "Batch ID": edit.edit_batch_id,
+        "Edit Date": format(new Date(edit.edited_at), "yyyy-MM-dd HH:mm:ss"),
+        "Agent Name (Old)": edit.old_name,
+        "Agent Phone (Old)": edit.old_phone,
+        "Agent Name (New)": edit.new_name,
+        "Agent Phone (New)": edit.new_phone,
+        "Edited By": edit.edited_by || "N/A",
+        "Status": edit.undone_at ? "Undone" : "Active",
+        "Undone Date": edit.undone_at ? format(new Date(edit.undone_at), "yyyy-MM-dd HH:mm:ss") : "N/A",
+        "Hours Until Expiry": edit.undone_at ? "N/A" : getTimeRemaining(edit.edited_at).toString() + "h",
+      }));
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Set column widths for better readability
+      ws["!cols"] = [
+        { wch: 38 }, // Batch ID
+        { wch: 20 }, // Edit Date
+        { wch: 25 }, // Agent Name (Old)
+        { wch: 18 }, // Agent Phone (Old)
+        { wch: 25 }, // Agent Name (New)
+        { wch: 18 }, // Agent Phone (New)
+        { wch: 15 }, // Edited By
+        { wch: 10 }, // Status
+        { wch: 20 }, // Undone Date
+        { wch: 18 }, // Hours Until Expiry
+      ];
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Edit History");
+
+      // Generate filename with current date
+      const date = new Date().toISOString().split("T")[0];
+      const filename = `Agent_Edit_History_${date}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+
+      toast({
+        title: "Export Successful",
+        description: `Edit history exported to ${filename}`,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export edit history. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -240,13 +311,36 @@ export const BulkEditUndoHistory = () => {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Recent Edits
-          </CardTitle>
-          <CardDescription>
-            Undo bulk edits within {UNDO_WINDOW_HOURS} hours of making them
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Recent Edits
+              </CardTitle>
+              <CardDescription>
+                Undo bulk edits within {UNDO_WINDOW_HOURS} hours of making them
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={exporting}
+              className="gap-2"
+            >
+              {exporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export History
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px] pr-4">
