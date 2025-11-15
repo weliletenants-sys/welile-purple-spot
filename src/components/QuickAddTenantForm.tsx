@@ -175,12 +175,12 @@ export const QuickAddTenantForm = () => {
     const rentAmount = parseFloat(formData.rentAmount) || 0;
 
     try {
-      // Normalize phone numbers
-      const normalizedContact = formData.contact.trim().replace(/[\s-]/g, '');
-      const normalizedAgentPhone = formData.agentPhone.trim().replace(/[\s-]/g, '');
+      // Normalize phone numbers and provide defaults for empty fields
+      const normalizedContact = formData.contact.trim().replace(/[\s-]/g, '') || "0000000000";
+      const normalizedAgentPhone = formData.agentPhone.trim().replace(/[\s-]/g, '') || "0000000000";
       
       const tenantData = {
-        name: formData.name.trim().toUpperCase(),
+        name: formData.name.trim().toUpperCase() || "UNNAMED TENANT",
         contact: normalizedContact,
         address: formData.address.trim() || "TBD",
         landlord: "TBD",
@@ -201,9 +201,9 @@ export const QuickAddTenantForm = () => {
           subcountyOrWard: "",
           cellOrVillage: "",
         },
-        agentName: formData.agentName.trim(),
+        agentName: formData.agentName.trim() || "UNKNOWN AGENT",
         agentPhone: normalizedAgentPhone,
-        serviceCenter: formData.serviceCenter.trim() || "",
+        serviceCenter: formData.serviceCenter.trim() || "TBD",
       };
 
       console.log('Submitting pipeline tenant:', tenantData);
