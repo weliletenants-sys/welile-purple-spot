@@ -614,28 +614,33 @@ const AgentDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Recording Bonuses - Highlighted */}
+                  {/* Recording Bonuses - MOST PROMINENT */}
                   {agent.recordingBonuses > 0 && (
-                    <div className="p-4 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="p-2 rounded-lg bg-accent/20">
-                            <Zap className="w-5 h-5 text-accent" />
+                    <div className="p-6 rounded-xl bg-gradient-to-br from-amber-500/20 via-amber-400/15 to-amber-600/20 border-3 border-amber-500 dark:border-amber-600 shadow-lg shadow-amber-500/20 animate-pulse hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/50 animate-bounce">
+                            <Zap className="w-7 h-7 text-white" />
                           </div>
-                          <div>
-                            <span className="text-sm font-medium text-accent">Recording Bonuses</span>
-                            {agent.hasRecentRecordingActivity && (
-                              <Badge className="ml-2 bg-gradient-to-r from-accent to-primary text-primary-foreground text-xs animate-pulse">
-                                Active
-                              </Badge>
-                            )}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base font-black text-amber-900 dark:text-amber-100 tracking-wide">RECORDING BONUSES ⭐</span>
+                              {agent.hasRecentRecordingActivity && (
+                                <Badge className="bg-gradient-to-r from-green-600 to-green-500 text-white text-xs animate-pulse shadow-lg shadow-green-500/50">
+                                  Active
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs font-bold text-amber-800 dark:text-amber-200 mt-1">✓ WITHDRAWABLE</p>
                           </div>
                         </div>
-                        <span className="text-2xl font-bold text-accent">
-                          UGX {agent.recordingBonuses.toLocaleString()}
-                        </span>
+                        <div className="text-center py-2 px-4 rounded-lg bg-gradient-to-r from-amber-900/20 to-amber-800/20 border border-amber-600/30">
+                          <span className="text-4xl font-black text-amber-900 dark:text-amber-100 tracking-tight drop-shadow-lg">
+                            UGX {agent.recordingBonuses.toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-center font-semibold text-amber-800 dark:text-amber-300 italic">💰 Earned from recording payments</p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">Earned from recording payments</p>
                     </div>
                   )}
 
