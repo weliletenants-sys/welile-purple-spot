@@ -40,6 +40,7 @@ const ServiceCenterManagement = lazy(() => import("./pages/ServiceCenterManageme
 const ServiceCenterTransferAnalytics = lazy(() => import("./pages/ServiceCenterTransferAnalytics"));
 const RecentlyAddedTenants = lazy(() => import("./pages/RecentlyAddedTenants"));
 const RiskDashboard = lazy(() => import("./pages/RiskDashboard"));
+const PipelineDashboard = lazy(() => import("./pages/PipelineDashboard"));
 const PipelineTenants = lazy(() => import("./pages/PipelineTenants"));
 const PipelineAnalytics = lazy(() => import("./pages/PipelineAnalytics"));
 const AgentManagement = lazy(() => import("./pages/AgentManagement"));
@@ -141,6 +142,7 @@ const App = () => {
               <Route path="/service-center-transfer-analytics" element={<ServiceCenterTransferAnalytics />} />
               <Route path="/recently-added" element={<RecentlyAddedTenants />} />
               <Route path="/risk-dashboard" element={<RiskDashboard />} />
+              <Route path="/pipeline-dashboard" element={<PipelineDashboard />} />
               <Route path="/pipeline-tenants" element={<PipelineTenants />} />
               <Route path="/pipeline-analytics" element={<PipelineAnalytics />} />
               <Route path="/agent-management" element={<AgentManagement />} />
