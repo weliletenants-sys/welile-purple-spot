@@ -70,6 +70,19 @@ const Index = () => {
   const { data: pendingCount = 0 } = usePendingTenantsCount();
   const { data: underReviewCount = 0 } = useUnderReviewTenantsCount();
   
+  // Fetch pipeline tenants count
+  const { data: pipelineCount = 0 } = useQuery({
+    queryKey: ["pipelineTenantsCount"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("tenants")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pipeline");
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+  
   // Fetch all tenants and payments for agent stats (visible to all users)
   const { data: allTenants } = useQuery({
     queryKey: ["all-tenants-for-stats"],
@@ -319,10 +332,29 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-primary to-accent">
-                <Users className="w-6 h-6 text-primary-foreground" />
-                <span className="font-bold text-lg text-primary-foreground">{stats.total.toLocaleString()} Tenants</span>
-              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-primary to-accent cursor-help">
+                      <Users className="w-6 h-6 text-primary-foreground" />
+                      <div className="text-left">
+                        <span className="font-bold text-lg text-primary-foreground block">{stats.total.toLocaleString()} Total</span>
+                        <span className="text-xs text-primary-foreground/80">{pipelineCount} Pipeline</span>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-sm space-y-1">
+                      <p className="font-semibold">Tenant Breakdown:</p>
+                      <p>• Total: {stats.total.toLocaleString()}</p>
+                      <p>• Active: {stats.total - pipelineCount - pendingCount - underReviewCount}</p>
+                      <p>• Pipeline: {pipelineCount}</p>
+                      <p>• Pending: {pendingCount}</p>
+                      <p>• Under Review: {underReviewCount}</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <ShareButton />
               <NotificationBell />
               <DropdownMenu>
@@ -879,7 +911,7 @@ const Index = () => {
         </Card>
 
         {/* Stats Section with enhanced visuals */}
-        <div data-tour="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 animate-fade-in">
+        <div data-tour="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 animate-fade-in">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -968,6 +1000,33 @@ const Index = () => {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Click to manage tenants under review</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="flex items-center gap-3 bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 rounded-xl px-6 py-4 border-2 border-cyan-200 dark:border-cyan-800 hover-scale cursor-pointer shadow-md transition-all hover:shadow-lg"
+                  onClick={() => navigate("/pipeline-tenants")}
+                >
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 relative">
+                    <Hourglass className="w-7 h-7 text-white" />
+                    {pipelineCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-1.5 py-0.5">
+                        {pipelineCount}
+                      </Badge>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-cyan-700 dark:text-cyan-300">{pipelineCount}</div>
+                    <div className="text-sm font-medium text-cyan-600 dark:text-cyan-400">Pipeline</div>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click to view and convert pipeline tenants</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
