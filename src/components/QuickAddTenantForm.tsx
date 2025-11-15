@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ const DRAFT_TIMESTAMP_KEY = 'quickAddTenantDraftTimestamp';
 
 export const QuickAddTenantForm = () => {
   const [open, setOpen] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { toast } = useToast();
   const { addTenant } = useTenants();
   const { data: agents = [] } = useAgents();
@@ -38,6 +40,7 @@ export const QuickAddTenantForm = () => {
   const [phoneError, setPhoneError] = useState("");
   const [hasDraft, setHasDraft] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [emptyFields, setEmptyFields] = useState<string[]>([]);
   
   // Load saved agent phone and draft from localStorage on component mount
   const [formData, setFormData] = useState<QuickAddFormData>(() => {
@@ -141,9 +144,34 @@ export const QuickAddTenantForm = () => {
     return true;
   };
 
+  const checkEmptyFields = () => {
+    const empty: string[] = [];
+    if (!formData.name.trim()) empty.push("Tenant Name");
+    if (!formData.contact.trim()) empty.push("Phone Number");
+    if (!formData.address.trim()) empty.push("Location");
+    if (!formData.rentAmount) empty.push("Monthly Rent");
+    if (!formData.agentName.trim()) empty.push("Agent Name");
+    if (!formData.agentPhone.trim()) empty.push("Agent Phone");
+    if (!formData.serviceCenter.trim()) empty.push("Service Center");
+    return empty;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check for empty fields
+    const empty = checkEmptyFields();
+    if (empty.length > 0) {
+      setEmptyFields(empty);
+      setShowConfirmDialog(true);
+      return;
+    }
+    
+    // If all fields filled, proceed directly
+    await performSave();
+  };
+
+  const performSave = async () => {
     const rentAmount = parseFloat(formData.rentAmount) || 0;
 
     try {
@@ -610,6 +638,39 @@ export const QuickAddTenantForm = () => {
           </Button>
         </div>
       </DialogContent>
+
+      {/* Confirmation Dialog for Empty Fields */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Empty Fields Detected
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>The following fields are empty:</p>
+              <ul className="list-disc list-inside space-y-1 text-foreground font-medium">
+                {emptyFields.map((field) => (
+                  <li key={field}>{field}</li>
+                ))}
+              </ul>
+              <p className="text-sm text-muted-foreground">Do you still want to save this tenant?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setShowConfirmDialog(false);
+                performSave();
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Save Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
