@@ -483,6 +483,7 @@ export type Database = {
           expires_at: string | null
           id: string
           message: string
+          metadata: Json | null
           read: boolean
           severity: string
           tenant_id: string | null
@@ -494,6 +495,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           message: string
+          metadata?: Json | null
           read?: boolean
           severity?: string
           tenant_id?: string | null
@@ -505,6 +507,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           message?: string
+          metadata?: Json | null
           read?: boolean
           severity?: string
           tenant_id?: string | null
