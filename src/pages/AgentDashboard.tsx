@@ -3,7 +3,7 @@ import { WelileLogo } from "@/components/WelileLogo";
 import { BackToHome } from "@/components/BackToHome";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter, Wallet } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter, Wallet, Info } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -25,6 +25,7 @@ import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { BulkEditAgentsDialog } from "@/components/BulkEditAgentsDialog";
 import { BulkEditUndoHistory } from "@/components/BulkEditUndoHistory";
 import { useAgents } from "@/hooks/useAgents";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -420,7 +421,21 @@ const AgentDashboard = () => {
             <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Available</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-medium text-muted-foreground">Available</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-sm font-semibold mb-1">Withdrawal Rules</p>
+                          <p className="text-xs"><strong>Withdrawable:</strong> Commissions + Recording Bonuses</p>
+                          <p className="text-xs text-muted-foreground mt-1"><strong>Non-withdrawable:</strong> Pipeline bonuses (UGX 50), Data Entry, and Signup bonuses</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <p className="text-3xl font-bold text-foreground">UGX {totalAvailableCommissions.toLocaleString()}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
@@ -643,7 +658,21 @@ const AgentDashboard = () => {
                       </span>
                     </div>
                     <div className="flex items-center justify-between pt-2 border-t border-border">
-                      <span className="text-sm font-medium text-muted-foreground">Available</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-medium text-muted-foreground">Available</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p className="text-sm font-semibold mb-1">Withdrawal Rules</p>
+                              <p className="text-xs"><strong>Withdrawable:</strong> Commissions + Recording Bonuses</p>
+                              <p className="text-xs text-muted-foreground mt-1"><strong>Non-withdrawable:</strong> Pipeline bonuses (UGX 50), Data Entry, and Signup bonuses</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <span className="text-xl font-bold text-accent">
                         UGX {(((agent.commissions || 0) + (agent.recordingBonuses || 0) - (agent.withdrawnCommission || 0))).toLocaleString()}
                       </span>
