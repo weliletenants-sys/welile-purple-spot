@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Hourglass, ArrowRight, Phone, MapPin, DollarSign, Bell, Home, BarChart3 } from "lucide-react";
 import { PipelineConversionWizard } from "@/components/PipelineConversionWizard";
+import BulkUploadPipelineTenants from "@/components/BulkUploadPipelineTenants";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -98,13 +99,14 @@ export default function PipelineTenants() {
               </div>
             </div>
             <div className="flex gap-2">
+              <BulkUploadPipelineTenants />
               <Button
                 onClick={() => navigate('/pipeline-analytics')}
                 variant="outline"
                 size="sm"
                 className="gap-2"
               >
-                <ArrowRight className="h-4 w-4" />
+                <BarChart3 className="h-4 w-4" />
                 View Analytics
               </Button>
               <Button
