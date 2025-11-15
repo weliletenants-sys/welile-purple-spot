@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Zap, AlertTriangle } from "lucide-react";
+import { Zap, AlertTriangle, Save, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
 import { useAgents } from "@/hooks/useAgents";
@@ -24,6 +24,9 @@ interface QuickAddFormData {
   serviceCenter: string;
 }
 
+const DRAFT_KEY = 'quickAddTenantDraft';
+const DRAFT_TIMESTAMP_KEY = 'quickAddTenantDraftTimestamp';
+
 export const QuickAddTenantForm = () => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -32,8 +35,10 @@ export const QuickAddTenantForm = () => {
   const { data: serviceCenters = [] } = useServiceCenters();
   const { logActivity } = useAgentActivity();
   const [phoneError, setPhoneError] = useState("");
+  const [hasDraft, setHasDraft] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
-  // Load saved agent phone from localStorage on component mount
+  // Load saved agent phone and draft from localStorage on component mount
   const [formData, setFormData] = useState<QuickAddFormData>(() => {
     const savedAgentPhone = localStorage.getItem('quickAddAgentPhone');
     const savedAgentName = localStorage.getItem('quickAddAgentName');
@@ -47,6 +52,70 @@ export const QuickAddTenantForm = () => {
       serviceCenter: "",
     };
   });
+
+  // Load draft when dialog opens
+  useEffect(() => {
+    if (open) {
+      const draft = localStorage.getItem(DRAFT_KEY);
+      const timestamp = localStorage.getItem(DRAFT_TIMESTAMP_KEY);
+      
+      if (draft) {
+        try {
+          const parsedDraft = JSON.parse(draft);
+          setFormData(parsedDraft);
+          setHasDraft(true);
+          if (timestamp) {
+            setLastSaved(new Date(timestamp));
+          }
+        } catch (error) {
+          console.error("Failed to load draft:", error);
+        }
+      }
+    }
+  }, [open]);
+
+  // Auto-save draft as user types (with debounce)
+  useEffect(() => {
+    const hasContent = formData.name || formData.contact || formData.address || formData.rentAmount;
+    
+    if (!hasContent) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
+        const now = new Date();
+        localStorage.setItem(DRAFT_TIMESTAMP_KEY, now.toISOString());
+        setLastSaved(now);
+        setHasDraft(true);
+      } catch (error) {
+        console.error("Failed to save draft:", error);
+      }
+    }, 1000); // Save after 1 second of inactivity
+
+    return () => clearTimeout(timeoutId);
+  }, [formData]);
+
+  const clearDraft = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(DRAFT_TIMESTAMP_KEY);
+    setHasDraft(false);
+    setLastSaved(null);
+    setFormData({
+      name: "",
+      contact: "",
+      address: "",
+      rentAmount: "",
+      agentName: formData.agentName,
+      agentPhone: formData.agentPhone,
+      serviceCenter: "",
+    });
+    toast({
+      title: "Draft Cleared",
+      description: "Form has been reset",
+    });
+  };
 
   const validatePhone = (phone: string): boolean => {
     if (!phone) {
@@ -175,6 +244,12 @@ export const QuickAddTenantForm = () => {
         duration: 5000,
       });
 
+      // Clear draft after successful submission
+      localStorage.removeItem(DRAFT_KEY);
+      localStorage.removeItem(DRAFT_TIMESTAMP_KEY);
+      setHasDraft(false);
+      setLastSaved(null);
+
       // Reset form but keep agent info
       setFormData({
         name: "",
@@ -264,17 +339,42 @@ export const QuickAddTenantForm = () => {
       </DialogTrigger>
       <DialogContent className="h-[95vh] sm:h-[90vh] max-w-[95vw] sm:max-w-xl flex flex-col p-0 gap-0">
         <DialogHeader className="flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b">
-          <DialogTitle className="flex items-center gap-2 text-lg sm:text-2xl font-bold text-primary">
-            <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-            Quick Add Pipeline Tenant
-          </DialogTitle>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Fast entry for prospects - only essential info required
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2 text-lg sm:text-2xl font-bold text-primary">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+                Quick Add Pipeline Tenant
+              </DialogTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                Fast entry for prospects - only essential info required
+              </p>
+            </div>
+            {hasDraft && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={clearDraft}
+                className="text-xs sm:text-sm text-muted-foreground hover:text-destructive gap-1.5"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Clear Draft
+              </Button>
+            )}
+          </div>
         </DialogHeader>
         
         <ScrollArea className="flex-1 overflow-auto px-4 sm:px-6">
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 py-4">
+          {hasDraft && lastSaved && (
+            <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800">
+              <Save className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">
+                Draft auto-saved at {lastSaved.toLocaleTimeString()}. Your progress is safe!
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <Alert className="border-primary/30 bg-primary/5">
             <Zap className="h-4 w-4 text-primary" />
             <AlertDescription className="text-xs sm:text-sm">
