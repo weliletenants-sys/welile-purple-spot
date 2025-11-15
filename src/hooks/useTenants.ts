@@ -293,8 +293,8 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
 
       if (paymentsError) throw paymentsError;
 
-      // Create agent signup bonus earning (UGX 5000)
-      if (tenant.agentName && tenant.agentPhone) {
+      // Create agent signup bonus earning (UGX 5000) - ONLY for non-pipeline tenants
+      if ((tenant.status as string) !== "pipeline" && tenant.agentName && tenant.agentPhone) {
         const { error: earningsError } = await supabase
           .from("agent_earnings")
           .insert({
@@ -308,8 +308,8 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
         if (earningsError) throw earningsError;
       }
 
-      // Create data entry reward earning (UGX 100)
-      if (tenant.agentName && tenant.agentPhone) {
+      // Create data entry reward earning (UGX 100) - ONLY for non-pipeline tenants
+      if ((tenant.status as string) !== "pipeline" && tenant.agentName && tenant.agentPhone) {
         const { error: dataEntryError } = await supabase
           .from("agent_earnings")
           .insert({
