@@ -48,6 +48,7 @@ import {
   TooltipProvider as InfoTooltipProvider, 
   TooltipTrigger as InfoTooltipTrigger 
 } from "@/components/ui/tooltip";
+import { EarningsBreakdownModal } from "@/components/EarningsBreakdownModal";
 
 const AgentDetailPage = () => {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ const AgentDetailPage = () => {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isEarningsOpen, setIsEarningsOpen] = useState(false);
   const [showEarnings, setShowEarnings] = useState(false);
+  const [showBreakdownModal, setShowBreakdownModal] = useState(false);
   const itemsPerPage = 20;
   const { toast } = useToast();
   
@@ -391,6 +393,16 @@ const AgentDetailPage = () => {
               )}
             </Button>
           </div>
+
+          {/* View Full Breakdown Button */}
+          <Button
+            variant="outline"
+            className="w-full mt-2"
+            onClick={() => setShowBreakdownModal(true)}
+          >
+            <DollarSign className="mr-2 h-4 w-4" />
+            View Full Earnings Breakdown
+          </Button>
         </CardContent>
       </Card>
       )}
@@ -832,6 +844,23 @@ const AgentDetailPage = () => {
           onSuccess={() => {
             setAssigningTenant(null);
             window.location.reload(); // Refresh to show updated assignment
+          }}
+        />
+      )}
+
+      {/* Earnings Breakdown Modal */}
+      {agentEarnings && (
+        <EarningsBreakdownModal
+          open={showBreakdownModal}
+          onOpenChange={setShowBreakdownModal}
+          agentName={agentName}
+          earnings={{
+            commissions: agentEarnings.commissions || 0,
+            recordingBonuses: agentEarnings.recordingBonuses || 0,
+            pipelineBonuses: agentEarnings.pipelineBonuses || 0,
+            dataEntryRewards: agentEarnings.dataEntryRewards || 0,
+            signupBonuses: agentEarnings.signupBonuses || 0,
+            withdrawnCommission: agentEarnings.withdrawnCommission || 0,
           }}
         />
       )}

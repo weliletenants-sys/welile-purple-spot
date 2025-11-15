@@ -26,6 +26,7 @@ import { BulkEditAgentsDialog } from "@/components/BulkEditAgentsDialog";
 import { BulkEditUndoHistory } from "@/components/BulkEditUndoHistory";
 import { useAgents } from "@/hooks/useAgents";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { EarningsBreakdownModal } from "@/components/EarningsBreakdownModal";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const AgentDashboard = () => {
   const { agentName: routeAgentName } = useParams();
   const [period, setPeriod] = useState<string>("all");
   const [withdrawingAgent, setWithdrawingAgent] = useState<string | null>(null);
+  const [breakdownModalAgent, setBreakdownModalAgent] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
@@ -698,6 +700,15 @@ const AgentDashboard = () => {
                   {/* Earnings Breakdown with Withdrawn Status */}
                   <div className="pt-4 border-t border-border">
                     <AgentEarningsBreakdown agentName={agent.agentName} period={period} />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={() => setBreakdownModalAgent(agent.agentName)}
+                    >
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      View Full Breakdown
+                    </Button>
                   </div>
 
                   {/* Withdraw Button */}
@@ -844,6 +855,23 @@ const AgentDashboard = () => {
           <p className="mt-1">Commission rate: 5% of rent repayments</p>
         </div>
       </div>
+
+      {/* Earnings Breakdown Modal */}
+      {breakdownModalAgent && (
+        <EarningsBreakdownModal
+          open={!!breakdownModalAgent}
+          onOpenChange={(open) => !open && setBreakdownModalAgent(null)}
+          agentName={breakdownModalAgent}
+          earnings={{
+            commissions: agents?.find(a => a.agentName === breakdownModalAgent)?.commissions || 0,
+            recordingBonuses: agents?.find(a => a.agentName === breakdownModalAgent)?.recordingBonuses || 0,
+            pipelineBonuses: agents?.find(a => a.agentName === breakdownModalAgent)?.pipelineBonuses || 0,
+            dataEntryRewards: agents?.find(a => a.agentName === breakdownModalAgent)?.dataEntryRewards || 0,
+            signupBonuses: agents?.find(a => a.agentName === breakdownModalAgent)?.signupBonuses || 0,
+            withdrawnCommission: agents?.find(a => a.agentName === breakdownModalAgent)?.withdrawnCommission || 0,
+          }}
+        />
+      )}
     </div>
   );
 };
