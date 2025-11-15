@@ -620,40 +620,30 @@ export const QuickAddTenantForm = () => {
         </form>
         </ScrollArea>
         
-        {/* Fixed Bottom Actions - Large and Visual */}
-        <div className="flex flex-col gap-3 px-4 sm:px-6 py-4 border-t-4 border-primary/20 bg-background flex-shrink-0">
-          {!isFormValid && (
-            <div className="flex items-center justify-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border-2 border-amber-300">
-              <AlertTriangle className="h-5 w-5 text-amber-600" />
-              <p className="text-sm font-bold text-amber-700 dark:text-amber-400">
-                Fill all fields above ↑
-              </p>
-            </div>
-          )}
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              className="flex-1 h-14 text-base font-bold border-2"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={!isFormValid}
-              onClick={handleSubmit}
-              className={cn(
-                "flex-1 h-14 text-base font-bold gap-2",
-                isFormValid 
-                  ? "bg-green-600 hover:bg-green-700 text-white" 
-                  : "bg-gray-300 text-gray-500"
-              )}
-            >
-              {isFormValid && <CheckCircle2 className="w-5 h-5" />}
-              Save Tenant
-            </Button>
-          </div>
+        {/* Fixed Bottom Actions - Always Visible */}
+        <div className="flex gap-3 px-4 sm:px-6 py-4 border-t-4 border-primary/20 bg-background flex-shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            className="flex-1 h-14 text-base font-bold border-2"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={!isFormValid}
+            onClick={handleSubmit}
+            className={cn(
+              "flex-1 h-14 text-base font-bold gap-2",
+              isFormValid 
+                ? "bg-green-600 hover:bg-green-700 text-white" 
+                : "bg-gray-300 text-gray-500"
+            )}
+          >
+            {isFormValid && <CheckCircle2 className="w-5 h-5" />}
+            Save Tenant
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
