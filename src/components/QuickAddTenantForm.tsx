@@ -144,37 +144,7 @@ export const QuickAddTenantForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
-    if (!formData.name.trim() || !formData.contact.trim() || !formData.address.trim() || 
-        !formData.rentAmount || !formData.agentName.trim() || !formData.agentPhone.trim() || 
-        !formData.serviceCenter.trim()) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate phone numbers
-    if (!validatePhone(formData.contact) || !validatePhone(formData.agentPhone)) {
-      toast({
-        title: "Invalid Phone Number",
-        description: phoneError,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const rentAmount = parseFloat(formData.rentAmount);
-    if (isNaN(rentAmount) || rentAmount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid rent amount",
-        variant: "destructive",
-      });
-      return;
-    }
+    const rentAmount = parseFloat(formData.rentAmount) || 0;
 
     try {
       // Normalize phone numbers
