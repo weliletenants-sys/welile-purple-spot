@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Zap, AlertTriangle, Save, Trash2 } from "lucide-react";
+import { Zap, AlertTriangle, Save, Trash2, User, Phone, MapPin, DollarSign, Users, Building2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenants } from "@/hooks/useTenants";
 import { useAgents } from "@/hooks/useAgents";
@@ -13,6 +13,7 @@ import { useServiceCenters } from "@/hooks/useServiceCenterAnalytics";
 import { useAgentActivity } from "@/hooks/useAgentActivity";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface QuickAddFormData {
   name: string;
@@ -332,22 +333,26 @@ export const QuickAddTenantForm = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all">
-          <Zap className="w-5 h-5" />
-          Quick Add Pipeline
+        <Button className="gap-3 h-14 px-6 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all text-base font-bold">
+          <Zap className="w-6 h-6" />
+          Add Tenant
         </Button>
       </DialogTrigger>
       <DialogContent className="h-[95vh] sm:h-[90vh] max-w-[95vw] sm:max-w-xl flex flex-col p-0 gap-0">
-        <DialogHeader className="flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b">
+        <DialogHeader className="flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b-4 border-primary/30 bg-gradient-to-r from-primary/10 to-blue-500/10">
           <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="flex items-center gap-2 text-lg sm:text-2xl font-bold text-primary">
-                <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-                Quick Add Pipeline Tenant
-              </DialogTitle>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Fast entry for prospects - only essential info required
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-primary">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl sm:text-2xl font-bold text-primary">
+                  Add New Tenant
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  Fill form below
+                </p>
+              </div>
             </div>
             {hasDraft && (
               <Button
@@ -355,181 +360,282 @@ export const QuickAddTenantForm = () => {
                 variant="ghost"
                 size="sm"
                 onClick={clearDraft}
-                className="text-xs sm:text-sm text-muted-foreground hover:text-destructive gap-1.5"
+                className="text-xs text-destructive hover:bg-destructive/10"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                Clear Draft
+                <Trash2 className="h-4 w-4" />
               </Button>
             )}
           </div>
         </DialogHeader>
         
         <ScrollArea className="flex-1 overflow-auto px-4 sm:px-6">
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          {/* Progress Indicator */}
+          <div className="flex gap-2 mb-4">
+            {[
+              { filled: !!formData.name, icon: User, label: "Name" },
+              { filled: !!formData.contact, icon: Phone, label: "Phone" },
+              { filled: !!formData.address, icon: MapPin, label: "Location" },
+              { filled: !!formData.rentAmount, icon: DollarSign, label: "Rent" },
+            ].map((step, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  "flex-1 h-2 rounded-full transition-all",
+                  step.filled ? "bg-green-500" : "bg-muted"
+                )}
+              />
+            ))}
+          </div>
+
           {hasDraft && lastSaved && (
-            <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800">
-              <Save className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">
-                Draft auto-saved at {lastSaved.toLocaleTimeString()}. Your progress is safe!
+            <Alert className="border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <AlertDescription className="text-sm font-medium text-green-700 dark:text-green-300">
+                ✓ Saved {lastSaved.toLocaleTimeString()}
               </AlertDescription>
             </Alert>
           )}
-          
-          <Alert className="border-primary/30 bg-primary/5">
-            <Zap className="h-4 w-4 text-primary" />
-            <AlertDescription className="text-xs sm:text-sm">
-              Prospect will be added with "Pending" status. Add full details when tenant becomes active.
-            </AlertDescription>
-          </Alert>
 
-          {/* Essential Tenant Info */}
-          <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 bg-secondary/10 rounded-lg border">
-            <h3 className="font-semibold text-sm sm:text-base text-foreground">Tenant Information *</h3>
-            
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="quick-name" className="text-sm sm:text-base">Full Name *</Label>
-              <Input
-                id="quick-name"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder="Enter tenant's name"
-                maxLength={100}
-                className="h-11 sm:h-10 text-base sm:text-sm"
-              />
+          {/* Tenant Name - Visual Card */}
+          <div className={cn(
+            "p-4 rounded-xl border-2 transition-all",
+            formData.name ? "bg-green-50 dark:bg-green-950/20 border-green-500" : "bg-blue-50 dark:bg-blue-950/20 border-blue-300"
+          )}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={cn(
+                "p-3 rounded-full",
+                formData.name ? "bg-green-500" : "bg-blue-500"
+              )}>
+                <User className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="quick-name" className="text-base font-bold text-foreground">
+                  1. Tenant Name
+                </Label>
+              </div>
+              {formData.name && <CheckCircle2 className="h-6 w-6 text-green-600" />}
             </div>
-
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="quick-contact" className="text-sm sm:text-base">Contact Number *</Label>
-              <Input
-                id="quick-contact"
-                value={formData.contact}
-                onChange={(e) => handleChange("contact", e.target.value)}
-                placeholder="e.g., 0700000000"
-                maxLength={13}
-                className={`h-11 sm:h-10 text-base sm:text-sm ${phoneError && formData.contact ? "border-destructive" : ""}`}
-              />
-              {phoneError && formData.contact && (
-                <p className="text-xs text-destructive">{phoneError}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="quick-address" className="text-sm sm:text-base">Address *</Label>
-              <Input
-                id="quick-address"
-                value={formData.address}
-                onChange={(e) => handleChange("address", e.target.value)}
-                placeholder="Enter address or location"
-                maxLength={200}
-                className="h-11 sm:h-10 text-base sm:text-sm"
-              />
-            </div>
-
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="quick-rent" className="text-sm sm:text-base">Monthly Rent (UGX) *</Label>
-              <Input
-                id="quick-rent"
-                type="number"
-                value={formData.rentAmount}
-                onChange={(e) => handleChange("rentAmount", e.target.value)}
-                placeholder="Enter rent amount"
-                min="0"
-                step="1000"
-                className="h-11 sm:h-10 text-base sm:text-sm"
-              />
-            </div>
+            <Input
+              id="quick-name"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              placeholder="Example: JOHN DOE"
+              maxLength={100}
+              className="h-14 text-lg font-medium border-2"
+            />
           </div>
 
-          {/* Agent & Service Center */}
-          <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 bg-primary/5 rounded-lg border border-primary/20">
-            <h3 className="font-semibold text-sm sm:text-base text-foreground">Agent & Location *</h3>
-            
-            <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3">
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="quick-agent" className="text-sm sm:text-base">Agent *</Label>
-                <Select value={formData.agentName} onValueChange={handleAgentChange}>
-                  <SelectTrigger id="quick-agent" className="h-11 sm:h-10 text-base sm:text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[200px]">
-                    {agents.map((agent) => (
-                      <SelectItem key={agent.name} value={agent.name} className="text-base sm:text-sm py-3 sm:py-2">
-                        {agent.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {/* Phone Number - Visual Card */}
+          <div className={cn(
+            "p-4 rounded-xl border-2 transition-all",
+            formData.contact && !phoneError ? "bg-green-50 dark:bg-green-950/20 border-green-500" : "bg-orange-50 dark:bg-orange-950/20 border-orange-300"
+          )}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={cn(
+                "p-3 rounded-full",
+                formData.contact && !phoneError ? "bg-green-500" : "bg-orange-500"
+              )}>
+                <Phone className="h-6 w-6 text-white" />
               </div>
-              
-              <div className="space-y-1.5 sm:space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="quick-agent-phone" className="text-sm sm:text-base">Agent Phone *</Label>
-                  {formData.agentPhone && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        handleChange("agentPhone", "");
-                        localStorage.removeItem('quickAddAgentPhone');
-                      }}
-                      className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                    >
-                      Clear
-                    </Button>
-                  )}
-                </div>
-                <Input
-                  id="quick-agent-phone"
-                  value={formData.agentPhone}
-                  onChange={(e) => handleChange("agentPhone", e.target.value)}
-                  placeholder="0700000000"
-                  maxLength={13}
-                  className={`h-11 sm:h-10 text-base sm:text-sm ${phoneError && formData.agentPhone ? "border-destructive" : ""}`}
-                />
-                {formData.agentPhone && !phoneError && (
-                  <p className="text-xs text-muted-foreground">
-                    ✓ Phone saved - will persist across forms
-                  </p>
-                )}
+              <div className="flex-1">
+                <Label htmlFor="quick-contact" className="text-base font-bold text-foreground">
+                  2. Phone Number
+                </Label>
               </div>
+              {formData.contact && !phoneError && <CheckCircle2 className="h-6 w-6 text-green-600" />}
             </div>
+            <Input
+              id="quick-contact"
+              value={formData.contact}
+              onChange={(e) => handleChange("contact", e.target.value)}
+              placeholder="0700123456"
+              type="tel"
+              maxLength={13}
+              className={cn(
+                "h-14 text-lg font-medium border-2",
+                phoneError && formData.contact && "border-red-500"
+              )}
+            />
+            {phoneError && formData.contact && (
+              <div className="flex items-center gap-2 mt-2 text-red-600">
+                <AlertTriangle className="h-4 w-4" />
+                <p className="text-sm font-medium">{phoneError}</p>
+              </div>
+            )}
+          </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="quick-service-center" className="text-sm sm:text-base">Service Center (Optional)</Label>
-              <Select value={formData.serviceCenter} onValueChange={(value) => handleChange("serviceCenter", value)}>
-                <SelectTrigger id="quick-service-center" className="h-11 sm:h-10 text-base sm:text-sm">
-                  <SelectValue placeholder="Select service center (optional)" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px]">
-                  {serviceCenters?.map((center) => (
-                    <SelectItem key={center.id} value={center.name} className="text-base sm:text-sm py-3 sm:py-2">
-                      {center.name} ({center.district})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Address - Visual Card */}
+          <div className={cn(
+            "p-4 rounded-xl border-2 transition-all",
+            formData.address ? "bg-green-50 dark:bg-green-950/20 border-green-500" : "bg-purple-50 dark:bg-purple-950/20 border-purple-300"
+          )}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={cn(
+                "p-3 rounded-full",
+                formData.address ? "bg-green-500" : "bg-purple-500"
+              )}>
+                <MapPin className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="quick-address" className="text-base font-bold text-foreground">
+                  3. Location
+                </Label>
+              </div>
+              {formData.address && <CheckCircle2 className="h-6 w-6 text-green-600" />}
             </div>
+            <Input
+              id="quick-address"
+              value={formData.address}
+              onChange={(e) => handleChange("address", e.target.value)}
+              placeholder="Example: Kampala, Wandegeya"
+              maxLength={200}
+              className="h-14 text-lg font-medium border-2"
+            />
+          </div>
+
+          {/* Rent Amount - Visual Card */}
+          <div className={cn(
+            "p-4 rounded-xl border-2 transition-all",
+            formData.rentAmount ? "bg-green-50 dark:bg-green-950/20 border-green-500" : "bg-amber-50 dark:bg-amber-950/20 border-amber-300"
+          )}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={cn(
+                "p-3 rounded-full",
+                formData.rentAmount ? "bg-green-500" : "bg-amber-500"
+              )}>
+                <DollarSign className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="quick-rent" className="text-base font-bold text-foreground">
+                  4. Monthly Rent (UGX)
+                </Label>
+              </div>
+              {formData.rentAmount && <CheckCircle2 className="h-6 w-6 text-green-600" />}
+            </div>
+            <Input
+              id="quick-rent"
+              type="number"
+              value={formData.rentAmount}
+              onChange={(e) => handleChange("rentAmount", e.target.value)}
+              placeholder="Example: 500000"
+              min="0"
+              step="10000"
+              className="h-14 text-lg font-medium border-2"
+            />
+          </div>
+
+          {/* Agent Selection - Visual Card */}
+          <div className={cn(
+            "p-4 rounded-xl border-2 transition-all",
+            formData.agentName ? "bg-green-50 dark:bg-green-950/20 border-green-500" : "bg-indigo-50 dark:bg-indigo-950/20 border-indigo-300"
+          )}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={cn(
+                "p-3 rounded-full",
+                formData.agentName ? "bg-green-500" : "bg-indigo-500"
+              )}>
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="quick-agent" className="text-base font-bold text-foreground">
+                  5. Your Name
+                </Label>
+              </div>
+              {formData.agentName && <CheckCircle2 className="h-6 w-6 text-green-600" />}
+            </div>
+            <Select value={formData.agentName} onValueChange={handleAgentChange}>
+              <SelectTrigger id="quick-agent" className="h-14 text-lg font-medium border-2">
+                <SelectValue placeholder="Select your name" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                {agents.map((agent) => (
+                  <SelectItem 
+                    key={agent.name} 
+                    value={agent.name} 
+                    className="text-lg py-4 font-medium"
+                  >
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Agent Phone - Auto-filled */}
+          {formData.agentPhone && (
+            <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-300">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-gray-500">
+                  <Phone className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Your Phone</p>
+                  <p className="text-lg font-bold">{formData.agentPhone}</p>
+                </div>
+                <CheckCircle2 className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          )}
+
+          {/* Service Center - Optional */}
+          <div className={cn(
+            "p-4 rounded-xl border-2 transition-all",
+            formData.serviceCenter ? "bg-green-50 dark:bg-green-950/20 border-green-500" : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
+          )}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={cn(
+                "p-3 rounded-full",
+                formData.serviceCenter ? "bg-green-500" : "bg-gray-400"
+              )}>
+                <Building2 className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="quick-service-center" className="text-base font-bold text-foreground">
+                  6. Office (Optional)
+                </Label>
+              </div>
+              {formData.serviceCenter && <CheckCircle2 className="h-6 w-6 text-green-600" />}
+            </div>
+            <Select value={formData.serviceCenter} onValueChange={(value) => handleChange("serviceCenter", value)}>
+              <SelectTrigger id="quick-service-center" className="h-14 text-lg font-medium border-2">
+                <SelectValue placeholder="Skip or select office" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                {serviceCenters?.map((center) => (
+                  <SelectItem 
+                    key={center.id} 
+                    value={center.name} 
+                    className="text-lg py-4 font-medium"
+                  >
+                    {center.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Bottom spacing */}
-          <div className="h-2" />
+          <div className="h-4" />
         </form>
         </ScrollArea>
         
-        {/* Fixed Bottom Actions */}
-        <div className="flex flex-col gap-2 px-4 sm:px-6 py-3 sm:py-4 border-t bg-background flex-shrink-0">
+        {/* Fixed Bottom Actions - Large and Visual */}
+        <div className="flex flex-col gap-3 px-4 sm:px-6 py-4 border-t-4 border-primary/20 bg-background flex-shrink-0">
           {!isFormValid && (
-            <p className="text-xs sm:text-sm text-muted-foreground text-center">
-              Please fill in all required fields
-            </p>
+            <div className="flex items-center justify-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border-2 border-amber-300">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              <p className="text-sm font-bold text-amber-700 dark:text-amber-400">
+                Fill all fields above ↑
+              </p>
+            </div>
           )}
-          <div className="flex gap-2 sm:gap-3">
+          <div className="flex gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="flex-1 h-11 sm:h-10 text-base sm:text-sm"
+              className="flex-1 h-14 text-base font-bold border-2"
             >
               Cancel
             </Button>
@@ -537,10 +643,15 @@ export const QuickAddTenantForm = () => {
               type="submit"
               disabled={!isFormValid}
               onClick={handleSubmit}
-              className="flex-1 h-11 sm:h-10 text-base sm:text-sm bg-gradient-to-r from-primary to-primary/80 font-semibold"
+              className={cn(
+                "flex-1 h-14 text-base font-bold gap-2",
+                isFormValid 
+                  ? "bg-green-600 hover:bg-green-700 text-white" 
+                  : "bg-gray-300 text-gray-500"
+              )}
             >
-              <Zap className="w-4 h-4 mr-2" />
-              Add to Pipeline
+              {isFormValid && <CheckCircle2 className="w-5 h-5" />}
+              Save Tenant
             </Button>
           </div>
         </div>
