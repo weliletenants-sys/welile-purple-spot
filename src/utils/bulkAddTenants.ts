@@ -94,7 +94,7 @@ export const bulkAddTenants = async () => {
           agent_phone: "",
           registration_fee: 10000,
           access_fee: 0,
-          status: "active",
+          status: "pipeline",
           payment_status: "pending",
           performance: 80,
           location_district: tenant.district,
@@ -123,13 +123,13 @@ export const bulkAddTenants = async () => {
 
       await supabase.from('daily_payments').insert(payments);
 
-      // Create agent earnings
+      // Create agent earnings (Pipeline bonus - UGX 50)
       await supabase.from('agent_earnings').insert({
         agent_name: "ADEKE ANNET",
         agent_phone: "",
         tenant_id: newTenant.id,
-        earning_type: "signup_bonus",
-        amount: 5000
+        earning_type: "pipeline_bonus",
+        amount: 50
       });
 
       result.success++;

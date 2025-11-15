@@ -169,13 +169,13 @@ Deno.serve(async (req) => {
 
         await supabase.from('daily_payments').insert(payments)
 
-        // Create agent earnings (Pipeline bonus)
+        // Create agent earnings (Pipeline bonus - UGX 50)
         await supabase.from('agent_earnings').insert({
           agent_name: tenant.agent_name || "ADEKE ANNET",
           agent_phone: "",
           tenant_id: newTenant.id,
           earning_type: "pipeline_bonus",
-          amount: 100
+          amount: 50
         })
 
         result.success++
