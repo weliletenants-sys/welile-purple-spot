@@ -114,6 +114,43 @@ export const EarningsBreakdownModal = ({
 
         <Separator className="my-4" />
 
+        {/* Non-withdrawable Earnings Section */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 mb-3">
+            <XCircle className="h-5 w-5 text-orange-600" />
+            <h3 className="font-semibold text-base">Non-withdrawable Earnings</h3>
+          </div>
+
+          <EarningType
+            icon={<TrendingUp className="h-5 w-5 text-blue-600" />}
+            label="Pipeline Bonus"
+            amount={earnings.pipelineBonuses}
+            withdrawable={false}
+            description="UGX 50 for each pipeline tenant added"
+            color="bg-blue-100 dark:bg-blue-900/30"
+          />
+
+          <EarningType
+            icon={<Award className="h-5 w-5 text-purple-600" />}
+            label="Data Entry Rewards"
+            amount={earnings.dataEntryRewards}
+            withdrawable={false}
+            description="Rewards for data entry tasks"
+            color="bg-purple-100 dark:bg-purple-900/30"
+          />
+
+          <EarningType
+            icon={<Users className="h-5 w-5 text-pink-600" />}
+            label="Signup Bonuses"
+            amount={earnings.signupBonuses}
+            withdrawable={false}
+            description="One-time bonuses for new agent signups"
+            color="bg-pink-100 dark:bg-pink-900/30"
+          />
+        </div>
+
+        <Separator className="my-4" />
+
         {/* Withdrawable Earnings Section */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 mb-3">
@@ -154,43 +191,6 @@ export const EarningsBreakdownModal = ({
               </div>
             </div>
           </Card>
-        </div>
-
-        <Separator className="my-4" />
-
-        {/* Non-withdrawable Earnings Section */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 mb-3">
-            <XCircle className="h-5 w-5 text-orange-600" />
-            <h3 className="font-semibold text-base">Non-withdrawable Earnings</h3>
-          </div>
-
-          <EarningType
-            icon={<TrendingUp className="h-5 w-5 text-blue-600" />}
-            label="Pipeline Bonus"
-            amount={earnings.pipelineBonuses}
-            withdrawable={false}
-            description="UGX 50 for each pipeline tenant added"
-            color="bg-blue-100 dark:bg-blue-900/30"
-          />
-
-          <EarningType
-            icon={<Award className="h-5 w-5 text-purple-600" />}
-            label="Data Entry Rewards"
-            amount={earnings.dataEntryRewards}
-            withdrawable={false}
-            description="Rewards for data entry tasks"
-            color="bg-purple-100 dark:bg-purple-900/30"
-          />
-
-          <EarningType
-            icon={<Users className="h-5 w-5 text-pink-600" />}
-            label="Signup Bonuses"
-            amount={earnings.signupBonuses}
-            withdrawable={false}
-            description="One-time bonuses for new agent signups"
-            color="bg-pink-100 dark:bg-pink-900/30"
-          />
         </div>
 
         <Separator className="my-4" />
