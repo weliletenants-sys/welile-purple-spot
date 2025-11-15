@@ -103,6 +103,56 @@ export type Database = {
           },
         ]
       }
+      agent_edit_history: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          edit_batch_id: string
+          edited_at: string
+          edited_by: string | null
+          id: string
+          new_name: string
+          new_phone: string
+          old_name: string
+          old_phone: string
+          undone_at: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          edit_batch_id: string
+          edited_at?: string
+          edited_by?: string | null
+          id?: string
+          new_name: string
+          new_phone: string
+          old_name: string
+          old_phone: string
+          undone_at?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          edit_batch_id?: string
+          edited_at?: string
+          edited_by?: string | null
+          id?: string
+          new_name?: string
+          new_phone?: string
+          old_name?: string
+          old_phone?: string
+          undone_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_edit_history_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_points: {
         Row: {
           agent_name: string
@@ -326,6 +376,7 @@ export type Database = {
           paid: boolean
           paid_amount: number | null
           payment_mode: string | null
+          payment_type: string | null
           recorded_at: string | null
           recorded_by: string | null
           service_center: string | null
@@ -342,6 +393,7 @@ export type Database = {
           paid?: boolean
           paid_amount?: number | null
           payment_mode?: string | null
+          payment_type?: string | null
           recorded_at?: string | null
           recorded_by?: string | null
           service_center?: string | null
@@ -358,6 +410,7 @@ export type Database = {
           paid?: boolean
           paid_amount?: number | null
           payment_mode?: string | null
+          payment_type?: string | null
           recorded_at?: string | null
           recorded_by?: string | null
           service_center?: string | null

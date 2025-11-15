@@ -86,23 +86,27 @@ const BulkUploadPipelineTenants = () => {
       for (let i = 0; i < jsonData.length; i++) {
         const row: any = jsonData[i];
         
-        const name = row.name || row.Name || row.NAME || row["Tenant Name"] || "";
+        // Support multiple column name formats
+        const name = row["TENANTS NAME"] || row.name || row.Name || row.NAME || row["Tenant Name"] || "";
         const contact = normalizePhone(
-          row.contact || row.Contact || row.CONTACT || row.phone || row.Phone || row.PHONE || ""
+          row["TEL NO."] || row.contact || row.Contact || row.CONTACT || row.phone || row.Phone || row.PHONE || ""
         );
-        const district = row.district || row.District || row.DISTRICT || "";
-        const address = row.address || row.Address || row.ADDRESS || row.location || "";
-        const landlord = row.landlord || row.Landlord || row.LANDLORD || "";
+        const district = row.DISTRICT || row.district || row.District || "";
+        const location = row["CELL/VILLAGE"] || row.location || row.Location || row.address || row.Address || "";
+        
+        // Optional fields with defaults
+        const landlord = row.landlord || row.Landlord || row.LANDLORD || "Unknown";
         const landlord_contact = normalizePhone(
           row.landlord_contact || row["Landlord Contact"] || row.landlord_phone || ""
-        );
+        ) || "0000000000";
         const rent_amount = parseFloat(row.rent_amount || row["Rent Amount"] || row.rent || "0");
-        const agent_name = row.agent_name || row["Agent Name"] || row.agent || "";
-        const agent_phone = normalizePhone(row.agent_phone || row["Agent Phone"] || "");
+        const agent_name = row.agent_name || row["Agent Name"] || row.agent || "ADEKE ANNET";
+        const agent_phone = normalizePhone(row.agent_phone || row["Agent Phone"] || "") || "256700000000";
         const service_center = row.service_center || row["Service Center"] || "";
         const expected_conversion_date = row.expected_conversion_date || row["Expected Conversion Date"] || "";
         const notes = row.notes || row.Notes || row.comments || "";
 
+        // Only require name and contact, allow everything else to be missing
         if (!name || !contact) {
           uploadResult.errors.push(`Row ${i + 2}: Missing name or contact`);
           uploadResult.failed++;
@@ -112,7 +116,7 @@ const BulkUploadPipelineTenants = () => {
         parsedTenants.push({
           name,
           contact,
-          address,
+          address: location || district, // Use location or fall back to district
           district,
           landlord,
           landlord_contact,
@@ -151,17 +155,18 @@ const BulkUploadPipelineTenants = () => {
             .insert({
               name: tenant.name,
               contact: tenant.contact,
-              address: tenant.address || "N/A",
-              location_district: tenant.district || "",
-              landlord: tenant.landlord || "N/A",
-              landlord_contact: tenant.landlord_contact || "",
-              rent_amount: tenant.rent_amount,
+              address: tenant.address || "To be updated",
+              location_district: tenant.district || "To be updated",
+              location_cell_or_village: tenant.address,
+              landlord: tenant.landlord || "To be updated",
+              landlord_contact: tenant.landlord_contact || "0000000000",
+              rent_amount: tenant.rent_amount || 0,
               repayment_days: 30,
               status: "pipeline",
               payment_status: "pending",
-              agent_name: tenant.agent_name || "",
-              agent_phone: tenant.agent_phone || "",
-              service_center: tenant.service_center || "",
+              agent_name: tenant.agent_name || "ADEKE ANNET",
+              agent_phone: tenant.agent_phone || "256700000000",
+              service_center: tenant.service_center || "To be assigned",
               registration_fee: 0,
               access_fee: 0,
               source: "bulk_upload_pipeline",
@@ -318,21 +323,19 @@ const BulkUploadPipelineTenants = () => {
           <div className="bg-muted p-4 rounded-lg text-xs space-y-2">
             <p className="font-medium">Expected Excel columns:</p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li><strong>name</strong> or Name - Tenant name (required)</li>
-              <li><strong>contact/phone</strong> - Phone number (required)</li>
-              <li><strong>district</strong> - District location</li>
-              <li><strong>address/location</strong> - Physical address</li>
-              <li><strong>landlord</strong> - Landlord name</li>
-              <li><strong>landlord_contact</strong> - Landlord phone</li>
-              <li><strong>rent_amount/rent</strong> - Monthly rent amount</li>
-              <li><strong>agent_name/agent</strong> - Agent name</li>
-              <li><strong>agent_phone</strong> - Agent phone</li>
-              <li><strong>service_center</strong> - Service center</li>
-              <li><strong>expected_conversion_date</strong> - Target conversion date</li>
-              <li><strong>notes/comments</strong> - Additional notes</li>
+              <li><strong>TENANTS NAME</strong> or name - Tenant name (required)</li>
+              <li><strong>TEL NO.</strong> or contact/phone - Phone number (required)</li>
+              <li><strong>DISTRICT</strong> - District location (optional)</li>
+              <li><strong>CELL/VILLAGE</strong> or location - Cell or village (optional)</li>
+              <li>landlord - Landlord name (optional, defaults to "To be updated")</li>
+              <li>landlord_contact - Landlord phone (optional)</li>
+              <li>rent_amount/rent - Monthly rent amount (optional)</li>
+              <li>agent_name/agent - Agent name (optional, defaults to "ADEKE ANNET")</li>
+              <li>agent_phone - Agent phone (optional)</li>
+              <li>service_center - Service center (optional)</li>
             </ul>
             <p className="text-muted-foreground mt-2">
-              All tenants will be added with "pipeline" status automatically.
+              <strong>Note:</strong> All tenants will be added as editable pipeline tenants. Missing information can be filled in later by editing each tenant.
             </p>
           </div>
         </div>
