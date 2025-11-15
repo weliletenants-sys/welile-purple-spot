@@ -75,7 +75,7 @@ const AgentDashboard = () => {
         comparison = b.tenantsCount - a.tenantsCount;
         break;
       case "available":
-        comparison = (b.earnedCommission - b.withdrawnCommission) - (a.earnedCommission - a.withdrawnCommission);
+        comparison = (((b.commissions || 0) + (b.recordingBonuses || 0) - (b.withdrawnCommission || 0)) - (((a.commissions || 0) + (a.recordingBonuses || 0) - (a.withdrawnCommission || 0))));
         break;
       default:
         comparison = 0;
@@ -195,7 +195,9 @@ const AgentDashboard = () => {
   const totalEarnedCommissions = agents?.reduce((sum, agent) => sum + agent.earnedCommission, 0) || 0;
   const totalExpectedCommissions = agents?.reduce((sum, agent) => sum + agent.expectedCommission, 0) || 0;
   const totalWithdrawnCommissions = agents?.reduce((sum, agent) => sum + agent.withdrawnCommission, 0) || 0;
-  const totalAvailableCommissions = totalEarnedCommissions - totalWithdrawnCommissions;
+  const totalAvailableCommissions = agents?.reduce((sum, agent) =>
+    sum + (((agent.commissions || 0) + (agent.recordingBonuses || 0) - (agent.withdrawnCommission || 0))),
+  0) || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -643,7 +645,7 @@ const AgentDashboard = () => {
                     <div className="flex items-center justify-between pt-2 border-t border-border">
                       <span className="text-sm font-medium text-muted-foreground">Available</span>
                       <span className="text-xl font-bold text-accent">
-                        UGX {(agent.earnedCommission - agent.withdrawnCommission).toLocaleString()}
+                        UGX {(((agent.commissions || 0) + (agent.recordingBonuses || 0) - (agent.withdrawnCommission || 0))).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -671,11 +673,11 @@ const AgentDashboard = () => {
 
                   {/* Withdraw Button */}
                   <div className="pt-3 border-t border-border">
-                    <Button
-                      className="w-full"
-                      onClick={() => handleWithdraw(agent.agentPhone, agent.agentName, agent.earnedCommission - agent.withdrawnCommission)}
-                      disabled={withdrawingAgent === agent.agentPhone || (agent.earnedCommission - agent.withdrawnCommission) <= 0}
-                    >
+                      <Button
+                        className="w-full"
+                        onClick={() => handleWithdraw(agent.agentPhone, agent.agentName, ((agent.commissions || 0) + (agent.recordingBonuses || 0) - (agent.withdrawnCommission || 0)))}
+                        disabled={withdrawingAgent === agent.agentPhone || (((agent.commissions || 0) + (agent.recordingBonuses || 0) - (agent.withdrawnCommission || 0)) <= 0)}
+                      >
                       {withdrawingAgent === agent.agentPhone ? "Processing..." : "Withdraw Commission"}
                     </Button>
                   </div>
