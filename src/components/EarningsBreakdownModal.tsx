@@ -130,14 +130,30 @@ export const EarningsBreakdownModal = ({
             color="bg-primary/10"
           />
 
-          <EarningType
-            icon={<Zap className="h-5 w-5 text-amber-600" />}
-            label="Recording Bonus"
-            amount={earnings.recordingBonuses}
-            withdrawable={true}
-            description="Bonuses earned from recording payments"
-            color="bg-amber-100 dark:bg-amber-900/30"
-          />
+          <Card className="p-4 hover:shadow-md transition-shadow border-2 border-amber-500 dark:border-amber-600 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 flex-1">
+                <div className="p-2 rounded-lg bg-amber-500 dark:bg-amber-600">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-bold text-sm text-amber-900 dark:text-amber-100">Recording Bonus ⭐</h4>
+                    <Badge variant="default" className="text-xs bg-green-600 hover:bg-green-700">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Withdrawable
+                    </Badge>
+                  </div>
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-200">Bonuses earned from recording payments</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-bold text-amber-900 dark:text-amber-100">
+                  UGX {earnings.recordingBonuses.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </Card>
         </div>
 
         <Separator className="my-4" />
