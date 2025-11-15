@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, UserPlus, ArrowLeft, Lock, Search, Download, FileSpreadsheet, TrendingUp, DollarSign, Target } from "lucide-react";
+import { Pencil, Trash2, UserPlus, ArrowLeft, Lock, Search, Download, FileSpreadsheet, TrendingUp, DollarSign, Target, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { Input } from "@/components/ui/input";
@@ -75,6 +75,8 @@ const AgentManagement = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
   const [agentPerformance, setAgentPerformance] = useState<Record<string, AgentPerformance>>({});
+  const [sortColumn, setSortColumn] = useState<string>("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   // Check if user is already authorized
   useEffect(() => {
@@ -245,6 +247,25 @@ const AgentManagement = () => {
     )
   ).sort();
 
+  // Handle sorting
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (column: string) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
+    }
+    return sortDirection === "asc" 
+      ? <ArrowUp className="h-4 w-4 ml-1" />
+      : <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
   // Filter agents based on search and status
   const filteredAgents = fullAgents.filter((agent) => {
     const matchesSearch = 
@@ -257,6 +278,54 @@ const AgentManagement = () => {
       (statusFilter === "inactive" && !agent.is_active);
     
     return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    const perfA = agentPerformance[a.phone] || {
+      totalTenants: 0,
+      activeTenants: 0,
+      pipelineTenants: 0,
+      totalEarnings: 0,
+      conversionRate: 0,
+    };
+    const perfB = agentPerformance[b.phone] || {
+      totalTenants: 0,
+      activeTenants: 0,
+      pipelineTenants: 0,
+      totalEarnings: 0,
+      conversionRate: 0,
+    };
+
+    let compareValue = 0;
+
+    switch (sortColumn) {
+      case "name":
+        compareValue = a.name.localeCompare(b.name);
+        break;
+      case "phone":
+        compareValue = (a.phone || "").localeCompare(b.phone || "");
+        break;
+      case "status":
+        compareValue = (a.is_active === b.is_active) ? 0 : a.is_active ? -1 : 1;
+        break;
+      case "totalTenants":
+        compareValue = perfA.totalTenants - perfB.totalTenants;
+        break;
+      case "activeTenants":
+        compareValue = perfA.activeTenants - perfB.activeTenants;
+        break;
+      case "pipelineTenants":
+        compareValue = perfA.pipelineTenants - perfB.pipelineTenants;
+        break;
+      case "earnings":
+        compareValue = perfA.totalEarnings - perfB.totalEarnings;
+        break;
+      case "conversionRate":
+        compareValue = perfA.conversionRate - perfB.conversionRate;
+        break;
+      default:
+        compareValue = 0;
+    }
+
+    return sortDirection === "asc" ? compareValue : -compareValue;
   });
 
   // Export to Excel
@@ -582,52 +651,114 @@ const AgentManagement = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("name")}
+                            className="flex items-center hover:bg-transparent p-0 h-auto font-medium"
+                          >
+                            Name
+                            {getSortIcon("name")}
+                          </Button>
+                        </TableHead>
+                        <TableHead>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("phone")}
+                            className="flex items-center hover:bg-transparent p-0 h-auto font-medium"
+                          >
+                            Phone
+                            {getSortIcon("phone")}
+                          </Button>
+                        </TableHead>
+                        <TableHead>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("status")}
+                            className="flex items-center hover:bg-transparent p-0 h-auto font-medium"
+                          >
+                            Status
+                            {getSortIcon("status")}
+                          </Button>
+                        </TableHead>
                         <TableHead className="text-right">
                           <Tooltip>
-                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
-                              <Users className="h-4 w-4" />
-                              <span>Total</span>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleSort("totalTenants")}
+                                className="flex items-center gap-1 ml-auto hover:bg-transparent p-0 h-auto font-medium"
+                              >
+                                <Users className="h-4 w-4" />
+                                <span>Total</span>
+                                {getSortIcon("totalTenants")}
+                              </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Total Tenants</TooltipContent>
+                            <TooltipContent>Total Tenants - Click to sort</TooltipContent>
                           </Tooltip>
                         </TableHead>
                         <TableHead className="text-right">
                           <Tooltip>
-                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
-                              <UserCheck className="h-4 w-4" />
-                              <span>Active</span>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleSort("activeTenants")}
+                                className="flex items-center gap-1 ml-auto hover:bg-transparent p-0 h-auto font-medium"
+                              >
+                                <UserCheck className="h-4 w-4" />
+                                <span>Active</span>
+                                {getSortIcon("activeTenants")}
+                              </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Active Tenants</TooltipContent>
+                            <TooltipContent>Active Tenants - Click to sort</TooltipContent>
                           </Tooltip>
                         </TableHead>
                         <TableHead className="text-right">
                           <Tooltip>
-                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
-                              <Target className="h-4 w-4" />
-                              <span>Pipeline</span>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleSort("pipelineTenants")}
+                                className="flex items-center gap-1 ml-auto hover:bg-transparent p-0 h-auto font-medium"
+                              >
+                                <Target className="h-4 w-4" />
+                                <span>Pipeline</span>
+                                {getSortIcon("pipelineTenants")}
+                              </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Pipeline Tenants</TooltipContent>
+                            <TooltipContent>Pipeline Tenants - Click to sort</TooltipContent>
                           </Tooltip>
                         </TableHead>
                         <TableHead className="text-right">
                           <Tooltip>
-                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
-                              <DollarSign className="h-4 w-4" />
-                              <span>Earnings</span>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleSort("earnings")}
+                                className="flex items-center gap-1 ml-auto hover:bg-transparent p-0 h-auto font-medium"
+                              >
+                                <DollarSign className="h-4 w-4" />
+                                <span>Earnings</span>
+                                {getSortIcon("earnings")}
+                              </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Total Earnings (UGX)</TooltipContent>
+                            <TooltipContent>Total Earnings (UGX) - Click to sort</TooltipContent>
                           </Tooltip>
                         </TableHead>
                         <TableHead className="text-right">
                           <Tooltip>
-                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
-                              <TrendingUp className="h-4 w-4" />
-                              <span>Conv. Rate</span>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleSort("conversionRate")}
+                                className="flex items-center gap-1 ml-auto hover:bg-transparent p-0 h-auto font-medium"
+                              >
+                                <TrendingUp className="h-4 w-4" />
+                                <span>Conv. Rate</span>
+                                {getSortIcon("conversionRate")}
+                              </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Conversion Rate (Active/Total)</TooltipContent>
+                            <TooltipContent>Conversion Rate (Active/Total) - Click to sort</TooltipContent>
                           </Tooltip>
                         </TableHead>
                         <TableHead className="text-right">Actions</TableHead>
