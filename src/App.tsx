@@ -58,6 +58,7 @@ const UnderReviewTenants = lazy(() => import("./pages/UnderReviewTenants"));
 const StatusHistoryPage = lazy(() => import("./pages/StatusHistoryPage"));
 const AgentEarningsAnalytics = lazy(() => import("./pages/AgentEarningsAnalytics"));
 const RecordingBonusCalculator = lazy(() => import("./pages/RecordingBonusCalculator"));
+const RecordingBonusLeaderboard = lazy(() => import("./pages/RecordingBonusLeaderboard"));
 const EarningsLeaderboard = lazy(() => import("./pages/EarningsLeaderboard"));
 const TeamEarningsLeaderboard = lazy(() => import("./pages/TeamEarningsLeaderboard"));
 const DataCleanup = lazy(() => import("./pages/DataCleanup"));
@@ -159,6 +160,7 @@ const App = () => {
               <Route path="/status-history" element={<StatusHistoryPage />} />
               <Route path="/agent-earnings-analytics" element={<AgentEarningsAnalytics />} />
               <Route path="/recording-bonus-calculator" element={<RecordingBonusCalculator />} />
+              <Route path="/recording-bonus-leaderboard" element={<RecordingBonusLeaderboard />} />
         <Route path="/earnings-leaderboard" element={<EarningsLeaderboard />} />
         <Route path="/team-earnings" element={<TeamEarningsLeaderboard />} />
         <Route path="/data-cleanup" element={<DataCleanup />} />
