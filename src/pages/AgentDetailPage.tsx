@@ -99,7 +99,8 @@ const AgentDetailPage = () => {
 
   const availableBalance = useMemo(() => {
     if (!agentEarnings) return 0;
-    return agentEarnings.earnedCommission - agentEarnings.withdrawnCommission;
+    const withdrawableEarned = (agentEarnings.commissions || 0) + (agentEarnings.recordingBonuses || 0);
+    return Math.max(0, withdrawableEarned - (agentEarnings.withdrawnCommission || 0));
   }, [agentEarnings]);
 
   const handleWithdraw = async () => {
