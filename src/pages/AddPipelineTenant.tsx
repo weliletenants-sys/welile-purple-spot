@@ -158,20 +158,32 @@ const AddPipelineTenant = () => {
       const { error: earningsError } = await supabase.from("agent_earnings").insert({
         agent_name: formData.referrerName.trim().toUpperCase(),
         agent_phone: formData.referrerPhone.trim(),
-        earning_type: "pipeline_referral",
+        earning_type: "pipeline_bonus",
         amount: 100,
         tenant_id: tenant.id,
       });
 
       if (earningsError) throw earningsError;
 
+      // Fetch total earnings for this referrer
+      const { data: totalEarningsData, error: totalError } = await supabase
+        .from("agent_earnings")
+        .select("amount")
+        .eq("agent_name", formData.referrerName.trim().toUpperCase())
+        .eq("agent_phone", formData.referrerPhone.trim());
+
+      if (totalError) throw totalError;
+
+      const accumulatedTotal = totalEarningsData?.reduce((sum, earning) => sum + Number(earning.amount), 0) || 100;
+
       // Update local state
-      setTotalEarned((prev) => prev + 100);
+      setTotalEarned(accumulatedTotal);
       setTenantsAdded((prev) => prev + 1);
 
       toast({
         title: "🎉 Success! You Earned UGX 100!",
-        description: `${formData.name} added to pipeline. Keep adding more tenants to earn more!`,
+        description: `${formData.name} added to pipeline. Your Total Earnings: UGX ${accumulatedTotal.toLocaleString()}!`,
+        duration: 6000,
       });
 
       // Reset form
