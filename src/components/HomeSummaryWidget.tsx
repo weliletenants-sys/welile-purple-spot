@@ -3,10 +3,40 @@ import { useExecutiveStats } from "@/hooks/useExecutiveStats";
 import { TrendingUp, Users, DollarSign, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { TenantStatusBreakdownDialog } from "./TenantStatusBreakdownDialog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { usePendingTenantsCount } from "@/hooks/usePendingTenants";
+import { useUnderReviewTenantsCount } from "@/hooks/useUnderReviewTenants";
 
 export const HomeSummaryWidget = () => {
   const stats = useExecutiveStats();
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const { data: pendingCount = 0 } = usePendingTenantsCount();
+  const { data: underReviewCount = 0 } = useUnderReviewTenantsCount();
+  
+  const { data: pipelineCount = 0 } = useQuery({
+    queryKey: ["pipelineTenantsCount"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("tenants")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pipeline");
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+  
+  const { data: activeCount = 0 } = useQuery({
+    queryKey: ["activeTenantsCount"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("tenants")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+      if (error) throw error;
+      return count || 0;
+    },
+  });
 
   const collectionRate = parseFloat(stats?.collectionRate || '0');
   const totalTenants = stats?.numberOfTenants || 0;
@@ -71,6 +101,11 @@ export const HomeSummaryWidget = () => {
       <TenantStatusBreakdownDialog 
         open={showBreakdown}
         onOpenChange={setShowBreakdown}
+        totalCount={totalTenants}
+        pipelineCount={pipelineCount}
+        activeCount={activeCount}
+        pendingCount={pendingCount}
+        underReviewCount={underReviewCount}
       />
     </>
   );

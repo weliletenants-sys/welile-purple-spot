@@ -1,15 +1,32 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, TrendingUp, Hourglass, PauseCircle } from "lucide-react";
+import { Users, TrendingUp, Hourglass, PauseCircle, Clock, AlertTriangle, Target } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 interface TenantStatusBreakdownDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  totalCount: number;
+  pipelineCount: number;
+  activeCount: number;
+  pendingCount: number;
+  underReviewCount: number;
 }
 
-export const TenantStatusBreakdownDialog = ({ open, onOpenChange }: TenantStatusBreakdownDialogProps) => {
+export const TenantStatusBreakdownDialog = ({ 
+  open, 
+  onOpenChange,
+  totalCount,
+  pipelineCount,
+  activeCount,
+  pendingCount,
+  underReviewCount,
+}: TenantStatusBreakdownDialogProps) => {
+  const navigate = useNavigate();
+  
   const { data: breakdown } = useQuery({
     queryKey: ["tenantStatusBreakdown"],
     queryFn: async () => {
