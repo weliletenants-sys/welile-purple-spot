@@ -594,6 +594,11 @@ const Index = () => {
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* Bulk Upload Pipeline Tenants Button */}
+              <div className="flex justify-center mt-6">
+                <BulkUploadPipelineTenants />
+              </div>
             </div>
           </div>
         </div>
