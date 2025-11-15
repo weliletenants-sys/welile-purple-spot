@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, UserPlus, ArrowLeft, Lock, Search, Download, FileSpreadsheet } from "lucide-react";
+import { Pencil, Trash2, UserPlus, ArrowLeft, Lock, Search, Download, FileSpreadsheet, TrendingUp, DollarSign, Target } from "lucide-react";
 import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { Users, UserCheck, UserPlus2, Activity, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Agent {
   id: string;
@@ -51,6 +52,14 @@ interface Agent {
   last_action_at?: string;
   last_action_type?: string;
   last_login_at?: string;
+}
+
+interface AgentPerformance {
+  totalTenants: number;
+  activeTenants: number;
+  pipelineTenants: number;
+  totalEarnings: number;
+  conversionRate: number;
 }
 
 const AgentManagement = () => {
@@ -65,6 +74,7 @@ const AgentManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
+  const [agentPerformance, setAgentPerformance] = useState<Record<string, AgentPerformance>>({});
 
   // Check if user is already authorized
   useEffect(() => {
@@ -118,6 +128,56 @@ const AgentManagement = () => {
   useState(() => {
     fetchFullAgents();
   });
+
+  // Fetch performance metrics for all agents
+  const fetchAgentPerformance = async () => {
+    try {
+      // Fetch all tenants
+      const { data: tenants, error: tenantsError } = await supabase
+        .from("tenants")
+        .select("agent_phone, status");
+
+      if (tenantsError) throw tenantsError;
+
+      // Fetch all earnings
+      const { data: earnings, error: earningsError } = await supabase
+        .from("agent_earnings")
+        .select("agent_phone, amount");
+
+      if (earningsError) throw earningsError;
+
+      // Calculate performance metrics for each agent
+      const performance: Record<string, AgentPerformance> = {};
+
+      fullAgents.forEach((agent) => {
+        const agentTenants = tenants?.filter(t => t.agent_phone === agent.phone) || [];
+        const activeTenants = agentTenants.filter(t => t.status === "active").length;
+        const pipelineTenants = agentTenants.filter(t => t.status === "pipeline").length;
+        const totalTenants = agentTenants.length;
+        const agentEarnings = earnings?.filter(e => e.agent_phone === agent.phone) || [];
+        const totalEarnings = agentEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
+        const conversionRate = totalTenants > 0 ? (activeTenants / totalTenants) * 100 : 0;
+
+        performance[agent.phone] = {
+          totalTenants,
+          activeTenants,
+          pipelineTenants,
+          totalEarnings,
+          conversionRate,
+        };
+      });
+
+      setAgentPerformance(performance);
+    } catch (error) {
+      console.error("Error fetching agent performance:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (fullAgents.length > 0) {
+      fetchAgentPerformance();
+    }
+  }, [fullAgents]);
 
   const handleDelete = async () => {
     if (!selectedAgent) return;
@@ -518,57 +578,145 @@ const AgentManagement = () => {
               </div>
             ) : (
               <ScrollArea className="h-[600px] w-full rounded-md">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Phone Number</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAgents.map((agent) => (
-                      <TableRow key={agent.id}>
-                        <TableCell className="font-medium">{agent.name}</TableCell>
-                        <TableCell>
-                          {agent.phone || (
-                            <span className="text-muted-foreground italic">
-                              No phone number
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={agent.is_active ? "default" : "secondary"}
-                          >
-                            {agent.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <EditAgentDialog
-                              agent={agent}
-                              onSuccess={() => {
-                                refetch();
-                                fetchFullAgents();
-                              }}
-                            />
-                            {agent.is_active && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openDeleteDialog(agent)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
+                <TooltipProvider>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">
+                          <Tooltip>
+                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
+                              <Users className="h-4 w-4" />
+                              <span>Total</span>
+                            </TooltipTrigger>
+                            <TooltipContent>Total Tenants</TooltipContent>
+                          </Tooltip>
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <Tooltip>
+                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
+                              <UserCheck className="h-4 w-4" />
+                              <span>Active</span>
+                            </TooltipTrigger>
+                            <TooltipContent>Active Tenants</TooltipContent>
+                          </Tooltip>
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <Tooltip>
+                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
+                              <Target className="h-4 w-4" />
+                              <span>Pipeline</span>
+                            </TooltipTrigger>
+                            <TooltipContent>Pipeline Tenants</TooltipContent>
+                          </Tooltip>
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <Tooltip>
+                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
+                              <DollarSign className="h-4 w-4" />
+                              <span>Earnings</span>
+                            </TooltipTrigger>
+                            <TooltipContent>Total Earnings (UGX)</TooltipContent>
+                          </Tooltip>
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <Tooltip>
+                            <TooltipTrigger className="flex items-center gap-1 ml-auto">
+                              <TrendingUp className="h-4 w-4" />
+                              <span>Conv. Rate</span>
+                            </TooltipTrigger>
+                            <TooltipContent>Conversion Rate (Active/Total)</TooltipContent>
+                          </Tooltip>
+                        </TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAgents.map((agent) => {
+                        const performance = agentPerformance[agent.phone] || {
+                          totalTenants: 0,
+                          activeTenants: 0,
+                          pipelineTenants: 0,
+                          totalEarnings: 0,
+                          conversionRate: 0,
+                        };
+
+                        return (
+                          <TableRow key={agent.id}>
+                            <TableCell className="font-medium">{agent.name}</TableCell>
+                            <TableCell>
+                              {agent.phone || (
+                                <span className="text-muted-foreground italic">
+                                  No phone
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={agent.is_active ? "default" : "secondary"}
+                              >
+                                {agent.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
+                              {performance.totalTenants}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-green-600 font-medium">
+                                {performance.activeTenants}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-blue-600 font-medium">
+                                {performance.pipelineTenants}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {performance.totalEarnings.toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge 
+                                variant={performance.conversionRate >= 50 ? "default" : "secondary"}
+                                className={
+                                  performance.conversionRate >= 70 
+                                    ? "bg-green-500" 
+                                    : performance.conversionRate >= 50 
+                                    ? "bg-blue-500" 
+                                    : ""
+                                }
+                              >
+                                {performance.conversionRate.toFixed(1)}%
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <EditAgentDialog
+                                  agent={agent}
+                                  onSuccess={() => {
+                                    refetch();
+                                    fetchFullAgents();
+                                  }}
+                                />
+                                {agent.is_active && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => openDeleteDialog(agent)}
+                                    title="Deactivate agent"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TooltipProvider>
               </ScrollArea>
             )}
           </CardContent>
