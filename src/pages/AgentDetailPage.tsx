@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search, UserCog, Wallet, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, TrendingUp, Calendar, ArrowUpDown, Plus, Zap, List, Grid, Search, UserCog, Wallet, ChevronDown, Eye, EyeOff, Info } from "lucide-react";
 
 import { AssignTenantToAgentDialog } from "@/components/AssignTenantToAgentDialog";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -42,6 +42,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { 
+  Tooltip as InfoTooltip, 
+  TooltipContent as InfoTooltipContent, 
+  TooltipProvider as InfoTooltipProvider, 
+  TooltipTrigger as InfoTooltipTrigger 
+} from "@/components/ui/tooltip";
 
 const AgentDetailPage = () => {
   const navigate = useNavigate();
@@ -325,13 +331,37 @@ const AgentDetailPage = () => {
                   </span>
                 </div>
                 <div className="pt-2 border-t flex justify-between items-baseline">
-                  <span className="text-sm font-medium">Available Balance</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium">Available Balance</span>
+                    <InfoTooltipProvider>
+                      <InfoTooltip>
+                        <InfoTooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </InfoTooltipTrigger>
+                        <InfoTooltipContent className="max-w-xs">
+                          <p className="text-sm font-semibold mb-1">Withdrawal Rules</p>
+                          <p className="text-xs"><strong>Withdrawable:</strong> Commissions + Recording Bonuses</p>
+                          <p className="text-xs text-muted-foreground mt-1"><strong>Non-withdrawable:</strong> Pipeline bonuses (UGX 50), Data Entry, and Signup bonuses</p>
+                        </InfoTooltipContent>
+                      </InfoTooltip>
+                    </InfoTooltipProvider>
+                  </div>
                   <span className="text-3xl font-bold text-green-700 dark:text-green-300">
                     UGX {availableBalance.toLocaleString()}
                   </span>
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="px-4 py-2 bg-muted/50 rounded-md border border-border mb-2">
+            <div className="flex items-start gap-2">
+              <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+              <div className="text-xs text-muted-foreground">
+                <span className="font-medium">Withdrawal includes:</span> Commissions & Recording Bonuses only. 
+                <span className="block mt-0.5 italic">Pipeline (UGX 50), Data Entry & Signup bonuses are non-withdrawable.</span>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-2">
