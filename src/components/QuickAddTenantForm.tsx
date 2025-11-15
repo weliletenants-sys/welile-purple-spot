@@ -107,10 +107,14 @@ export const QuickAddTenantForm = () => {
     }
 
     try {
+      // Normalize phone numbers
+      const normalizedContact = formData.contact.trim().replace(/[\s-]/g, '');
+      const normalizedAgentPhone = formData.agentPhone.trim().replace(/[\s-]/g, '');
+      
       const tenantData = {
         name: formData.name.trim().toUpperCase(),
-        contact: formData.contact.trim().replace(/[\s-]/g, ''),
-        address: formData.address.trim(),
+        contact: normalizedContact,
+        address: formData.address.trim() || "TBD",
         landlord: "TBD",
         landlordContact: "0000000000",
         rentAmount,
@@ -120,6 +124,8 @@ export const QuickAddTenantForm = () => {
         status: "pipeline" as const,
         paymentStatus: "pending" as const,
         performance: 80,
+        guarantor1: undefined,
+        guarantor2: undefined,
         location: {
           country: "Uganda",
           county: "",
@@ -128,10 +134,11 @@ export const QuickAddTenantForm = () => {
           cellOrVillage: "",
         },
         agentName: formData.agentName.trim(),
-        agentPhone: formData.agentPhone.trim().replace(/[\s-]/g, ''),
-        serviceCenter: formData.serviceCenter.trim(),
+        agentPhone: normalizedAgentPhone,
+        serviceCenter: formData.serviceCenter.trim() || "",
       };
 
+      console.log('Submitting pipeline tenant:', tenantData);
       await addTenant(tenantData);
 
       // Log agent activity
@@ -181,11 +188,21 @@ export const QuickAddTenantForm = () => {
       setPhoneError("");
       setOpen(false);
     } catch (error: any) {
-      console.error("Error adding tenant:", error);
+      console.error("Error adding pipeline tenant:", error);
+      
+      // More detailed error message
+      let errorMessage = "Failed to add tenant. Please try again.";
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.code) {
+        errorMessage = `Database error (${error.code}): ${error.details || 'Please check all fields'}`;
+      }
+      
       toast({
-        title: "❌ Error",
-        description: error.message || "Failed to add tenant. Please try again.",
+        title: "❌ Error Adding Pipeline Tenant",
+        description: errorMessage,
         variant: "destructive",
+        duration: 7000,
       });
     }
   };
@@ -235,7 +252,6 @@ export const QuickAddTenantForm = () => {
     parseFloat(formData.rentAmount) > 0 &&
     formData.agentName.trim() && 
     formData.agentPhone.trim() && 
-    formData.serviceCenter.trim() &&
     !phoneError;
 
   return (
@@ -378,10 +394,10 @@ export const QuickAddTenantForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="quick-service-center">Service Center *</Label>
+              <Label htmlFor="quick-service-center">Service Center (Optional)</Label>
               <Select value={formData.serviceCenter} onValueChange={(value) => handleChange("serviceCenter", value)}>
                 <SelectTrigger id="quick-service-center">
-                  <SelectValue placeholder="Select service center" />
+                  <SelectValue placeholder="Select service center (optional)" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[200px]">
                   {serviceCenters?.map((center) => (
