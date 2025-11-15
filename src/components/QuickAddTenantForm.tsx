@@ -632,16 +632,10 @@ export const QuickAddTenantForm = () => {
           </Button>
           <Button
             type="submit"
-            disabled={!isFormValid}
             onClick={handleSubmit}
-            className={cn(
-              "flex-1 h-14 text-base font-bold gap-2",
-              isFormValid 
-                ? "bg-green-600 hover:bg-green-700 text-white" 
-                : "bg-gray-300 text-gray-500"
-            )}
+            className="flex-1 h-14 text-base font-bold gap-2 bg-green-600 hover:bg-green-700 text-white"
           >
-            {isFormValid && <CheckCircle2 className="w-5 h-5" />}
+            <CheckCircle2 className="w-5 h-5" />
             Save Tenant
           </Button>
         </div>
