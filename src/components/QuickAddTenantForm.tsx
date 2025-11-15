@@ -262,96 +262,98 @@ export const QuickAddTenantForm = () => {
           Quick Add Pipeline
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2 text-2xl font-bold text-primary">
-            <Zap className="w-6 h-6" />
+      <DialogContent className="h-[95vh] sm:h-[90vh] max-w-[95vw] sm:max-w-xl flex flex-col p-0 gap-0">
+        <DialogHeader className="flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-2xl font-bold text-primary">
+            <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
             Quick Add Pipeline Tenant
           </DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Fast entry for prospects - only essential info required
           </p>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 max-h-[calc(90vh-120px)] pr-4">
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+        <ScrollArea className="flex-1 overflow-auto px-4 sm:px-6">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 py-4">
           <Alert className="border-primary/30 bg-primary/5">
             <Zap className="h-4 w-4 text-primary" />
-            <AlertDescription className="text-sm">
+            <AlertDescription className="text-xs sm:text-sm">
               Prospect will be added with "Pending" status. Add full details when tenant becomes active.
             </AlertDescription>
           </Alert>
 
           {/* Essential Tenant Info */}
-          <div className="space-y-4 p-4 bg-secondary/10 rounded-lg border">
-            <h3 className="font-semibold text-sm text-foreground">Tenant Information *</h3>
+          <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 bg-secondary/10 rounded-lg border">
+            <h3 className="font-semibold text-sm sm:text-base text-foreground">Tenant Information *</h3>
             
-            <div className="space-y-2">
-              <Label htmlFor="quick-name">Full Name *</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="quick-name" className="text-sm sm:text-base">Full Name *</Label>
               <Input
                 id="quick-name"
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 placeholder="Enter tenant's name"
                 maxLength={100}
+                className="h-11 sm:h-10 text-base sm:text-sm"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quick-contact">Contact Number *</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="quick-contact" className="text-sm sm:text-base">Contact Number *</Label>
               <Input
                 id="quick-contact"
                 value={formData.contact}
                 onChange={(e) => handleChange("contact", e.target.value)}
-                placeholder="e.g., 0700000000 or 256700000000"
+                placeholder="e.g., 0700000000"
                 maxLength={13}
-                className={phoneError && formData.contact ? "border-destructive" : ""}
+                className={`h-11 sm:h-10 text-base sm:text-sm ${phoneError && formData.contact ? "border-destructive" : ""}`}
               />
               {phoneError && formData.contact && (
-                <p className="text-sm text-destructive flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" />
-                  {phoneError}
-                </p>
+                <p className="text-xs text-destructive">{phoneError}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quick-address">Address *</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="quick-address" className="text-sm sm:text-base">Address *</Label>
               <Input
                 id="quick-address"
                 value={formData.address}
                 onChange={(e) => handleChange("address", e.target.value)}
-                placeholder="Enter address"
+                placeholder="Enter address or location"
                 maxLength={200}
+                className="h-11 sm:h-10 text-base sm:text-sm"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quick-rent">Expected Rent Amount (UGX) *</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="quick-rent" className="text-sm sm:text-base">Monthly Rent (UGX) *</Label>
               <Input
                 id="quick-rent"
                 type="number"
                 value={formData.rentAmount}
                 onChange={(e) => handleChange("rentAmount", e.target.value)}
                 placeholder="Enter rent amount"
+                min="0"
+                step="1000"
+                className="h-11 sm:h-10 text-base sm:text-sm"
               />
             </div>
           </div>
 
           {/* Agent & Service Center */}
-          <div className="space-y-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
-            <h3 className="font-semibold text-sm text-foreground">Agent & Location *</h3>
+          <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 bg-primary/5 rounded-lg border border-primary/20">
+            <h3 className="font-semibold text-sm sm:text-base text-foreground">Agent & Location *</h3>
             
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="quick-agent">Agent *</Label>
+            <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="quick-agent" className="text-sm sm:text-base">Agent *</Label>
                 <Select value={formData.agentName} onValueChange={handleAgentChange}>
-                  <SelectTrigger id="quick-agent">
+                  <SelectTrigger id="quick-agent" className="h-11 sm:h-10 text-base sm:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="max-h-[200px]">
                     {agents.map((agent) => (
-                      <SelectItem key={agent.name} value={agent.name}>
+                      <SelectItem key={agent.name} value={agent.name} className="text-base sm:text-sm py-3 sm:py-2">
                         {agent.name}
                       </SelectItem>
                     ))}
@@ -359,9 +361,9 @@ export const QuickAddTenantForm = () => {
                 </Select>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1.5 sm:space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="quick-agent-phone">Agent Phone *</Label>
+                  <Label htmlFor="quick-agent-phone" className="text-sm sm:text-base">Agent Phone *</Label>
                   {formData.agentPhone && (
                     <Button
                       type="button"
@@ -371,7 +373,7 @@ export const QuickAddTenantForm = () => {
                         handleChange("agentPhone", "");
                         localStorage.removeItem('quickAddAgentPhone');
                       }}
-                      className="h-6 text-xs text-muted-foreground hover:text-destructive"
+                      className="h-7 text-xs text-muted-foreground hover:text-destructive"
                     >
                       Clear
                     </Button>
@@ -383,7 +385,7 @@ export const QuickAddTenantForm = () => {
                   onChange={(e) => handleChange("agentPhone", e.target.value)}
                   placeholder="0700000000"
                   maxLength={13}
-                  className={phoneError && formData.agentPhone ? "border-destructive" : ""}
+                  className={`h-11 sm:h-10 text-base sm:text-sm ${phoneError && formData.agentPhone ? "border-destructive" : ""}`}
                 />
                 {formData.agentPhone && !phoneError && (
                   <p className="text-xs text-muted-foreground">
@@ -393,15 +395,15 @@ export const QuickAddTenantForm = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quick-service-center">Service Center (Optional)</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="quick-service-center" className="text-sm sm:text-base">Service Center (Optional)</Label>
               <Select value={formData.serviceCenter} onValueChange={(value) => handleChange("serviceCenter", value)}>
-                <SelectTrigger id="quick-service-center">
+                <SelectTrigger id="quick-service-center" className="h-11 sm:h-10 text-base sm:text-sm">
                   <SelectValue placeholder="Select service center (optional)" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[200px]">
                   {serviceCenters?.map((center) => (
-                    <SelectItem key={center.id} value={center.name}>
+                    <SelectItem key={center.id} value={center.name} className="text-base sm:text-sm py-3 sm:py-2">
                       {center.name} ({center.district})
                     </SelectItem>
                   ))}
@@ -410,34 +412,38 @@ export const QuickAddTenantForm = () => {
             </div>
           </div>
 
-          {/* Submit Buttons */}
-          <div className="flex gap-3 pt-2">
-            <Button 
-              type="submit" 
-              className="flex-1 font-semibold"
+          {/* Bottom spacing */}
+          <div className="h-2" />
+        </form>
+        </ScrollArea>
+        
+        {/* Fixed Bottom Actions */}
+        <div className="flex flex-col gap-2 px-4 sm:px-6 py-3 sm:py-4 border-t bg-background flex-shrink-0">
+          {!isFormValid && (
+            <p className="text-xs sm:text-sm text-muted-foreground text-center">
+              Please fill in all required fields
+            </p>
+          )}
+          <div className="flex gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="flex-1 h-11 sm:h-10 text-base sm:text-sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
               disabled={!isFormValid}
+              onClick={handleSubmit}
+              className="flex-1 h-11 sm:h-10 text-base sm:text-sm bg-gradient-to-r from-primary to-primary/80 font-semibold"
             >
               <Zap className="w-4 h-4 mr-2" />
               Add to Pipeline
             </Button>
-            
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setOpen(false)} 
-              className="flex-1"
-            >
-              Cancel
-            </Button>
           </div>
-
-          {!isFormValid && (
-            <p className="text-sm text-muted-foreground text-center">
-              Please fill in all required fields
-            </p>
-          )}
-        </form>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
