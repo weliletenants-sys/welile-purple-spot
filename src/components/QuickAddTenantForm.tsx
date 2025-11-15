@@ -33,14 +33,19 @@ export const QuickAddTenantForm = () => {
   const { logActivity } = useAgentActivity();
   const [phoneError, setPhoneError] = useState("");
   
-  const [formData, setFormData] = useState<QuickAddFormData>({
-    name: "",
-    contact: "",
-    address: "",
-    rentAmount: "",
-    agentName: "MUHWEZI MARTIN",
-    agentPhone: "",
-    serviceCenter: "",
+  // Load saved agent phone from localStorage on component mount
+  const [formData, setFormData] = useState<QuickAddFormData>(() => {
+    const savedAgentPhone = localStorage.getItem('quickAddAgentPhone');
+    const savedAgentName = localStorage.getItem('quickAddAgentName');
+    return {
+      name: "",
+      contact: "",
+      address: "",
+      rentAmount: "",
+      agentName: savedAgentName || "MUHWEZI MARTIN",
+      agentPhone: savedAgentPhone || "",
+      serviceCenter: "",
+    };
   });
 
   const validatePhone = (phone: string): boolean => {
@@ -163,14 +168,14 @@ export const QuickAddTenantForm = () => {
         duration: 5000,
       });
 
-      // Reset form
+      // Reset form but keep agent info
       setFormData({
         name: "",
         contact: "",
         address: "",
         rentAmount: "",
-        agentName: "MUHWEZI MARTIN",
-        agentPhone: "",
+        agentName: formData.agentName, // Keep agent name
+        agentPhone: formData.agentPhone, // Keep agent phone
         serviceCenter: "",
       });
       setPhoneError("");
@@ -188,22 +193,41 @@ export const QuickAddTenantForm = () => {
   const handleChange = (field: keyof QuickAddFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
+    // Save agent phone to localStorage when changed
+    if (field === "agentPhone") {
+      localStorage.setItem('quickAddAgentPhone', value);
+      validatePhone(value);
+    } else if (field === "agentName") {
+      localStorage.setItem('quickAddAgentName', value);
+    }
+    
     // Validate phone on change
-    if (field === "contact" || field === "agentPhone") {
+    if (field === "contact") {
       validatePhone(value);
     }
   };
 
   const handleAgentChange = (agentName: string) => {
     const selectedAgent = agents.find(agent => agent.name === agentName);
+    const newAgentPhone = selectedAgent?.phone || "";
+    
     setFormData(prev => ({
       ...prev,
       agentName,
-      agentPhone: selectedAgent?.phone || "",
+      agentPhone: newAgentPhone,
     }));
+    
+    // Save to localStorage
+    localStorage.setItem('quickAddAgentName', agentName);
+    localStorage.setItem('quickAddAgentPhone', newAgentPhone);
+    
+    // Validate the new phone
+    if (newAgentPhone) {
+      validatePhone(newAgentPhone);
+    }
   };
 
-  const isFormValid = 
+  const isFormValid =
     formData.name.trim() && 
     formData.contact.trim() && 
     formData.address.trim() && 
@@ -320,7 +344,23 @@ export const QuickAddTenantForm = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="quick-agent-phone">Agent Phone *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="quick-agent-phone">Agent Phone *</Label>
+                  {formData.agentPhone && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        handleChange("agentPhone", "");
+                        localStorage.removeItem('quickAddAgentPhone');
+                      }}
+                      className="h-6 text-xs text-muted-foreground hover:text-destructive"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
                 <Input
                   id="quick-agent-phone"
                   value={formData.agentPhone}
@@ -329,6 +369,11 @@ export const QuickAddTenantForm = () => {
                   maxLength={13}
                   className={phoneError && formData.agentPhone ? "border-destructive" : ""}
                 />
+                {formData.agentPhone && !phoneError && (
+                  <p className="text-xs text-muted-foreground">
+                    ✓ Phone saved - will persist across forms
+                  </p>
+                )}
               </div>
             </div>
 
