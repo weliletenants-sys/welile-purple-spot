@@ -34,7 +34,7 @@ interface TenantFormData {
   name: string;
   contact: string;
   address: string;
-  status: 'active' | 'pending' | 'review' | 'cleared' | 'overdue';
+  status: 'active' | 'pending' | 'review' | 'cleared' | 'overdue' | 'pipeline';
   paymentStatus: 'paid' | 'pending' | 'overdue' | 'cleared';
   landlord: string;
   landlordContact: string;

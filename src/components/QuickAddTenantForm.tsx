@@ -12,6 +12,7 @@ import { useAgents } from "@/hooks/useAgents";
 import { useServiceCenters } from "@/hooks/useServiceCenterAnalytics";
 import { useAgentActivity } from "@/hooks/useAgentActivity";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QuickAddFormData {
   name: string;
@@ -111,7 +112,7 @@ export const QuickAddTenantForm = () => {
         registrationFee: 0,
         accessFee: 0,
         repaymentDays: 60 as 30 | 60 | 90,
-        status: "pending" as const,
+        status: "pipeline" as const,
         paymentStatus: "pending" as const,
         performance: 80,
         location: {
@@ -147,9 +148,19 @@ export const QuickAddTenantForm = () => {
         });
       }
 
+      // Fetch total earnings to show in notification
+      const { data: earningsData } = await supabase
+        .from("agent_earnings")
+        .select("amount")
+        .eq("agent_phone", formData.agentPhone)
+        .neq("earning_type", "withdrawal");
+
+      const totalEarnings = earningsData?.reduce((sum, earning) => sum + Number(earning.amount), 0) || 0;
+
       toast({
-        title: "✅ Pipeline Tenant Added!",
-        description: `${formData.name} added as pending prospect successfully`,
+        title: "🎉 Pipeline Tenant Added!",
+        description: `${formData.name} added successfully! You earned UGX 50. Total earnings: UGX ${totalEarnings.toLocaleString()}`,
+        duration: 5000,
       });
 
       // Reset form
