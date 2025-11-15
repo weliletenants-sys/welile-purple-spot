@@ -37,6 +37,9 @@ All colors MUST be HSL.
     --input: 252 30% 92%;
     --ring: 267 83% 55%;
 
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 100%;
+
     --radius: 0.75rem;
 
     --gradient-primary: linear-gradient(135deg, hsl(267 83% 55%), hsl(280 85% 65%));

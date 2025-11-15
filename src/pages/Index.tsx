@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { TenantStatusBreakdownDialog } from "@/components/TenantStatusBreakdownDialog";
 
 import { AddTenantForm } from "@/components/AddTenantForm";
 import { QuickAddTenantForm } from "@/components/QuickAddTenantForm";
@@ -133,6 +134,7 @@ const Index = () => {
 
   const [showAchievements, setShowAchievements] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showTenantBreakdown, setShowTenantBreakdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -920,18 +922,24 @@ const Index = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-xl px-6 py-4 border-2 border-blue-200 dark:border-blue-800 hover-scale cursor-help shadow-md">
+                <div 
+                  className="flex items-center gap-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-xl px-6 py-4 border-2 border-blue-200 dark:border-blue-800 hover-scale cursor-pointer shadow-md transition-all hover:shadow-lg"
+                  onClick={() => setShowTenantBreakdown(true)}
+                >
                   <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
                     <Zap className="w-7 h-7 text-white" />
                   </div>
                   <div>
                     <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{stats.total}</div>
                     <div className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Tenants</div>
+                    <div className="text-xs text-blue-500 dark:text-blue-500 mt-0.5">
+                      +{pipelineCount} Pipeline
+                    </div>
                   </div>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p>All tenants in the system</p>
+                <p>Click to see breakdown of all tenants</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -1013,20 +1021,23 @@ const Index = () => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div 
-                  className="flex items-center gap-3 bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 rounded-xl px-6 py-4 border-2 border-cyan-200 dark:border-cyan-800 hover-scale cursor-pointer shadow-md transition-all hover:shadow-lg"
+                  className="flex items-center gap-3 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/20 dark:to-amber-900/20 rounded-xl px-6 py-4 border-2 border-amber-300 dark:border-amber-700 hover-scale cursor-pointer shadow-md transition-all hover:shadow-lg ring-2 ring-amber-200 dark:ring-amber-800"
                   onClick={() => navigate("/pipeline-tenants")}
                 >
-                  <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 relative">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 relative">
                     <Hourglass className="w-7 h-7 text-white" />
                     {pipelineCount > 0 && (
-                      <Badge className="absolute -top-2 -right-2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-1.5 py-0.5">
+                      <Badge className="absolute -top-2 -right-2 bg-amber-700 hover:bg-amber-800 text-white text-xs px-1.5 py-0.5 animate-pulse">
                         {pipelineCount}
                       </Badge>
                     )}
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-cyan-700 dark:text-cyan-300">{pipelineCount}</div>
-                    <div className="text-sm font-medium text-cyan-600 dark:text-cyan-400">Pipeline</div>
+                    <div className="text-3xl font-bold text-amber-700 dark:text-amber-300">{pipelineCount}</div>
+                    <div className="text-sm font-medium text-amber-600 dark:text-amber-400">Pipeline</div>
+                    <div className="text-xs text-amber-500 dark:text-amber-500 mt-0.5">
+                      Quick Add Tenants
+                    </div>
                   </div>
                 </div>
               </TooltipTrigger>
@@ -1235,6 +1246,17 @@ const Index = () => {
 
       {/* Floating Quick Actions Panel */}
       <FloatingQuickActionsPanel />
+      
+      {/* Tenant Status Breakdown Dialog */}
+      <TenantStatusBreakdownDialog
+        open={showTenantBreakdown}
+        onOpenChange={setShowTenantBreakdown}
+        totalCount={stats.total}
+        pipelineCount={pipelineCount}
+        activeCount={stats.active}
+        pendingCount={pendingCount}
+        underReviewCount={underReviewCount}
+      />
       
       {/* Scroll to Top Button */}
       <ScrollToTop />

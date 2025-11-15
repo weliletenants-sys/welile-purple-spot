@@ -128,7 +128,11 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
                     #{tenantNumber}
                   </span>
                 )}
-                <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors truncate">
+                <h3 className={`font-semibold text-lg group-hover:text-primary transition-colors truncate ${
+                  (tenant.status as string) === 'pipeline' 
+                    ? 'text-amber-600 dark:text-amber-400' 
+                    : 'text-foreground'
+                }`}>
                   {tenant.name}
                 </h3>
               </div>
