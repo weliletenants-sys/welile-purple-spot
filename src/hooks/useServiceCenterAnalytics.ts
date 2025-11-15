@@ -128,14 +128,40 @@ export const useServiceCenters = () => {
   return useQuery({
     queryKey: ["serviceCenters"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch service centers
+      const { data: centers, error } = await supabase
         .from("service_centers")
         .select("*")
-        .eq("is_active", true)
-        .order("name");
+        .eq("is_active", true);
 
       if (error) throw error;
-      return data;
+
+      // Fetch tenant counts per service center
+      const { data: tenantCounts, error: countError } = await supabase
+        .from("tenants")
+        .select("service_center")
+        .not("service_center", "is", null);
+
+      if (countError) throw countError;
+
+      // Count occurrences of each service center
+      const countMap = new Map<string, number>();
+      tenantCounts?.forEach((tenant) => {
+        const center = tenant.service_center;
+        if (center) {
+          countMap.set(center, (countMap.get(center) || 0) + 1);
+        }
+      });
+
+      // Sort by usage count (descending), then by name
+      return centers?.sort((a, b) => {
+        const countA = countMap.get(a.name) || 0;
+        const countB = countMap.get(b.name) || 0;
+        if (countB !== countA) {
+          return countB - countA; // Most used first
+        }
+        return a.name.localeCompare(b.name); // Alphabetical as tiebreaker
+      }) || [];
     },
   });
 };
