@@ -12,3 +12,6 @@ verify_jwt = false
 [functions.pipeline-forecast]
 verify_jwt = false
 
+[functions.send-earnings-summary]
+verify_jwt = false
+
