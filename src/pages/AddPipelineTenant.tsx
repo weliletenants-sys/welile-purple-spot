@@ -181,8 +181,8 @@ const AddPipelineTenant = () => {
       setTenantsAdded((prev) => prev + 1);
 
       toast({
-        title: "🎉 Success! You Earned UGX 100!",
-        description: `${formData.name} added to pipeline. Your Total Earnings: UGX ${accumulatedTotal.toLocaleString()}!`,
+        title: "🎉 Earned UGX 100!",
+        description: `${formData.name} added. Total: UGX ${accumulatedTotal.toLocaleString()}`,
         duration: 6000,
       });
 
@@ -219,36 +219,36 @@ const AddPipelineTenant = () => {
         <BackToHome />
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
+        <div className="text-center mb-6 md:mb-8">
+          <div className="flex justify-center mb-3 md:mb-4">
             <WelileLogo />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2 px-2">
             Earn UGX 100 Per Tenant! 💰
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground px-4">
             Help us grow by adding pipeline tenants from all over Uganda
           </p>
         </div>
 
         {/* Earnings Dashboard */}
         {tenantsAdded > 0 && (
-          <Card className="mb-6 border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10">
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-2 gap-4 text-center mb-4">
+          <Card className="mb-4 md:mb-6 border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10">
+            <CardContent className="pt-4 md:pt-6">
+              <div className="grid grid-cols-2 gap-3 md:gap-4 text-center mb-3 md:mb-4">
                 <div>
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <Trophy className="h-5 w-5 text-primary" />
-                    <p className="text-sm font-medium text-muted-foreground">Tenants Added</p>
+                  <div className="flex items-center justify-center gap-1 md:gap-2 mb-1 md:mb-2">
+                    <Trophy className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Tenants</p>
                   </div>
-                  <p className="text-3xl font-bold text-primary">{tenantsAdded}</p>
+                  <p className="text-2xl md:text-3xl font-bold text-primary">{tenantsAdded}</p>
                 </div>
                 <div>
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                    <p className="text-sm font-medium text-muted-foreground">Total Earned</p>
+                  <div className="flex items-center justify-center gap-1 md:gap-2 mb-1 md:mb-2">
+                    <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Earned</p>
                   </div>
-                  <p className="text-3xl font-bold text-green-600">UGX {totalEarned.toLocaleString()}</p>
+                  <p className="text-xl md:text-3xl font-bold text-green-600 break-words">UGX {totalEarned.toLocaleString()}</p>
                 </div>
               </div>
               <Button
@@ -264,7 +264,7 @@ const AddPipelineTenant = () => {
         )}
 
         {/* Motivation Cards */}
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
           <Card className="border-primary/20">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
