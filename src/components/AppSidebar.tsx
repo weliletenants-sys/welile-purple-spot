@@ -111,15 +111,16 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Track which groups are expanded - default to collapsed on mobile
+  // Track which groups are expanded - expand groups with active routes by default
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     navigationGroups.forEach(group => {
       const hasActiveRoute = group.items.some(item => 
         item.url === "/" ? currentPath === "/" : currentPath.startsWith(item.url)
       );
-      // On mobile, only expand the group with active route
-      initial[group.label] = !isMobile && (hasActiveRoute || currentPath === "/" && group.label === "Overview");
+      // Expand groups with active routes OR Overview group on home page
+      // On mobile/smaller screens, expand at least the active group
+      initial[group.label] = hasActiveRoute || (currentPath === "/" && group.label === "Overview");
     });
     return initial;
   });
@@ -148,19 +149,17 @@ export function AppSidebar() {
             >
               <SidebarGroup>
                 <CollapsibleTrigger asChild>
-                  <SidebarGroupLabel className="cursor-pointer hover:bg-accent/50 rounded-md px-2 py-1.5 sm:py-2 transition-colors flex items-center justify-between group">
-                    <span className={`text-xs sm:text-sm ${hasActiveRoute ? "text-primary font-semibold" : ""}`}>
+                  <SidebarGroupLabel className="cursor-pointer hover:bg-accent rounded-md px-2 py-2 transition-colors flex items-center justify-between group select-none">
+                    <span className={`text-sm font-medium ${hasActiveRoute ? "text-primary font-semibold" : "text-foreground"}`}>
                       {open ? group.label : group.label.charAt(0)}
                     </span>
-                    {open && (
-                      <ChevronDown 
-                        className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} 
-                      />
-                    )}
+                    <ChevronDown 
+                      className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""} ${!open ? "opacity-0" : "opacity-100"}`} 
+                    />
                   </SidebarGroupLabel>
                 </CollapsibleTrigger>
 
-                <CollapsibleContent>
+                <CollapsibleContent className="transition-all duration-200">
                   <SidebarGroupContent>
                     <SidebarMenu>
                       {group.items.map((item) => {
@@ -174,11 +173,11 @@ export function AppSidebar() {
                               <NavLink 
                                 to={item.url} 
                                 end={item.url === "/"}
-                                className="flex items-center gap-2 sm:gap-3 hover:bg-accent/50 rounded-md transition-colors py-2"
-                                activeClassName="bg-primary/10 text-primary font-medium"
+                                className="flex items-center gap-3 hover:bg-accent rounded-md transition-colors py-2.5 px-2"
+                                activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary"
                               >
-                                <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                                {open && <span className="text-xs sm:text-sm">{item.title}</span>}
+                                <item.icon className="h-4 w-4 shrink-0" />
+                                {open && <span className="text-sm truncate">{item.title}</span>}
                               </NavLink>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
