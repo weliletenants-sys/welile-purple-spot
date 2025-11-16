@@ -134,7 +134,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-border" collapsible="icon">
-      <SidebarContent className="px-2 py-2 sm:py-4">
+      <SidebarContent className="overflow-y-auto overflow-x-hidden px-2 py-4" style={{ maxHeight: "100vh" }}>
         {navigationGroups.map((group) => {
           const isExpanded = expandedGroups[group.label];
           const hasActiveRoute = group.items.some(item => 
@@ -146,22 +146,26 @@ export function AppSidebar() {
               key={group.label}
               open={isExpanded}
               onOpenChange={() => toggleGroup(group.label)}
+              className="mb-2"
             >
-              <SidebarGroup>
+              <SidebarGroup className="space-y-1">
                 <CollapsibleTrigger asChild>
-                  <SidebarGroupLabel className="cursor-pointer hover:bg-accent rounded-md px-2 py-2 transition-colors flex items-center justify-between group select-none">
-                    <span className={`text-sm font-medium ${hasActiveRoute ? "text-primary font-semibold" : "text-foreground"}`}>
-                      {open ? group.label : group.label.charAt(0)}
+                  <SidebarGroupLabel 
+                    className="cursor-pointer hover:bg-accent rounded-md px-2 py-2 transition-all duration-200 flex items-center justify-between group select-none w-full"
+                    title={open ? `${isExpanded ? 'Collapse' : 'Expand'} ${group.label}` : group.label}
+                  >
+                    <span className={`text-sm font-medium truncate ${hasActiveRoute ? "text-primary font-semibold" : "text-foreground"}`}>
+                      {open ? group.label : group.label.charAt(0).toUpperCase()}
                     </span>
                     <ChevronDown 
-                      className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""} ${!open ? "opacity-0" : "opacity-100"}`} 
+                      className={`h-4 w-4 transition-all duration-200 shrink-0 ${isExpanded ? "rotate-180" : "rotate-0"} ${!open ? "opacity-0 w-0" : "opacity-100"}`} 
                     />
                   </SidebarGroupLabel>
                 </CollapsibleTrigger>
 
-                <CollapsibleContent className="transition-all duration-200">
+                <CollapsibleContent className="transition-all duration-200 ease-in-out">
                   <SidebarGroupContent>
-                    <SidebarMenu>
+                    <SidebarMenu className="space-y-0.5">
                       {group.items.map((item) => {
                         const isActive = item.url === "/" 
                           ? currentPath === "/"
@@ -173,11 +177,12 @@ export function AppSidebar() {
                               <NavLink 
                                 to={item.url} 
                                 end={item.url === "/"}
-                                className="flex items-center gap-3 hover:bg-accent rounded-md transition-colors py-2.5 px-2"
-                                activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary"
+                                className="flex items-center gap-3 hover:bg-accent rounded-md transition-all duration-150 py-2.5 px-2 w-full"
+                                activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary pl-[6px]"
+                                title={item.title}
                               >
                                 <item.icon className="h-4 w-4 shrink-0" />
-                                {open && <span className="text-sm truncate">{item.title}</span>}
+                                {open && <span className="text-sm truncate flex-1 text-left">{item.title}</span>}
                               </NavLink>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
