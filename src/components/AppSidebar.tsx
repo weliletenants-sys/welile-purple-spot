@@ -46,14 +46,12 @@ import { Separator } from "@/components/ui/separator";
 interface RecentPage {
   url: string;
   title: string;
-  icon: any;
   visitedAt: number;
 }
 
 interface PinnedPage {
   url: string;
   title: string;
-  icon: any;
 }
 
 const navigationGroups = [
@@ -159,11 +157,10 @@ export function AppSidebar() {
       setRecentPages(prev => {
         // Remove if already exists
         const filtered = prev.filter(p => p.url !== currentItem.url);
-        // Add to front
+        // Add to front (without icon - we'll look it up when rendering)
         const updated = [{
           url: currentItem.url,
           title: currentItem.title,
-          icon: currentItem.icon,
           visitedAt: Date.now()
         }, ...filtered].slice(0, 5); // Keep only 5 most recent
         
@@ -172,7 +169,7 @@ export function AppSidebar() {
         return updated;
       });
     }
-  }, [currentPath, pinnedPages]);
+  }, [currentPath, pinnedPages, allNavItems]);
 
   const togglePin = (url: string) => {
     const item = allNavItems.find(i => i.url === url);
@@ -186,11 +183,10 @@ export function AppSidebar() {
         // Unpin
         updated = prev.filter(p => p.url !== url);
       } else {
-        // Pin
+        // Pin (without icon - we'll look it up when rendering)
         updated = [...prev, {
           url: item.url,
-          title: item.title,
-          icon: item.icon
+          title: item.title
         }];
         
         // Remove from recent pages if pinned
@@ -246,7 +242,9 @@ export function AppSidebar() {
                   const isActive = page.url === "/" 
                     ? currentPath === "/"
                     : currentPath.startsWith(page.url);
-                  const PageIcon = page.icon;
+                  // Look up icon from navigation items
+                  const navItem = allNavItems.find(item => item.url === page.url);
+                  const PageIcon = navItem?.icon || Home;
 
                   return (
                     <SidebarMenuItem key={page.url} className="group/item">
@@ -298,7 +296,9 @@ export function AppSidebar() {
                   const isActive = page.url === "/" 
                     ? currentPath === "/"
                     : currentPath.startsWith(page.url);
-                  const PageIcon = page.icon;
+                  // Look up icon from navigation items
+                  const navItem = allNavItems.find(item => item.url === page.url);
+                  const PageIcon = navItem?.icon || Home;
 
                   return (
                     <SidebarMenuItem key={page.url} className="group/item">
