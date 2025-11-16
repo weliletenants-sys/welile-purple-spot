@@ -157,9 +157,16 @@ export function AppSidebar() {
                     <span className={`text-sm font-medium truncate ${hasActiveRoute ? "text-primary font-semibold" : "text-foreground"}`}>
                       {open ? group.label : group.label.charAt(0).toUpperCase()}
                     </span>
-                    <ChevronDown 
-                      className={`h-4 w-4 transition-all duration-200 shrink-0 ${isExpanded ? "rotate-180" : "rotate-0"} ${!open ? "opacity-0 w-0" : "opacity-100"}`} 
-                    />
+                    <div className="flex items-center gap-2 shrink-0">
+                      {!isExpanded && (
+                        <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium min-w-[20px] text-center">
+                          {group.items.length}
+                        </span>
+                      )}
+                      <ChevronDown 
+                        className={`h-4 w-4 transition-all duration-200 shrink-0 ${isExpanded ? "rotate-180" : "rotate-0"} ${!open ? "opacity-0 w-0" : "opacity-100"}`} 
+                      />
+                    </div>
                   </SidebarGroupLabel>
                 </CollapsibleTrigger>
 
