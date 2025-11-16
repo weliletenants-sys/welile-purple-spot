@@ -18,7 +18,8 @@ import {
   UserCog,
   Activity,
   Database,
-  History
+  History,
+  Star
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -47,6 +48,12 @@ interface RecentPage {
   title: string;
   icon: any;
   visitedAt: number;
+}
+
+interface PinnedPage {
+  url: string;
+  title: string;
+  icon: any;
 }
 
 const navigationGroups = [
@@ -122,25 +129,33 @@ export function AppSidebar() {
 
   // Track recently visited pages
   const [recentPages, setRecentPages] = useState<RecentPage[]>([]);
+  
+  // Track pinned pages
+  const [pinnedPages, setPinnedPages] = useState<PinnedPage[]>([]);
 
   // Get all navigation items for lookup
   const allNavItems = navigationGroups.flatMap(group => group.items);
 
   useEffect(() => {
-    // Load recent pages from localStorage
+    // Load recent pages and pinned pages from localStorage
     const stored = localStorage.getItem('recentPages');
     if (stored) {
       setRecentPages(JSON.parse(stored));
     }
+    
+    const storedPinned = localStorage.getItem('pinnedPages');
+    if (storedPinned) {
+      setPinnedPages(JSON.parse(storedPinned));
+    }
   }, []);
 
   useEffect(() => {
-    // Track current page visit
+    // Track current page visit (exclude if it's pinned)
     const currentItem = allNavItems.find(item => 
       item.url === "/" ? currentPath === "/" : currentPath.startsWith(item.url)
     );
 
-    if (currentItem) {
+    if (currentItem && !pinnedPages.some(p => p.url === currentItem.url)) {
       setRecentPages(prev => {
         // Remove if already exists
         const filtered = prev.filter(p => p.url !== currentItem.url);
@@ -157,7 +172,41 @@ export function AppSidebar() {
         return updated;
       });
     }
-  }, [currentPath]);
+  }, [currentPath, pinnedPages]);
+
+  const togglePin = (url: string) => {
+    const item = allNavItems.find(i => i.url === url);
+    if (!item) return;
+
+    setPinnedPages(prev => {
+      const isPinned = prev.some(p => p.url === url);
+      let updated: PinnedPage[];
+      
+      if (isPinned) {
+        // Unpin
+        updated = prev.filter(p => p.url !== url);
+      } else {
+        // Pin
+        updated = [...prev, {
+          url: item.url,
+          title: item.title,
+          icon: item.icon
+        }];
+        
+        // Remove from recent pages if pinned
+        setRecentPages(recent => {
+          const filtered = recent.filter(p => p.url !== url);
+          localStorage.setItem('recentPages', JSON.stringify(filtered));
+          return filtered;
+        });
+      }
+      
+      localStorage.setItem('pinnedPages', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const isPinned = (url: string) => pinnedPages.some(p => p.url === url);
 
   // Track which groups are expanded - expand groups with active routes by default
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
@@ -184,6 +233,58 @@ export function AppSidebar() {
     <Sidebar className="border-r border-border" collapsible="icon">
       <SidebarContent className="overflow-y-auto overflow-x-hidden px-2 py-4" style={{ maxHeight: "100vh" }}>
         
+        {/* Pinned Pages Section */}
+        {pinnedPages.length > 0 && (
+          <>
+            <div className="mb-4">
+              <div className="flex items-center gap-2 px-2 py-2 mb-2">
+                <Star className="h-4 w-4 text-primary shrink-0 fill-primary" />
+                {open && <span className="text-xs font-semibold text-primary uppercase tracking-wide">Pinned</span>}
+              </div>
+              <SidebarMenu className="space-y-0.5">
+                {pinnedPages.map((page) => {
+                  const isActive = page.url === "/" 
+                    ? currentPath === "/"
+                    : currentPath.startsWith(page.url);
+                  const PageIcon = page.icon;
+
+                  return (
+                    <SidebarMenuItem key={page.url} className="group/item">
+                      <div className="flex items-center gap-1">
+                        <SidebarMenuButton asChild isActive={isActive} className="flex-1">
+                          <NavLink 
+                            to={page.url} 
+                            end={page.url === "/"}
+                            className="flex items-center gap-3 hover:bg-accent rounded-md transition-all duration-150 py-2 px-2 w-full"
+                            activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary pl-[6px]"
+                            title={page.title}
+                          >
+                            <PageIcon className="h-4 w-4 shrink-0" />
+                            {open && <span className="text-sm truncate flex-1 text-left">{page.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                        {open && (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              togglePin(page.url);
+                            }}
+                            className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-accent rounded transition-all"
+                            title="Unpin page"
+                          >
+                            <Star className="h-3.5 w-3.5 text-primary fill-primary" />
+                          </button>
+                        )}
+                      </div>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </div>
+            <Separator className="mb-4" />
+          </>
+        )}
+        
         {/* Recently Visited Section */}
         {recentPages.length > 0 && (
           <>
@@ -200,19 +301,33 @@ export function AppSidebar() {
                   const PageIcon = page.icon;
 
                   return (
-                    <SidebarMenuItem key={page.url}>
-                      <SidebarMenuButton asChild isActive={isActive}>
-                        <NavLink 
-                          to={page.url} 
-                          end={page.url === "/"}
-                          className="flex items-center gap-3 hover:bg-accent rounded-md transition-all duration-150 py-2 px-2 w-full"
-                          activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary pl-[6px]"
-                          title={page.title}
-                        >
-                          <PageIcon className="h-4 w-4 shrink-0" />
-                          {open && <span className="text-sm truncate flex-1 text-left">{page.title}</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
+                    <SidebarMenuItem key={page.url} className="group/item">
+                      <div className="flex items-center gap-1">
+                        <SidebarMenuButton asChild isActive={isActive} className="flex-1">
+                          <NavLink 
+                            to={page.url} 
+                            end={page.url === "/"}
+                            className="flex items-center gap-3 hover:bg-accent rounded-md transition-all duration-150 py-2 px-2 w-full"
+                            activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary pl-[6px]"
+                            title={page.title}
+                          >
+                            <PageIcon className="h-4 w-4 shrink-0" />
+                            {open && <span className="text-sm truncate flex-1 text-left">{page.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                        {open && (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              togglePin(page.url);
+                            }}
+                            className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-accent rounded transition-all"
+                            title="Pin page"
+                          >
+                            <Star className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+                          </button>
+                        )}
+                      </div>
                     </SidebarMenuItem>
                   );
                 })}
@@ -267,19 +382,35 @@ export function AppSidebar() {
                           : currentPath.startsWith(item.url);
 
                         return (
-                          <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton asChild isActive={isActive}>
-                              <NavLink 
-                                to={item.url} 
-                                end={item.url === "/"}
-                                className="flex items-center gap-3 hover:bg-accent rounded-md transition-all duration-150 py-2.5 px-2 w-full"
-                                activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary pl-[6px]"
-                                title={item.title}
-                              >
-                                <item.icon className="h-4 w-4 shrink-0" />
-                                {open && <span className="text-sm truncate flex-1 text-left">{item.title}</span>}
-                              </NavLink>
-                            </SidebarMenuButton>
+                          <SidebarMenuItem key={item.title} className="group/item">
+                            <div className="flex items-center gap-1">
+                              <SidebarMenuButton asChild isActive={isActive} className="flex-1">
+                                <NavLink 
+                                  to={item.url} 
+                                  end={item.url === "/"}
+                                  className="flex items-center gap-3 hover:bg-accent rounded-md transition-all duration-150 py-2.5 px-2 w-full"
+                                  activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary pl-[6px]"
+                                  title={item.title}
+                                >
+                                  <item.icon className="h-4 w-4 shrink-0" />
+                                  {open && <span className="text-sm truncate flex-1 text-left">{item.title}</span>}
+                                </NavLink>
+                              </SidebarMenuButton>
+                              {open && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    togglePin(item.url);
+                                  }}
+                                  className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-accent rounded transition-all"
+                                  title={isPinned(item.url) ? "Unpin page" : "Pin page"}
+                                >
+                                  <Star 
+                                    className={`h-3.5 w-3.5 ${isPinned(item.url) ? 'text-primary fill-primary' : 'text-muted-foreground hover:text-primary'}`} 
+                                  />
+                                </button>
+                              )}
+                            </div>
                           </SidebarMenuItem>
                         );
                       })}
