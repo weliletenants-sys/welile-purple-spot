@@ -17,10 +17,12 @@ import {
   Wallet,
   UserCog,
   Activity,
-  Database
+  Database,
+  History
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import {
   Sidebar,
@@ -38,7 +40,14 @@ import {
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { Separator } from "@/components/ui/separator";
+
+interface RecentPage {
+  url: string;
+  title: string;
+  icon: any;
+  visitedAt: number;
+}
 
 const navigationGroups = [
   {
@@ -111,6 +120,45 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
+  // Track recently visited pages
+  const [recentPages, setRecentPages] = useState<RecentPage[]>([]);
+
+  // Get all navigation items for lookup
+  const allNavItems = navigationGroups.flatMap(group => group.items);
+
+  useEffect(() => {
+    // Load recent pages from localStorage
+    const stored = localStorage.getItem('recentPages');
+    if (stored) {
+      setRecentPages(JSON.parse(stored));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Track current page visit
+    const currentItem = allNavItems.find(item => 
+      item.url === "/" ? currentPath === "/" : currentPath.startsWith(item.url)
+    );
+
+    if (currentItem) {
+      setRecentPages(prev => {
+        // Remove if already exists
+        const filtered = prev.filter(p => p.url !== currentItem.url);
+        // Add to front
+        const updated = [{
+          url: currentItem.url,
+          title: currentItem.title,
+          icon: currentItem.icon,
+          visitedAt: Date.now()
+        }, ...filtered].slice(0, 5); // Keep only 5 most recent
+        
+        // Save to localStorage
+        localStorage.setItem('recentPages', JSON.stringify(updated));
+        return updated;
+      });
+    }
+  }, [currentPath]);
+
   // Track which groups are expanded - expand groups with active routes by default
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -135,6 +183,46 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r border-border" collapsible="icon">
       <SidebarContent className="overflow-y-auto overflow-x-hidden px-2 py-4" style={{ maxHeight: "100vh" }}>
+        
+        {/* Recently Visited Section */}
+        {recentPages.length > 0 && (
+          <>
+            <div className="mb-4">
+              <div className="flex items-center gap-2 px-2 py-2 mb-2">
+                <History className="h-4 w-4 text-muted-foreground shrink-0" />
+                {open && <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Recent</span>}
+              </div>
+              <SidebarMenu className="space-y-0.5">
+                {recentPages.map((page) => {
+                  const isActive = page.url === "/" 
+                    ? currentPath === "/"
+                    : currentPath.startsWith(page.url);
+                  const PageIcon = page.icon;
+
+                  return (
+                    <SidebarMenuItem key={page.url}>
+                      <SidebarMenuButton asChild isActive={isActive}>
+                        <NavLink 
+                          to={page.url} 
+                          end={page.url === "/"}
+                          className="flex items-center gap-3 hover:bg-accent rounded-md transition-all duration-150 py-2 px-2 w-full"
+                          activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary pl-[6px]"
+                          title={page.title}
+                        >
+                          <PageIcon className="h-4 w-4 shrink-0" />
+                          {open && <span className="text-sm truncate flex-1 text-left">{page.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </div>
+            <Separator className="mb-4" />
+          </>
+        )}
+
+        {/* Main Navigation Groups */}
         {navigationGroups.map((group) => {
           const isExpanded = expandedGroups[group.label];
           const hasActiveRoute = group.items.some(item => 
