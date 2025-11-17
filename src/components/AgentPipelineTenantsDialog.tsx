@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, MapPin, Phone } from "lucide-react";
+import { Users, MapPin, Phone, ArrowRightLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { AgentTransferTenantDialog } from "./AgentTransferTenantDialog";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface AgentPipelineTenantsDialogProps {
   open: boolean;
@@ -19,6 +23,8 @@ export function AgentPipelineTenantsDialog({
   agentPhone, 
   agentName 
 }: AgentPipelineTenantsDialogProps) {
+  const [selectedTenant, setSelectedTenant] = useState<Tables<"tenants"> | null>(null);
+  
   const { data: tenants, isLoading } = useQuery({
     queryKey: ['pipeline-tenants-list', agentPhone],
     queryFn: async () => {
@@ -59,7 +65,7 @@ export function AgentPipelineTenantsDialog({
                 className="p-4 border rounded-lg space-y-2 hover:bg-accent/50 transition-colors"
               >
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex-1">
                     <h3 className="font-semibold">{tenant.name}</h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Phone className="h-3 w-3" />
@@ -70,9 +76,20 @@ export function AgentPipelineTenantsDialog({
                       {tenant.address}
                     </div>
                   </div>
-                  <Badge variant="outline">
-                    {format(new Date(tenant.created_at), 'MMM dd, yyyy')}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge variant="outline">
+                      {format(new Date(tenant.created_at), 'MMM dd, yyyy')}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedTenant(tenant)}
+                      className="gap-2"
+                    >
+                      <ArrowRightLeft className="h-3 w-3" />
+                      Transfer
+                    </Button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
@@ -93,6 +110,20 @@ export function AgentPipelineTenantsDialog({
           </div>
         )}
       </DialogContent>
+
+      {selectedTenant && (
+        <AgentTransferTenantDialog
+          open={!!selectedTenant}
+          onOpenChange={(open) => !open && setSelectedTenant(null)}
+          tenant={{
+            id: selectedTenant.id,
+            name: selectedTenant.name,
+            contact: selectedTenant.contact,
+          }}
+          currentAgentName={agentName}
+          onTransferComplete={() => setSelectedTenant(null)}
+        />
+      )}
     </Dialog>
   );
 }
