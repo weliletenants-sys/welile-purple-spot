@@ -62,6 +62,7 @@ const RecordingBonusLeaderboard = lazy(() => import("./pages/RecordingBonusLeade
 const EarningsLeaderboard = lazy(() => import("./pages/EarningsLeaderboard"));
 const TeamEarningsLeaderboard = lazy(() => import("./pages/TeamEarningsLeaderboard"));
 const DataCleanup = lazy(() => import("./pages/DataCleanup"));
+const AgentPipelineTenants = lazy(() => import("./pages/AgentPipelineTenants"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -126,6 +127,7 @@ const App = () => {
               <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
               <Route path="/agent-dashboard" element={<AgentDashboard />} />
               <Route path="/agent/:agentName" element={<AgentDashboard />} />
+              <Route path="/agent/:agentPhone/pipeline" element={<AgentPipelineTenants />} />
               <Route path="/top-performers" element={<TopPerformers />} />
               <Route path="/recording-activity" element={<RecordingActivity />} />
               <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />

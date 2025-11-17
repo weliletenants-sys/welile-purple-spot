@@ -3,7 +3,7 @@ import { WelileLogo } from "@/components/WelileLogo";
 import { BackToHome } from "@/components/BackToHome";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter, Wallet, Info } from "lucide-react";
+import { ArrowLeft, UserCheck, DollarSign, TrendingUp, TrendingDown, Pencil, X, Zap, ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Filter, Wallet, Info, Package } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgentEarnings } from "@/hooks/useAgentEarnings";
@@ -638,6 +638,15 @@ const AgentDashboard = () => {
                           </span>
                         </div>
                         <p className="text-xs text-center font-semibold text-blue-800 dark:text-blue-300 italic">🎉 Earned from adding pipeline tenants</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/agent/${agent.agentPhone}/pipeline`)}
+                          className="w-full mt-2 gap-2 border-blue-500 hover:bg-blue-500/10"
+                        >
+                          <Package className="h-4 w-4" />
+                          View My Pipeline Tenants
+                        </Button>
                       </div>
                     </div>
                   )}
