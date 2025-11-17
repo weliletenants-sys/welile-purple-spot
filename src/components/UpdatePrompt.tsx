@@ -27,15 +27,29 @@ export const UpdatePrompt = () => {
       navigator.serviceWorker.ready.then((reg) => {
         setRegistration(reg);
         
-        // Check for updates every minute for immediate detection across all devices
+        // Aggressive update checking - every 15 seconds
         setInterval(() => {
           reg.update();
           setLastCheckTime(new Date());
-        }, 60 * 1000);
+        }, 15 * 1000);
         
-        // Also check immediately on page load
+        // Check immediately on page load
         reg.update();
         setLastCheckTime(new Date());
+        
+        // Check when page becomes visible (user returns to tab)
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) {
+            reg.update();
+            setLastCheckTime(new Date());
+          }
+        });
+        
+        // Check on focus (user clicks on window)
+        window.addEventListener('focus', () => {
+          reg.update();
+          setLastCheckTime(new Date());
+        });
       });
 
       // Listen for new service worker
@@ -98,10 +112,10 @@ export const UpdatePrompt = () => {
     localStorage.setItem('update_postpone_count', newCount.toString());
     setShowUpdateDialog(false);
     
-    // Show reminder after 1 minute (very persistent to ensure all devices update)
+    // Very aggressive - show reminder after only 30 seconds
     setTimeout(() => {
       setShowUpdateDialog(true);
-    }, 60 * 1000);
+    }, 30 * 1000);
   };
 
   return (
