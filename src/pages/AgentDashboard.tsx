@@ -202,6 +202,7 @@ const AgentDashboard = () => {
   const totalAvailableCommissions = agents?.reduce((sum, agent) =>
     sum + (((agent.commissions || 0) + (agent.recordingBonuses || 0) + (agent.pipelineBonuses || 0) - (agent.withdrawnCommission || 0))),
   0) || 0;
+  const totalPipelineTenants = agents?.reduce((sum, agent) => sum + (agent.pipelineTenantsCount || 0), 0) || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -384,69 +385,89 @@ const AgentDashboard = () => {
             ))}
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-4 mb-8">
-            <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Expected Commission</p>
-                  <p className="text-3xl font-bold text-foreground">UGX {totalExpectedCommissions.toLocaleString()}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
-                  <TrendingUp className="w-6 h-6 text-primary-foreground" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Earned Commission</p>
-                  <p className="text-3xl font-bold text-foreground">UGX {totalEarnedCommissions.toLocaleString()}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
-                  <DollarSign className="w-6 h-6 text-primary-foreground" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Withdrawn</p>
-                  <p className="text-3xl font-bold text-foreground">UGX {totalWithdrawnCommissions.toLocaleString()}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-destructive/20 to-destructive/10">
-                  <TrendingDown className="w-6 h-6 text-destructive" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium text-muted-foreground">Available</p>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p className="text-sm font-semibold mb-1">Withdrawal Rules</p>
-                          <p className="text-xs"><strong>Withdrawable:</strong> Commissions + Recording Bonuses + Pipeline Bonuses</p>
-                          <p className="text-xs text-muted-foreground mt-1"><strong>Non-withdrawable:</strong> Data Entry and Signup bonuses</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+          <>
+            <div className="grid gap-6 md:grid-cols-4 mb-8">
+              <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Expected Commission</p>
+                    <p className="text-3xl font-bold text-foreground">UGX {totalExpectedCommissions.toLocaleString()}</p>
                   </div>
-                  <p className="text-3xl font-bold text-foreground">UGX {totalAvailableCommissions.toLocaleString()}</p>
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
+                    <TrendingUp className="w-6 h-6 text-primary-foreground" />
+                  </div>
                 </div>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
-                  <UserCheck className="w-6 h-6 text-primary-foreground" />
+              </Card>
+
+              <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Earned Commission</p>
+                    <p className="text-3xl font-bold text-foreground">UGX {totalEarnedCommissions.toLocaleString()}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
+                    <DollarSign className="w-6 h-6 text-primary-foreground" />
+                  </div>
                 </div>
-              </div>
-            </Card>
-          </div>
+              </Card>
+
+              <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Withdrawn</p>
+                    <p className="text-3xl font-bold text-foreground">UGX {totalWithdrawnCommissions.toLocaleString()}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-destructive/20 to-destructive/10">
+                    <TrendingDown className="w-6 h-6 text-destructive" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium text-muted-foreground">Available</p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="text-sm font-semibold mb-1">Withdrawal Rules</p>
+                            <p className="text-xs"><strong>Withdrawable:</strong> Commissions + Recording Bonuses + Pipeline Bonuses</p>
+                            <p className="text-xs text-muted-foreground mt-1"><strong>Non-withdrawable:</strong> Data Entry and Signup bonuses</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <p className="text-3xl font-bold text-foreground">UGX {totalAvailableCommissions.toLocaleString()}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
+                    <UserCheck className="w-6 h-6 text-primary-foreground" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Pipeline Tenants Stats Card */}
+            <div className="mb-8">
+              <Card className="p-6 bg-gradient-to-br from-blue-500/10 via-blue-400/5 to-blue-600/10 border-2 border-blue-500/50">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Total Pipeline Tenants</p>
+                    <p className="text-5xl font-black text-foreground">{totalPipelineTenants.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Across {agents?.length || 0} agent{agents && agents.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                    <Package className="w-10 h-10 text-white" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </>
         )}
 
         {/* Pipeline Summary - Only for single agent view */}
@@ -631,7 +652,7 @@ const AgentDashboard = () => {
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
                           <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/50 animate-bounce">
-                            <TrendingUp className="w-7 h-7 text-white" />
+                            <Package className="w-7 h-7 text-white" />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
@@ -640,7 +661,9 @@ const AgentDashboard = () => {
                                 UGX 50 per tenant
                               </Badge>
                             </div>
-                            <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mt-1">✓ WITHDRAWABLE</p>
+                            <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mt-1">
+                              {agent.pipelineTenantsCount || 0} Pipeline Tenant{(agent.pipelineTenantsCount || 0) !== 1 ? 's' : ''} ✓ WITHDRAWABLE
+                            </p>
                           </div>
                         </div>
                         <div className="text-center py-2 px-4 rounded-lg bg-gradient-to-r from-blue-900/20 to-blue-800/20 border border-blue-600/30">
@@ -656,7 +679,7 @@ const AgentDashboard = () => {
                           className="w-full mt-2 gap-2 border-blue-500 hover:bg-blue-500/10"
                         >
                           <Package className="h-4 w-4" />
-                          View My Pipeline Tenants
+                          View My {agent.pipelineTenantsCount || 0} Pipeline Tenant{(agent.pipelineTenantsCount || 0) !== 1 ? 's' : ''}
                         </Button>
                       </div>
                     </div>

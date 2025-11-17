@@ -11,6 +11,7 @@ export interface AgentEarning {
   withdrawnCommission: number;
   earningsCount: number;
   tenantsCount: number;
+  pipelineTenantsCount: number;
   totalOutstandingBalance: number;
   expectedCollectionDaily: number;
   expectedCollectionWeekly: number;
@@ -34,7 +35,7 @@ export const useAgentEarnings = (period?: string) => {
       // Get all tenants grouped by agent
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
-        .select("id, agent_name, agent_phone, rent_amount, repayment_days");
+        .select("id, agent_name, agent_phone, rent_amount, repayment_days, status");
 
       if (tenantsError) {
         console.error("Error fetching tenants:", tenantsError);
@@ -114,6 +115,7 @@ export const useAgentEarnings = (period?: string) => {
             withdrawnCommission: 0,
             earningsCount: 0,
             tenantsCount: 0,
+            pipelineTenantsCount: 0,
             totalOutstandingBalance: 0,
             expectedCollectionDaily: 0,
             expectedCollectionWeekly: 0,
@@ -137,6 +139,11 @@ export const useAgentEarnings = (period?: string) => {
         );
         agent.expectedCommission += repaymentDetails.totalAmount * 0.05; // 5% of total
         agent.tenantsCount += 1;
+
+        // Count pipeline tenants
+        if (tenant.status === 'pipeline') {
+          agent.pipelineTenantsCount += 1;
+        }
 
         // Add outstanding balance for this tenant
         const tenantPayment = tenantPaymentsMap.get(tenant.id);
@@ -172,6 +179,7 @@ export const useAgentEarnings = (period?: string) => {
             withdrawnCommission: 0,
             earningsCount: 0,
             tenantsCount: 0,
+            pipelineTenantsCount: 0,
             totalOutstandingBalance: 0,
             expectedCollectionDaily: 0,
             expectedCollectionWeekly: 0,
