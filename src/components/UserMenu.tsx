@@ -11,14 +11,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogIn, LogOut, User, Shield } from "lucide-react";
+import { LogIn, LogOut, User, Shield, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export const UserMenu = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -27,6 +29,42 @@ export const UserMenu = () => {
       description: "You have been successfully signed out.",
     });
     navigate("/");
+  };
+
+  const handleCheckForUpdates = async () => {
+    setIsCheckingUpdate(true);
+    
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.update();
+        
+        // Wait a moment to check if an update was found
+        setTimeout(() => {
+          setIsCheckingUpdate(false);
+          toast({
+            title: "✅ Update Check Complete",
+            description: "You're running the latest version. If an update was found, you'll be prompted to install it.",
+            duration: 4000,
+          });
+        }, 2000);
+      } catch (error) {
+        setIsCheckingUpdate(false);
+        toast({
+          title: "❌ Update Check Failed",
+          description: "Could not check for updates. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } else {
+      setIsCheckingUpdate(false);
+      toast({
+        title: "Not Supported",
+        description: "Update checking is not available in this browser.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user) {
@@ -70,6 +108,11 @@ export const UserMenu = () => {
             <span>Agent Management</span>
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem onClick={handleCheckForUpdates} disabled={isCheckingUpdate}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+          <span>{isCheckingUpdate ? 'Checking...' : 'Check for Updates'}</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign Out</span>
