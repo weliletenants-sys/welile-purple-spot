@@ -124,9 +124,10 @@ export const bulkAddTenants = async () => {
       await supabase.from('daily_payments').insert(payments);
 
       // Create agent earnings (Pipeline bonus - UGX 50)
+      // Phone number will be auto-corrected by database trigger
       await supabase.from('agent_earnings').insert({
         agent_name: "ADEKE ANNET",
-        agent_phone: "",
+        agent_phone: "0782655104", // Correct phone for ADEKE ANNET
         tenant_id: newTenant.id,
         earning_type: "pipeline_bonus",
         amount: 50
