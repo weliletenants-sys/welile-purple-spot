@@ -614,6 +614,34 @@ const AgentDashboard = () => {
                     </div>
                   </div>
 
+                  {/* Pipeline Bonuses - PROMINENTLY SHOWN */}
+                  {agent.pipelineBonuses > 0 && (
+                    <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/20 via-blue-400/15 to-blue-600/20 border-3 border-blue-500 dark:border-blue-600 shadow-lg shadow-blue-500/20 animate-pulse hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/50 animate-bounce">
+                            <TrendingUp className="w-7 h-7 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base font-black text-blue-900 dark:text-blue-100 tracking-wide">PIPELINE BONUSES 🎯</span>
+                              <Badge className="bg-gradient-to-r from-green-600 to-green-500 text-white text-xs animate-pulse shadow-lg shadow-green-500/50">
+                                UGX 50 per tenant
+                              </Badge>
+                            </div>
+                            <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mt-1">✓ WITHDRAWABLE</p>
+                          </div>
+                        </div>
+                        <div className="text-center py-2 px-4 rounded-lg bg-gradient-to-r from-blue-900/20 to-blue-800/20 border border-blue-600/30">
+                          <span className="text-4xl font-black text-blue-900 dark:text-blue-100 tracking-tight drop-shadow-lg">
+                            UGX {agent.pipelineBonuses.toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-center font-semibold text-blue-800 dark:text-blue-300 italic">🎉 Earned from adding pipeline tenants</p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Recording Bonuses - MOST PROMINENT */}
                   {agent.recordingBonuses > 0 && (
                     <div className="p-6 rounded-xl bg-gradient-to-br from-amber-500/20 via-amber-400/15 to-amber-600/20 border-3 border-amber-500 dark:border-amber-600 shadow-lg shadow-amber-500/20 animate-pulse hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300">
@@ -674,14 +702,14 @@ const AgentDashboard = () => {
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs">
                               <p className="text-sm font-semibold mb-1">Withdrawal Rules</p>
-                              <p className="text-xs"><strong>Withdrawable:</strong> Commissions + Recording Bonuses</p>
-                              <p className="text-xs text-muted-foreground mt-1"><strong>Non-withdrawable:</strong> Pipeline bonuses (UGX 50), Data Entry, and Signup bonuses</p>
+                              <p className="text-xs"><strong>Withdrawable:</strong> Commissions + Recording Bonuses + Pipeline Bonuses</p>
+                              <p className="text-xs text-muted-foreground mt-1"><strong>Non-withdrawable:</strong> Data Entry and Signup bonuses</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       </div>
                       <span className="text-xl font-bold text-accent">
-                        UGX {(((agent.commissions || 0) + (agent.recordingBonuses || 0) - (agent.withdrawnCommission || 0))).toLocaleString()}
+                        UGX {(((agent.commissions || 0) + (agent.recordingBonuses || 0) + (agent.pipelineBonuses || 0) - (agent.withdrawnCommission || 0))).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -720,8 +748,8 @@ const AgentDashboard = () => {
                   <div className="pt-3 border-t border-border">
                       <Button
                         className="w-full"
-                        onClick={() => handleWithdraw(agent.agentPhone, agent.agentName, ((agent.commissions || 0) + (agent.recordingBonuses || 0) - (agent.withdrawnCommission || 0)))}
-                        disabled={withdrawingAgent === agent.agentPhone || (((agent.commissions || 0) + (agent.recordingBonuses || 0) - (agent.withdrawnCommission || 0)) <= 0)}
+                        onClick={() => handleWithdraw(agent.agentPhone, agent.agentName, ((agent.commissions || 0) + (agent.recordingBonuses || 0) + (agent.pipelineBonuses || 0) - (agent.withdrawnCommission || 0)))}
+                        disabled={withdrawingAgent === agent.agentPhone || (((agent.commissions || 0) + (agent.recordingBonuses || 0) + (agent.pipelineBonuses || 0) - (agent.withdrawnCommission || 0)) <= 0)}
                       >
                       {withdrawingAgent === agent.agentPhone ? "Processing..." : "Withdraw Commission"}
                     </Button>
