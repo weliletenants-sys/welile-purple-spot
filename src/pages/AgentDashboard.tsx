@@ -27,6 +27,7 @@ import { BulkEditUndoHistory } from "@/components/BulkEditUndoHistory";
 import { useAgents } from "@/hooks/useAgents";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { EarningsBreakdownModal } from "@/components/EarningsBreakdownModal";
+import { AgentPipelineSummary } from "@/components/AgentPipelineSummary";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -445,6 +446,16 @@ const AgentDashboard = () => {
                 </div>
               </div>
             </Card>
+          </div>
+        )}
+
+        {/* Pipeline Summary - Only for single agent view */}
+        {routeAgentName && !isLoading && agents && agents.length > 0 && (
+          <div className="mb-8">
+            <AgentPipelineSummary 
+              agentPhone={agents[0].agentPhone}
+              currentPipelineBonuses={agents[0].pipelineBonuses || 0}
+            />
           </div>
         )}
 
