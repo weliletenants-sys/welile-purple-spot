@@ -324,6 +324,7 @@ export const useTenants = (options?: UseTenantsPaginationOptions) => {
       }
 
       // Create pipeline bonus earning (UGX 50) if tenant is pipeline
+      // Agent phone validation is handled automatically by database trigger
       if ((tenant.status as string) === "pipeline" && tenant.agentName && tenant.agentPhone) {
         const { error: pipelineError } = await supabase
           .from("agent_earnings")

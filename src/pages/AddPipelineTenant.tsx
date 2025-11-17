@@ -154,10 +154,21 @@ const AddPipelineTenant = () => {
 
       if (tenantError) throw tenantError;
 
-      // Award UGX 100 to referrer
+      // Validate agent data before awarding bonus
+      const { validateAgentData } = await import("@/utils/agentValidation");
+      const validatedAgent = await validateAgentData(
+        formData.referrerName.trim(),
+        formData.referrerPhone.trim()
+      );
+
+      if (!validatedAgent.isValid) {
+        console.warn(`Agent validation warning: ${validatedAgent.message}`);
+      }
+
+      // Award UGX 100 to referrer with validated data
       const { error: earningsError } = await supabase.from("agent_earnings").insert({
-        agent_name: formData.referrerName.trim().toUpperCase(),
-        agent_phone: formData.referrerPhone.trim(),
+        agent_name: validatedAgent.agentName,
+        agent_phone: validatedAgent.agentPhone,
         earning_type: "pipeline_bonus",
         amount: 100,
         tenant_id: tenant.id,
