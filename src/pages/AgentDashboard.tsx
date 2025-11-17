@@ -28,6 +28,7 @@ import { useAgents } from "@/hooks/useAgents";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { EarningsBreakdownModal } from "@/components/EarningsBreakdownModal";
 import { AgentPipelineSummary } from "@/components/AgentPipelineSummary";
+import { AgentPipelineTenantsDialog } from "@/components/AgentPipelineTenantsDialog";
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ const AgentDashboard = () => {
   const { data: allAgents, isLoading } = useAgentEarnings(period);
   const { createRequest } = useWithdrawalRequests();
   const { data: agentsList } = useAgents();
+  const [selectedAgent, setSelectedAgent] = useState<{ phone: string; name: string } | null>(null);
   
   // Enable real-time earnings notifications for specific agent view
   useEarningsNotifications({
@@ -661,8 +663,14 @@ const AgentDashboard = () => {
                                 UGX 50 per tenant
                               </Badge>
                             </div>
-                            <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mt-1">
-                              {agent.pipelineTenantsCount || 0} Pipeline Tenant{(agent.pipelineTenantsCount || 0) !== 1 ? 's' : ''} ✓ WITHDRAWABLE
+                            <p 
+                              className="text-xs font-bold text-blue-800 dark:text-blue-200 mt-1 cursor-pointer hover:underline hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedAgent({ phone: agent.agentPhone, name: agent.agentName });
+                              }}
+                            >
+                              {agent.pipelineTenantsCount || 0} Pipeline Tenant{(agent.pipelineTenantsCount || 0) !== 1 ? 's' : ''} ✓ WITHDRAWABLE (Click to view)
                             </p>
                           </div>
                         </div>
@@ -948,6 +956,14 @@ const AgentDashboard = () => {
           }}
         />
       )}
+
+      {/* Agent Pipeline Tenants Dialog */}
+      <AgentPipelineTenantsDialog
+        open={!!selectedAgent}
+        onOpenChange={(open) => !open && setSelectedAgent(null)}
+        agentPhone={selectedAgent?.phone || ''}
+        agentName={selectedAgent?.name || ''}
+      />
     </div>
   );
 };
