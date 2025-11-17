@@ -199,7 +199,7 @@ const AgentDashboard = () => {
   const totalExpectedCommissions = agents?.reduce((sum, agent) => sum + agent.expectedCommission, 0) || 0;
   const totalWithdrawnCommissions = agents?.reduce((sum, agent) => sum + agent.withdrawnCommission, 0) || 0;
   const totalAvailableCommissions = agents?.reduce((sum, agent) =>
-    sum + (((agent.commissions || 0) + (agent.recordingBonuses || 0) - (agent.withdrawnCommission || 0))),
+    sum + (((agent.commissions || 0) + (agent.recordingBonuses || 0) + (agent.pipelineBonuses || 0) - (agent.withdrawnCommission || 0))),
   0) || 0;
 
   return (
@@ -432,8 +432,8 @@ const AgentDashboard = () => {
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs">
                           <p className="text-sm font-semibold mb-1">Withdrawal Rules</p>
-                          <p className="text-xs"><strong>Withdrawable:</strong> Commissions + Recording Bonuses</p>
-                          <p className="text-xs text-muted-foreground mt-1"><strong>Non-withdrawable:</strong> Pipeline bonuses (UGX 50), Data Entry, and Signup bonuses</p>
+                          <p className="text-xs"><strong>Withdrawable:</strong> Commissions + Recording Bonuses + Pipeline Bonuses</p>
+                          <p className="text-xs text-muted-foreground mt-1"><strong>Non-withdrawable:</strong> Data Entry and Signup bonuses</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
