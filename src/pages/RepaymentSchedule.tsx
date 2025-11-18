@@ -86,6 +86,7 @@ export default function RepaymentSchedule() {
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
   const [authorizedRecorders, setAuthorizedRecorders] = useState<string[]>([]);
   const [serviceCenters, setServiceCenters] = useState<Array<{ name: string; district: string; region: string }>>([]);
+  const [isGeneratingSchedule, setIsGeneratingSchedule] = useState(false);
 
   // Fetch authorized recorders and service centers
   useEffect(() => {
@@ -240,6 +241,52 @@ export default function RepaymentSchedule() {
   
   const progressPercentage = (totalPaid / repaymentDetails.totalAmount) * 100;
   const balance = repaymentDetails.totalAmount - totalPaid;
+
+  // Handle generating missing payment schedule
+  const handleGenerateSchedule = async () => {
+    if (!tenant) return;
+    
+    setIsGeneratingSchedule(true);
+    try {
+      const dailyPayments = [];
+      const today = new Date();
+      const totalAmount = tenant.rentAmount + tenant.registrationFee + tenant.accessFee;
+      const dailyInstallment = Math.ceil(totalAmount / tenant.repaymentDays);
+
+      for (let i = 0; i < tenant.repaymentDays; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        dailyPayments.push({
+          tenant_id: tenant.id,
+          date: date.toISOString().split("T")[0],
+          amount: dailyInstallment,
+          paid: false,
+        });
+      }
+
+      const { error } = await supabase
+        .from("daily_payments")
+        .insert(dailyPayments);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Generated ${tenant.repaymentDays} payment installments!`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["payments", tenantId] });
+    } catch (error) {
+      console.error("Error generating schedule:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate payment schedule",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingSchedule(false);
+    }
+  };
 
   const handleRecordPayment = async (index: number) => {
     const actualIndex = startIndex + index;
@@ -774,8 +821,20 @@ export default function RepaymentSchedule() {
 
         {/* Daily Payments Table */}
         <Card className="p-6">
-          <h3 className="text-xl font-bold mb-2">Daily Installments</h3>
-          <div className="flex items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Daily Installments</h3>
+            {(!payments || payments.length === 0) && tenant && (
+              <Button
+                onClick={handleGenerateSchedule}
+                disabled={isGeneratingSchedule}
+                className="bg-gradient-to-r from-primary to-accent"
+              >
+                {isGeneratingSchedule ? "Generating..." : "Generate Payment Schedule"}
+              </Button>
+            )}
+          </div>
+          {payments && payments.length > 0 && (
+            <div className="flex items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
               <Badge className="bg-green-600 text-white">💰 Actual</Badge>
               <span className="text-sm text-muted-foreground">With commission</span>
@@ -785,6 +844,14 @@ export default function RepaymentSchedule() {
               <span className="text-sm text-muted-foreground">No commission</span>
             </div>
           </div>
+          )}
+          
+          {!payments || payments.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No payment schedule found for this tenant.</p>
+              <p className="text-sm text-muted-foreground">Click "Generate Payment Schedule" above to create one.</p>
+            </div>
+          ) : (
           <div className="space-y-3">
             {currentPayments.map((payment, index) => (
               <div 
@@ -1053,8 +1120,10 @@ export default function RepaymentSchedule() {
               </div>
             ))}
           </div>
+          )}
 
           {/* Pagination */}
+          {payments && payments.length > 0 && totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
             <Button
               variant="outline"
@@ -1087,6 +1156,7 @@ export default function RepaymentSchedule() {
               Next
             </Button>
           </div>
+          )}
         </Card>
       </main>
     </div>
