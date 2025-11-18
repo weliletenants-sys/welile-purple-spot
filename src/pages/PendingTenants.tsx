@@ -49,6 +49,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  DollarSign,
 } from "lucide-react";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -886,16 +887,26 @@ const PendingTenants = () => {
                           </Select>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                          >
-                            <Link to={`/tenant/${tenant.id}`}>
-                              <Eye className="h-4 w-4 mr-1" />
-                              View Details
-                            </Link>
-                          </Button>
+                          <div className="flex items-center gap-2 justify-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(`/tenant/${tenant.id}`)}
+                              className="gap-1"
+                            >
+                              <Eye className="h-4 w-4" />
+                              View
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/tenant/${tenant.id}`)}
+                              className="gap-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
+                            >
+                              <DollarSign className="h-4 w-4" />
+                              Pay
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

@@ -48,6 +48,7 @@ import {
   ChevronsRight,
   FileText,
   RotateCcw,
+  DollarSign,
 } from "lucide-react";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -562,6 +563,16 @@ const UnderReviewTenants = () => {
                                 title="View Details"
                               >
                                 <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/tenant/${tenant.id}`)}
+                                className="gap-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
+                                title="Record Payment"
+                              >
+                                <DollarSign className="h-4 w-4" />
+                                Pay
                               </Button>
                               <Button
                                 variant="outline"
