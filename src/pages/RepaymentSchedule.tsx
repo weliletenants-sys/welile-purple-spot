@@ -548,9 +548,37 @@ export default function RepaymentSchedule() {
                 <p className="text-sm text-muted-foreground mt-1">Remaining amount to be collected</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Total Paid</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">UGX {totalPaid.toLocaleString()}</p>
+            <div className="flex flex-col items-end gap-3">
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Total Paid</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">UGX {totalPaid.toLocaleString()}</p>
+              </div>
+              {(!payments || payments.length === 0) ? (
+                <Button
+                  onClick={handleGenerateSchedule}
+                  disabled={isGeneratingSchedule}
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg h-12 px-6"
+                >
+                  <DollarSign className="w-5 h-5 mr-2" />
+                  {isGeneratingSchedule ? "Generating..." : "Setup Payment Schedule"}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    const firstUnpaid = payments.findIndex((p: any) => !p.paid);
+                    if (firstUnpaid !== -1) {
+                      setSelectedPaymentIndex(firstUnpaid);
+                      document.getElementById('daily-payments-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  size="lg"
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg h-12 px-6"
+                >
+                  <DollarSign className="w-5 h-5 mr-2" />
+                  Quick Record Payment
+                </Button>
+              )}
             </div>
           </div>
         </Card>
@@ -820,7 +848,7 @@ export default function RepaymentSchedule() {
         )}
 
         {/* Daily Payments Table */}
-        <Card className="p-6">
+        <Card id="daily-payments-section" className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">Daily Installments</h3>
             {(!payments || payments.length === 0) && tenant && (
