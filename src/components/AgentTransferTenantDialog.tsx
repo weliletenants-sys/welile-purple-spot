@@ -124,11 +124,19 @@ export function AgentTransferTenantDialog({
           },
         });
 
-      toast.success(`Tenant transferred to ${selectedAgent.name} successfully`);
+      // Show detailed success message
+      toast.success(`✅ Tenant Moved Successfully!`, {
+        description: `${tenant.name} has been transferred from ${currentAgentName} to ${selectedAgent.name}`,
+        duration: 6000,
+      });
       
-      // Invalidate transfer history queries for both agents
+      // Invalidate all relevant queries to update the UI
       queryClient.invalidateQueries({ queryKey: ["agent-transfer-history", currentAgentName] });
       queryClient.invalidateQueries({ queryKey: ["agent-transfer-history", selectedAgent.name] });
+      queryClient.invalidateQueries({ queryKey: ["pipeline-tenants-list"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
+      queryClient.invalidateQueries({ queryKey: ["agent-activity-log"] });
       
       onTransferComplete();
       onOpenChange(false);

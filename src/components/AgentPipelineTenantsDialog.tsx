@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, MapPin, Phone, ArrowRightLeft } from "lucide-react";
@@ -24,6 +24,7 @@ export function AgentPipelineTenantsDialog({
   agentName 
 }: AgentPipelineTenantsDialogProps) {
   const [selectedTenant, setSelectedTenant] = useState<Tables<"tenants"> | null>(null);
+  const queryClient = useQueryClient();
   
   const { data: tenants, isLoading } = useQuery({
     queryKey: ['pipeline-tenants-list', agentPhone],
@@ -40,6 +41,12 @@ export function AgentPipelineTenantsDialog({
     },
     enabled: open,
   });
+
+  const handleTransferComplete = () => {
+    setSelectedTenant(null);
+    // Refetch the pipeline tenants list to show updated data
+    queryClient.invalidateQueries({ queryKey: ['pipeline-tenants-list', agentPhone] });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -121,7 +128,7 @@ export function AgentPipelineTenantsDialog({
             contact: selectedTenant.contact,
           }}
           currentAgentName={agentName}
-          onTransferComplete={() => setSelectedTenant(null)}
+          onTransferComplete={handleTransferComplete}
         />
       )}
     </Dialog>
