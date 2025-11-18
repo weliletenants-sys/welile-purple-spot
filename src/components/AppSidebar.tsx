@@ -69,6 +69,7 @@ const navigationGroups = [
       { title: "Agent Management", url: "/agent-management", icon: UserCog },
       { title: "Agent Performance", url: "/agent-performance", icon: TrendingUp },
       { title: "Top Performers", url: "/top-performers", icon: Award },
+      { title: "Transfer History", url: "/transfer-history", icon: History },
     ],
   },
   {
