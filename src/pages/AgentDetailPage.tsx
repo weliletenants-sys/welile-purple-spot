@@ -712,8 +712,7 @@ const AgentDetailPage = () => {
                 return (
                   <Card 
                     key={tenant.id} 
-                    className="hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
-                    onClick={() => navigate(`/tenant/${tenant.id}`)}
+                    className="hover:shadow-lg transition-all hover:scale-[1.02]"
                   >
                     <CardContent className="p-5 space-y-3">
                       {/* Tenant Name & Status */}
@@ -760,6 +759,21 @@ const AgentDetailPage = () => {
                           <span className="text-muted-foreground">Monthly Rent:</span>
                           <span className="font-semibold">UGX {Number(tenant.rentAmount).toLocaleString()}</span>
                         </div>
+                      </div>
+                      
+                      {/* Action Button */}
+                      <div className="pt-3 border-t">
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/tenant/${tenant.id}`);
+                          }}
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                          size="sm"
+                        >
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          Record Payment
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>

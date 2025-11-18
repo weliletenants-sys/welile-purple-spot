@@ -536,9 +536,17 @@ export default function RiskDashboard() {
                           </div>
                           <p className="text-sm text-muted-foreground">{tenant.contact} • {tenant.address}</p>
                         </div>
-                        <Link to={`/tenant/${tenant.id}`}>
-                          <Button variant="outline" size="sm">View Details</Button>
-                        </Link>
+                        <div className="flex gap-2">
+                          <Link to={`/tenant/${tenant.id}`}>
+                            <Button variant="default" size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              Pay
+                            </Button>
+                          </Link>
+                          <Link to={`/tenant/${tenant.id}`}>
+                            <Button variant="outline" size="sm">View</Button>
+                          </Link>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border">
