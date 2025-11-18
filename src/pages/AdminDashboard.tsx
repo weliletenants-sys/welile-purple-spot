@@ -1007,6 +1007,33 @@ const RequestsSection = ({
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {/* Prominent Daily Payments Card - Spans 2 columns */}
+        <div className="md:col-span-2">
+          <Card className="p-6 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-2 border-primary/30 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {dateRange.from && dateRange.to ? "Period Payments" : "Today's Payments"}
+                  </h3>
+                  <Badge className="bg-gradient-to-r from-primary to-accent text-white">
+                    Live
+                  </Badge>
+                </div>
+                <p className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  UGX {(dailyPayments?.total || 0).toLocaleString()}
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {dailyPayments?.count || 0} payments recorded
+                </p>
+              </div>
+              <div className="p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg">
+                <DollarSign className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+          </Card>
+        </div>
+
         <StatsCard
           title="Outstanding Balance"
           value={`UGX ${(stats?.outstandingBalance || 0).toLocaleString()}`}
@@ -1017,22 +1044,16 @@ const RequestsSection = ({
           }
         />
         <StatsCard
-          title={dateRange.from && dateRange.to ? "Period Payments" : "Today's Payments"}
-          value={`UGX ${(dailyPayments?.total || 0).toLocaleString()}`}
-          icon={DollarSign}
-          description={`${dailyPayments?.count || 0} payments recorded`}
+          title="Collection Rate"
+          value={`${stats?.collectionRate || 0}%`}
+          icon={Target}
+          description="Payment completion rate"
         />
         <StatsCard
           title="Total Tenants"
           value={stats?.numberOfTenants || 0}
           icon={Users}
           description={`${stats?.activeTenants || 0} active, ${stats?.pipelineTenants || 0} in pipeline`}
-        />
-        <StatsCard
-          title="Collection Rate"
-          value={`${stats?.collectionRate || 0}%`}
-          icon={Target}
-          description="Payment completion rate"
         />
         <StatsCard
           title="Total Agents"
