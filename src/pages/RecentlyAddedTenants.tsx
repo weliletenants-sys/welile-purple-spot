@@ -873,9 +873,17 @@ export default function RecentlyAddedTenants() {
                         <p className="text-sm text-muted-foreground">{tenant.contact}</p>
                         <p className="text-sm text-muted-foreground">{tenant.address}</p>
                       </div>
-                      <Link to={`/tenant/${tenant.id}`}>
-                        <Button variant="outline" size="sm">View Details</Button>
-                      </Link>
+                      <div className="flex gap-2">
+                        <Link to={`/tenant/${tenant.id}`}>
+                          <Button variant="default" size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            Pay
+                          </Button>
+                        </Link>
+                        <Link to={`/tenant/${tenant.id}`}>
+                          <Button variant="outline" size="sm">View</Button>
+                        </Link>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
