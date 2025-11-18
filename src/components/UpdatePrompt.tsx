@@ -27,11 +27,11 @@ export const UpdatePrompt = () => {
       navigator.serviceWorker.ready.then((reg) => {
         setRegistration(reg);
         
-        // Aggressive update checking - every 15 seconds
+        // Reasonable update checking - every 5 minutes for stability
         setInterval(() => {
           reg.update();
           setLastCheckTime(new Date());
-        }, 15 * 1000);
+        }, 5 * 60 * 1000);
         
         // Check immediately on page load
         reg.update();
@@ -82,11 +82,11 @@ export const UpdatePrompt = () => {
               setNewWorker(installingWorker);
               setShowUpdateDialog(true);
               
-              // Also show a toast as backup
+              // Show a subtle toast notification
               toast({
-                title: "🎉 New Features Available!",
-                description: "An update is ready. Tap 'Update Now' to get the latest version.",
-                duration: 8000,
+                title: "Update Available",
+                description: "A new version is ready when you're ready to update.",
+                duration: 6000,
               });
             }
           });
@@ -112,10 +112,10 @@ export const UpdatePrompt = () => {
     localStorage.setItem('update_postpone_count', newCount.toString());
     setShowUpdateDialog(false);
     
-    // Very aggressive - show reminder after only 30 seconds
+    // Reasonable reminder timing - 1 hour for better UX
     setTimeout(() => {
       setShowUpdateDialog(true);
-    }, 30 * 1000);
+    }, 60 * 60 * 1000);
   };
 
   return (
@@ -140,12 +140,11 @@ export const UpdatePrompt = () => {
               <DialogTitle className="text-2xl">New Features Available!</DialogTitle>
             </div>
             <DialogDescription className="text-base pt-2">
-              <strong>Important:</strong> We've added new features and improvements to the app. Please update now to ensure the best experience and access to all new features!
-              {postponeCount > 0 && (
-                <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-                  <p className="text-sm font-semibold text-destructive">
-                    ⚠️ You've postponed this update {postponeCount} time{postponeCount > 1 ? 's' : ''}. 
-                    {postponeCount >= 3 && ' Please update now to avoid issues!'}
+              A new version with improvements and features is available. Update when convenient to get the latest enhancements.
+              {postponeCount >= 2 && (
+                <div className="mt-3 p-3 bg-muted border border-border rounded-md">
+                  <p className="text-sm text-muted-foreground">
+                    💡 You've postponed this update {postponeCount} times. Updating ensures you have the best experience.
                   </p>
                 </div>
               )}
@@ -155,10 +154,10 @@ export const UpdatePrompt = () => {
             <Button 
               onClick={handleUpdate} 
               size="lg" 
-              className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 animate-pulse"
+              className="w-full"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              Update Now (Recommended)
+              Update Now
             </Button>
             <Button 
               onClick={handleLater} 
@@ -172,15 +171,7 @@ export const UpdatePrompt = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Update Check Indicator */}
-      <div className="fixed bottom-4 right-4 z-40 pointer-events-none">
-        <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg px-3 py-2 shadow-lg">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <RefreshCw className="w-3 h-3 animate-spin" style={{ animationDuration: '3s' }} />
-            <span>Last checked: {lastCheckTime.toLocaleTimeString()}</span>
-          </div>
-        </div>
-      </div>
+      {/* Update Check Indicator - Hidden for cleaner UX across devices */}
     </>
   );
 };
