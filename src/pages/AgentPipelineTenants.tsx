@@ -259,18 +259,33 @@ const AgentPipelineTenants = () => {
 
                     {/* Time in Pipeline */}
                     <div className="pt-3 border-t">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {daysInPipeline} {daysInPipeline === 1 ? 'day' : 'days'} in pipeline
-                        </span>
-                        <Button
-                          onClick={() => handleConvert(tenant)}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          Convert to Active
-                        </Button>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {daysInPipeline} {daysInPipeline === 1 ? 'day' : 'days'} in pipeline
+                          </span>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            onClick={() => navigate(`/tenant/${tenant.id}`)}
+                            size="sm"
+                            variant="outline"
+                            className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
+                          >
+                            <DollarSign className="h-4 w-4" />
+                            Record Payment
+                          </Button>
+                          <Button
+                            onClick={() => handleConvert(tenant)}
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Convert to Active
+                          </Button>
+                        </div>
                       </div>
                     </div>
 

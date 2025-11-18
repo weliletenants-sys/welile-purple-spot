@@ -435,22 +435,32 @@ export default function PipelineTenants() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(tenant)}
+                        className="gap-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Edit Info
+                      </Button>
+                      <Button
+                        onClick={() => handleConvert(tenant)}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Convert to Active
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
                     <Button
-                      variant="outline"
+                      onClick={() => navigate(`/tenant/${tenant.id}`)}
                       size="sm"
-                      onClick={() => handleEdit(tenant)}
-                      className="gap-2"
+                      className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 w-full"
                     >
-                      <Edit className="h-4 w-4" />
-                      Edit Info
-                    </Button>
-                    <Button
-                      onClick={() => handleConvert(tenant)}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      Convert to Active
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <DollarSign className="h-4 w-4" />
+                      Record Payment
                     </Button>
                   </div>
                 </div>
