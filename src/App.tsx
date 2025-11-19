@@ -12,6 +12,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { DynamicBreadcrumb } from "@/components/DynamicBreadcrumb";
 import { CommandPalette } from "@/components/CommandPalette";
+import { AppFooter } from "@/components/AppFooter";
 import { OfflineQueueProvider } from "@/contexts/OfflineQueueContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -172,6 +173,7 @@ const App = () => {
                       </Routes>
                     </Suspense>
                   </main>
+                  <AppFooter />
                 </div>
               </div>
             </SidebarProvider>
