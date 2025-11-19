@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Lock, Home } from "lucide-react";
-
-const ADMIN_ACCESS_CODE = "Mypart@welile";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const [accessCode, setAccessCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -19,20 +19,42 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      if (accessCode === ADMIN_ACCESS_CODE) {
-        sessionStorage.setItem("adminAccessCode", ADMIN_ACCESS_CODE);
-        toast({
-          title: "Access granted",
-          description: "Welcome to the admin dashboard!",
-        });
-        navigate('/admin-dashboard');
-      } else {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      // Check if user has admin role
+      const { data: hasAdminRole, error: roleError } = await supabase.rpc("has_role", {
+        _user_id: data.user.id,
+        _role: "admin",
+      });
+
+      if (roleError) throw roleError;
+
+      if (!hasAdminRole) {
+        await supabase.auth.signOut();
         toast({
           title: "Access denied",
-          description: "Invalid access code.",
+          description: "You don't have admin privileges.",
           variant: "destructive",
         });
+        return;
       }
+
+      toast({
+        title: "Access granted",
+        description: "Welcome to the admin dashboard!",
+      });
+      navigate('/admin-dashboard');
+    } catch (error: any) {
+      toast({
+        title: "Access denied",
+        description: error.message || "Invalid credentials.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -63,13 +85,24 @@ const AdminLogin = () => {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="accessCode">Access Code</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="accessCode"
+                id="email"
+                type="email"
+                placeholder="admin@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
                 type="password"
-                placeholder="Enter access code"
-                value={accessCode}
-                onChange={(e) => setAccessCode(e.target.value)}
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
