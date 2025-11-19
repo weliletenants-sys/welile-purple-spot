@@ -65,6 +65,7 @@ const TeamEarningsLeaderboard = lazy(() => import("./pages/TeamEarningsLeaderboa
 const DataCleanup = lazy(() => import("./pages/DataCleanup"));
 const AgentPipelineTenants = lazy(() => import("./pages/AgentPipelineTenants"));
 const TransferHistory = lazy(() => import("./pages/TransferHistory"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -166,10 +167,11 @@ const App = () => {
               <Route path="/agent-earnings-analytics" element={<AgentEarningsAnalytics />} />
               <Route path="/recording-bonus-calculator" element={<RecordingBonusCalculator />} />
               <Route path="/recording-bonus-leaderboard" element={<RecordingBonusLeaderboard />} />
-        <Route path="/earnings-leaderboard" element={<EarningsLeaderboard />} />
-        <Route path="/team-earnings" element={<TeamEarningsLeaderboard />} />
-        <Route path="/data-cleanup" element={<DataCleanup />} />
-              <Route path="*" element={<NotFound />} />
+         <Route path="/earnings-leaderboard" element={<EarningsLeaderboard />} />
+         <Route path="/team-earnings" element={<TeamEarningsLeaderboard />} />
+         <Route path="/data-cleanup" element={<DataCleanup />} />
+         <Route path="/settings" element={<Settings />} />
+               <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
                   </main>
