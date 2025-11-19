@@ -5,6 +5,7 @@ import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { useComprehensiveStats } from "@/hooks/useComprehensiveStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { StatsCard } from "@/components/StatsCard";
 import { ReportsSection } from "@/components/ReportsSection";
 import { ReportGenerator } from "@/components/ReportGenerator";
@@ -77,21 +78,33 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-const ADMIN_ACCESS_CODE = "Mypart@welile";
-
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { requests, isLoading, updateRequest } = useWithdrawalRequests();
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [activeSection, setActiveSection] = useState("requests");
+  const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
 
   useEffect(() => {
-    const accessCode = sessionStorage.getItem("adminAccessCode");
-    if (accessCode !== ADMIN_ACCESS_CODE) {
-      navigate('/admin-login');
-    }
-  }, [navigate]);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast("Please log in to access the admin dashboard");
+        navigate("/admin-login");
+        return;
+      }
+
+      if (!isAdminLoading && !isAdmin) {
+        toast("You don't have admin privileges");
+        navigate("/");
+        return;
+      }
+    };
+
+    checkAuth();
+  }, [navigate, isAdmin, isAdminLoading]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -148,8 +161,8 @@ const AdminDashboard = () => {
     setNotes("");
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("adminAccessCode");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate('/admin-login');
   };
 
