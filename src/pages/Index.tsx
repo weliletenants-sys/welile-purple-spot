@@ -24,6 +24,7 @@ import { LeaderboardModal } from "@/components/LeaderboardModal";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
+import { AllTenantsExport } from "@/components/AllTenantsExport";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
 import { usePendingTenantsCount } from "@/hooks/usePendingTenants";
@@ -498,6 +499,14 @@ const Index = () => {
                     >
                       <Building2 className="w-4 h-4" />
                       <span>🏢 Landlord Management</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="p-0 mt-2"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <div className="w-full px-2">
+                        <AllTenantsExport />
+                      </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="p-0 mt-2"
