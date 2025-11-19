@@ -21,6 +21,7 @@ import { PerformanceAlerts } from "@/components/PerformanceAlerts";
 import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
 import { ForecastAccuracy } from "@/components/ForecastAccuracy";
 import { ForecastHistory } from "@/components/ForecastHistory";
+import { DailyPaymentComparison } from "@/components/DailyPaymentComparison";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -1080,6 +1081,9 @@ const RequestsSection = ({
           description={`${stats?.approvedWithdrawals || 0} approved`}
         />
       </div>
+
+      {/* Daily Payment Comparison */}
+      <DailyPaymentComparison />
 
       {/* Visual Analytics Section */}
       <Tabs defaultValue="trends" className="space-y-4">
