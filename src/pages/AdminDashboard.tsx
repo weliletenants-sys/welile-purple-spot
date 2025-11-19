@@ -22,6 +22,7 @@ import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
 import { ForecastAccuracy } from "@/components/ForecastAccuracy";
 import { ForecastHistory } from "@/components/ForecastHistory";
 import { DailyPaymentComparison } from "@/components/DailyPaymentComparison";
+import { TodayPaymentCard } from "@/components/TodayPaymentCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -924,6 +925,9 @@ const RequestsSection = ({
 
   return (
     <div className="space-y-6">
+      {/* Today's Payment Performance */}
+      <TodayPaymentCard />
+      
       {/* Date Range Filter & Export */}
       <Card>
         <CardHeader>
