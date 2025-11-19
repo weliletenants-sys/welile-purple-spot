@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import {
   Sidebar,
@@ -134,8 +134,11 @@ export function AppSidebar() {
   // Track pinned pages
   const [pinnedPages, setPinnedPages] = useState<PinnedPage[]>([]);
 
-  // Get all navigation items for lookup
-  const allNavItems = navigationGroups.flatMap(group => group.items);
+  // Get all navigation items for lookup - memoized to prevent infinite loops
+  const allNavItems = useMemo(() => 
+    navigationGroups.flatMap(group => group.items),
+    []
+  );
 
   useEffect(() => {
     // Load recent pages and pinned pages from localStorage
