@@ -19,7 +19,8 @@ import {
   Activity,
   Database,
   History,
-  Star
+  Star,
+  Settings
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -117,6 +118,7 @@ const navigationGroups = [
       { title: "Landlord Management", url: "/landlord-management", icon: Building2 },
       { title: "Withdrawal History", url: "/withdrawal-history", icon: Wallet },
       { title: "Data Cleanup", url: "/data-cleanup", icon: Database },
+      { title: "Settings", url: "/settings", icon: Settings },
     ],
   },
 ];
