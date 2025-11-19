@@ -1,8 +1,10 @@
 import { useWhatsNew } from "@/hooks/useWhatsNew";
+import { useDiagnostics } from "@/hooks/useDiagnostics";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Info, 
   Server, 
@@ -14,13 +16,18 @@ import {
   CheckCircle2,
   XCircle,
   Activity,
-  Globe
+  Globe,
+  AlertCircle,
+  AlertTriangle,
+  Download,
+  Trash2
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const { currentVersion, reopenWhatsNew } = useWhatsNew();
+  const { logs, clearLogs, exportLogs } = useDiagnostics();
   const [systemStatus, setSystemStatus] = useState({
     online: navigator.onLine,
     database: 'checking',
@@ -303,6 +310,115 @@ const Settings = () => {
               <span className="text-muted-foreground">Screen</span>
               <span>{window.screen.width} × {window.screen.height}</span>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Diagnostics Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              <div>
+                <CardTitle>Diagnostics</CardTitle>
+                <CardDescription>Console errors, warnings, and system logs</CardDescription>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={exportLogs}
+                disabled={logs.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearLogs}
+                disabled={logs.length === 0}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Total Logs</span>
+              </div>
+              <Badge variant={logs.length > 0 ? "destructive" : "secondary"}>
+                {logs.length}
+              </Badge>
+            </div>
+
+            {logs.length > 0 ? (
+              <ScrollArea className="h-[400px] w-full rounded-md border">
+                <div className="p-4 space-y-3">
+                  {logs.map((log) => (
+                    <div 
+                      key={log.id}
+                      className={`p-3 rounded-lg border-l-4 ${
+                        log.type === 'error' 
+                          ? 'border-l-red-500 bg-red-50 dark:bg-red-950/20' 
+                          : 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-1">
+                          {log.type === 'error' ? (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          ) : (
+                            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge 
+                              variant={log.type === 'error' ? 'destructive' : 'outline'}
+                              className="text-xs"
+                            >
+                              {log.type.toUpperCase()}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {log.timestamp.toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="text-sm font-mono break-words whitespace-pre-wrap">
+                            {log.message}
+                          </p>
+                          {log.stack && (
+                            <details className="mt-2">
+                              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                                Stack trace
+                              </summary>
+                              <pre className="mt-2 text-xs font-mono bg-muted p-2 rounded overflow-x-auto">
+                                {log.stack}
+                              </pre>
+                            </details>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <CheckCircle2 className="h-12 w-12 text-green-500 mb-3" />
+                <p className="text-sm font-medium">No errors or warnings detected</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  The diagnostics system is monitoring your application
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
