@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfDay, subDays, format } from "date-fns";
+import { startOfDay, subDays, format, eachDayOfInterval } from "date-fns";
 
 export interface DailyComparison {
   date: string;
@@ -10,13 +10,22 @@ export interface DailyComparison {
   percentageOfExpected: number;
 }
 
-export const useDailyPaymentComparison = (days: number = 7) => {
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
+export const useDailyPaymentComparison = (dateRange?: DateRange) => {
   return useQuery({
-    queryKey: ["daily-payment-comparison", days],
+    queryKey: ["daily-payment-comparison", dateRange],
     queryFn: async () => {
       const today = startOfDay(new Date());
-      const startDate = format(subDays(today, days - 1), "yyyy-MM-dd");
-      const endDate = format(today, "yyyy-MM-dd");
+      const startDate = dateRange?.from 
+        ? format(dateRange.from, "yyyy-MM-dd")
+        : format(subDays(today, 6), "yyyy-MM-dd");
+      const endDate = dateRange?.to 
+        ? format(dateRange.to, "yyyy-MM-dd")
+        : format(today, "yyyy-MM-dd");
 
       // Fetch forecasts
       const { data: forecasts, error: forecastError } = await supabase
@@ -45,25 +54,28 @@ export const useDailyPaymentComparison = (days: number = 7) => {
         return acc;
       }, {} as Record<string, number>) || {};
 
+      // Get all dates in the range
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const allDates = eachDayOfInterval({ start, end });
+
       // Combine forecasts with actuals
-      const comparisons: DailyComparison[] = [];
-      
-      for (let i = 0; i < days; i++) {
-        const date = format(subDays(today, days - 1 - i), "yyyy-MM-dd");
-        const forecast = forecasts?.find(f => f.target_date === date);
+      const comparisons: DailyComparison[] = allDates.map(date => {
+        const dateStr = format(date, "yyyy-MM-dd");
+        const forecast = forecasts?.find(f => f.target_date === dateStr);
         const expected = forecast?.expected_amount || 0;
-        const actual = actualByDate[date] || 0;
+        const actual = actualByDate[dateStr] || 0;
         const difference = actual - expected;
         const percentageOfExpected = expected > 0 ? (actual / expected) * 100 : 0;
 
-        comparisons.push({
-          date,
+        return {
+          date: dateStr,
           expected,
           actual,
           difference,
           percentageOfExpected,
-        });
-      }
+        };
+      });
 
       return comparisons;
     },

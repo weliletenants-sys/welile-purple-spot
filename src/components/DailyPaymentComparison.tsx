@@ -1,11 +1,31 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDailyPaymentComparison } from "@/hooks/useDailyPaymentComparison";
-import { format, parseISO } from "date-fns";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { format, parseISO, subDays } from "date-fns";
+import { TrendingUp, TrendingDown, Minus, Calendar as CalendarIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 export const DailyPaymentComparison = () => {
-  const { data: comparisons, isLoading } = useDailyPaymentComparison(7);
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
+    from: subDays(new Date(), 6),
+    to: new Date(),
+  });
+  const [filterStatus, setFilterStatus] = useState<"all" | "above" | "below" | "onTarget">("all");
+  
+  const { data: comparisons, isLoading } = useDailyPaymentComparison(dateRange);
+
+  const filteredComparisons = comparisons?.filter(day => {
+    if (filterStatus === "all") return true;
+    if (filterStatus === "above") return day.percentageOfExpected > 100;
+    if (filterStatus === "below") return day.percentageOfExpected < 100 && day.percentageOfExpected > 0;
+    if (filterStatus === "onTarget") return day.percentageOfExpected === 100;
+    return true;
+  });
 
   if (isLoading) {
     return (
@@ -24,14 +44,127 @@ export const DailyPaymentComparison = () => {
     );
   }
 
+  const handleQuickSelect = (days: number) => {
+    setDateRange({
+      from: subDays(new Date(), days - 1),
+      to: new Date(),
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Daily Payment Comparison (Last 7 Days)</CardTitle>
+        <div className="flex flex-col gap-4">
+          <CardTitle>Daily Payment Comparison</CardTitle>
+          
+          {/* Filters and Date Selection */}
+          <div className="flex flex-wrap gap-4 items-center">
+            {/* Quick Select Buttons */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickSelect(7)}
+              >
+                Last 7 Days
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickSelect(14)}
+              >
+                Last 14 Days
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickSelect(30)}
+              >
+                Last 30 Days
+              </Button>
+            </div>
+
+            {/* Custom Date Range */}
+            <div className="flex gap-2 flex-wrap">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      !dateRange.from && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.from ? format(dateRange.from, "PPP") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.from}
+                    onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      !dateRange.to && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.to ? format(dateRange.to, "PPP") : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.to}
+                    onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {dateRange.from && dateRange.to && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDateRange({ from: undefined, to: undefined })}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            {/* Status Filter */}
+            <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Days</SelectItem>
+                <SelectItem value="above">Above Target</SelectItem>
+                <SelectItem value="onTarget">On Target</SelectItem>
+                <SelectItem value="below">Below Target</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {comparisons?.map((day) => {
+          {filteredComparisons?.map((day) => {
             const isAbove = day.percentageOfExpected > 100;
             const isBelow = day.percentageOfExpected < 100 && day.percentageOfExpected > 0;
             const isOnTarget = day.percentageOfExpected === 100;
