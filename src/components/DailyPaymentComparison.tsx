@@ -27,6 +27,24 @@ export const DailyPaymentComparison = () => {
     return true;
   });
 
+  // Calculate summary statistics
+  const summaryStats = comparisons?.reduce(
+    (acc, day) => ({
+      totalExpected: acc.totalExpected + day.expected,
+      totalActual: acc.totalActual + day.actual,
+    }),
+    { totalExpected: 0, totalActual: 0 }
+  ) || { totalExpected: 0, totalActual: 0 };
+
+  const totalDifference = summaryStats.totalActual - summaryStats.totalExpected;
+  const overallPercentage = summaryStats.totalExpected > 0 
+    ? (summaryStats.totalActual / summaryStats.totalExpected) * 100 
+    : 0;
+
+  const isOverallAbove = overallPercentage > 100;
+  const isOverallBelow = overallPercentage < 100 && overallPercentage > 0;
+  const isOverallOnTarget = overallPercentage === 100;
+
   if (isLoading) {
     return (
       <Card>
@@ -163,6 +181,78 @@ export const DailyPaymentComparison = () => {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Summary Statistics */}
+        <div
+          className={`p-6 rounded-lg border-2 mb-6 ${
+            isOverallAbove
+              ? "bg-green-50 border-green-500 dark:bg-green-950/20 dark:border-green-500"
+              : isOverallBelow
+              ? "bg-red-50 border-red-500 dark:bg-red-950/20 dark:border-red-500"
+              : isOverallOnTarget
+              ? "bg-blue-50 border-blue-500 dark:bg-blue-950/20 dark:border-blue-500"
+              : "bg-muted border-border"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="text-lg font-bold text-foreground">Period Summary</h3>
+                {isOverallAbove && (
+                  <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
+                )}
+                {isOverallBelow && (
+                  <TrendingDown className="h-6 w-6 text-red-600 dark:text-red-400" />
+                )}
+                {isOverallOnTarget && (
+                  <Minus className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                )}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Expected</p>
+                  <p className="text-xl font-bold text-foreground">
+                    UGX {summaryStats.totalExpected.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Actual</p>
+                  <p className="text-xl font-bold text-foreground">
+                    UGX {summaryStats.totalActual.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Difference</p>
+                  <p
+                    className={`text-xl font-bold ${
+                      totalDifference >= 0
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {totalDifference >= 0 ? "+" : ""}
+                    UGX {totalDifference.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="text-right ml-6">
+              <p className="text-sm text-muted-foreground mb-1">Overall Performance</p>
+              <p
+                className={`text-4xl font-bold ${
+                  isOverallAbove
+                    ? "text-green-600 dark:text-green-400"
+                    : isOverallBelow
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-blue-600 dark:text-blue-400"
+                }`}
+              >
+                {overallPercentage > 0 ? `${overallPercentage.toFixed(1)}%` : "0%"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Daily Breakdown */}
         <div className="space-y-3">
           {filteredComparisons?.map((day) => {
             const isAbove = day.percentageOfExpected > 100;
