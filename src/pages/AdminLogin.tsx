@@ -10,8 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -19,26 +18,16 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error } = await supabase.functions.invoke('admin-login', {
+        body: { accessCode }
       });
 
       if (error) throw error;
 
-      // Check if user has admin role
-      const { data: hasAdminRole, error: roleError } = await supabase.rpc("has_role", {
-        _user_id: data.user.id,
-        _role: "admin",
-      });
-
-      if (roleError) throw roleError;
-
-      if (!hasAdminRole) {
-        await supabase.auth.signOut();
+      if (data.error) {
         toast({
           title: "Access denied",
-          description: "You don't have admin privileges.",
+          description: data.error,
           variant: "destructive",
         });
         return;
@@ -52,7 +41,7 @@ const AdminLogin = () => {
     } catch (error: any) {
       toast({
         title: "Access denied",
-        description: error.message || "Invalid credentials.",
+        description: error.message || "Invalid access code.",
         variant: "destructive",
       });
     } finally {
@@ -79,30 +68,19 @@ const AdminLogin = () => {
           </div>
           <CardTitle className="text-2xl text-center">Admin Login</CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access the admin dashboard
+            Enter the access code to access the admin dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="accessCode">Access Code</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
+                id="accessCode"
                 type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter access code"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value)}
                 required
               />
             </div>
