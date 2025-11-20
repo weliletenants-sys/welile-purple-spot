@@ -31,6 +31,7 @@ const BulkAddAdekeAnnet = lazy(() => import("./pages/BulkAddAdekeAnnet"));
 const AutoImportTenants = lazy(() => import("./pages/AutoImportTenants"));
 const MissedPayments = lazy(() => import("./pages/MissedPayments"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const AdminSetup = lazy(() => import("./pages/AdminSetup"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const WithdrawalHistory = lazy(() => import("./pages/WithdrawalHistory"));
 const MonthlySummary = lazy(() => import("./pages/MonthlySummary"));
@@ -136,6 +137,7 @@ const App = () => {
               <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />
               <Route path="/auto-import" element={<AutoImportTenants />} />
               <Route path="/missed-payments" element={<MissedPayments />} />
+              <Route path="/admin-setup" element={<AdminSetup />} />
               <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/withdrawal-history" element={<WithdrawalHistory />} />
