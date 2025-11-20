@@ -72,15 +72,49 @@ serve(async (req) => {
       );
     }
 
+    // Generate access tokens for the admin user
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: user.email!,
+    });
+
+    if (linkError || !linkData) {
+      console.error('Error generating session:', linkError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create session' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Extract tokens from the action link URL
+    const actionLinkUrl = new URL(linkData.properties.action_link);
+    const accessToken = actionLinkUrl.searchParams.get('access_token');
+    const refreshToken = actionLinkUrl.searchParams.get('refresh_token');
+
+    if (!accessToken || !refreshToken) {
+      console.error('Failed to extract tokens from action link');
+      return new Response(
+        JSON.stringify({ error: 'Failed to create session tokens' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     console.log('Admin login successful for user:', user.email);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        user: {
-          id: user.id,
-          email: user.email
-        }
+        session: {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        },
+        user: linkData.user
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
