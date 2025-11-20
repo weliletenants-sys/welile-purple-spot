@@ -72,9 +72,9 @@ serve(async (req) => {
       );
     }
 
-    // Generate access tokens for the admin user
+    // Generate access tokens for the admin user using recovery type
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
+      type: 'recovery',
       email: user.email!,
     });
 
