@@ -33,6 +33,18 @@ const AdminLogin = () => {
         return;
       }
 
+      // Set the session in Supabase client
+      if (data.session) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+
+        if (sessionError) {
+          throw sessionError;
+        }
+      }
+
       toast({
         title: "Access granted",
         description: "Welcome to the admin dashboard!",
