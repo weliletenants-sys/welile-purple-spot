@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, UserCog, UserX, Users, Search } from "lucide-react";
+import { Loader2, UserCog, UserX, Users, Search, Filter, X } from "lucide-react";
 import { Agent } from "@/hooks/useAgents";
 
 interface AgentTenantManagementDialogProps {
@@ -29,6 +31,29 @@ export const AgentTenantManagementDialog = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
   const [selectedAssignedTenants, setSelectedAssignedTenants] = useState<string[]>([]);
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [serviceCenterFilter, setServiceCenterFilter] = useState<string>("all");
+  const [minRent, setMinRent] = useState<string>("");
+  const [maxRent, setMaxRent] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Fetch service centers
+  const { data: serviceCenters } = useQuery({
+    queryKey: ["service-centers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_centers")
+        .select("name")
+        .eq("is_active", true)
+        .order("name");
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: open,
+  });
 
   // Fetch agent's tenants
   const { data: agentTenants, refetch: refetchAgentTenants } = useQuery({
@@ -38,7 +63,7 @@ export const AgentTenantManagementDialog = ({
       
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, name, contact, address, rent_amount, status")
+        .select("id, name, contact, address, rent_amount, status, service_center")
         .eq("agent_id", agent.id)
         .order("name");
       
@@ -54,7 +79,7 @@ export const AgentTenantManagementDialog = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, name, contact, address, rent_amount, status, agent_name")
+        .select("id, name, contact, address, rent_amount, status, service_center, agent_name")
         .or("agent_id.is.null,agent_name.eq.")
         .order("name");
       
@@ -290,15 +315,42 @@ export const AgentTenantManagementDialog = ({
     }
   };
 
-  const filteredAgentTenants = agentTenants?.filter(tenant => 
-    tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tenant.contact.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setServiceCenterFilter("all");
+    setMinRent("");
+    setMaxRent("");
+    setSearchTerm("");
+  };
 
-  const filteredUnassignedTenants = unassignedTenants?.filter(tenant => 
-    tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tenant.contact.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const hasActiveFilters = statusFilter !== "all" || serviceCenterFilter !== "all" || minRent || maxRent || searchTerm;
+
+  const applyFilters = (tenants: any[]) => {
+    return tenants.filter(tenant => {
+      // Search filter
+      const matchesSearch = 
+        tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        tenant.contact.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Status filter
+      const matchesStatus = statusFilter === "all" || tenant.status === statusFilter;
+      
+      // Service center filter
+      const matchesServiceCenter = 
+        serviceCenterFilter === "all" || 
+        tenant.service_center === serviceCenterFilter;
+      
+      // Rent amount filter
+      const rentAmount = Number(tenant.rent_amount);
+      const matchesMinRent = !minRent || rentAmount >= Number(minRent);
+      const matchesMaxRent = !maxRent || rentAmount <= Number(maxRent);
+      
+      return matchesSearch && matchesStatus && matchesServiceCenter && matchesMinRent && matchesMaxRent;
+    });
+  };
+
+  const filteredAgentTenants = applyFilters(agentTenants || []);
+  const filteredUnassignedTenants = applyFilters(unassignedTenants || []);
 
   if (!agent) return null;
 
@@ -315,15 +367,99 @@ export const AgentTenantManagementDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search tenants..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="space-y-4 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search tenants..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowFilters(!showFilters)}
+              className={showFilters ? "bg-accent" : ""}
+            >
+              <Filter className="h-4 w-4" />
+            </Button>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={clearFilters}
+                title="Clear all filters"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {showFilters && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 border rounded-lg bg-accent/20">
+              <div className="space-y-2">
+                <Label htmlFor="status-filter" className="text-xs">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger id="status-filter" className="h-9">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="pipeline">Pipeline</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="service-center-filter" className="text-xs">Service Center</Label>
+                <Select value={serviceCenterFilter} onValueChange={setServiceCenterFilter}>
+                  <SelectTrigger id="service-center-filter" className="h-9">
+                    <SelectValue placeholder="All Centers" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Centers</SelectItem>
+                    {serviceCenters?.map((center) => (
+                      <SelectItem key={center.name} value={center.name}>
+                        {center.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="min-rent" className="text-xs">Min Rent (UGX)</Label>
+                <Input
+                  id="min-rent"
+                  type="number"
+                  placeholder="0"
+                  value={minRent}
+                  onChange={(e) => setMinRent(e.target.value)}
+                  className="h-9"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="max-rent" className="text-xs">Max Rent (UGX)</Label>
+                <Input
+                  id="max-rent"
+                  type="number"
+                  placeholder="No limit"
+                  value={maxRent}
+                  onChange={(e) => setMaxRent(e.target.value)}
+                  className="h-9"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <Tabs defaultValue="assigned" className="flex-1 overflow-hidden flex flex-col">
@@ -392,6 +528,11 @@ export const AgentTenantManagementDialog = ({
                           <Badge variant={tenant.status === "active" ? "default" : "outline"} className="text-xs">
                             {tenant.status}
                           </Badge>
+                          {tenant.service_center && (
+                            <Badge variant="outline" className="text-xs">
+                              {tenant.service_center}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <Button
@@ -465,6 +606,11 @@ export const AgentTenantManagementDialog = ({
                           <Badge variant={tenant.status === "active" ? "default" : "outline"} className="text-xs">
                             {tenant.status}
                           </Badge>
+                          {tenant.service_center && (
+                            <Badge variant="outline" className="text-xs">
+                              {tenant.service_center}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <Button
