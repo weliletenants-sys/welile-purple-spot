@@ -26,6 +26,7 @@ import { ForecastHistory } from "@/components/ForecastHistory";
 import { DailyPaymentComparison } from "@/components/DailyPaymentComparison";
 import { TodayPaymentCard } from "@/components/TodayPaymentCard";
 import { WeeklySummaryCard } from "@/components/WeeklySummaryCard";
+import { AgentWorkloadOverview } from "@/components/AgentWorkloadOverview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -665,6 +666,9 @@ const AgentManagementSection = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Agent Workload Overview Widget */}
+      <AgentWorkloadOverview />
 
       <Card>
         <CardHeader>
