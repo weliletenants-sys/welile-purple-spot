@@ -88,56 +88,7 @@ const AdminDashboard = () => {
   const [authCheckAttempts, setAuthCheckAttempts] = useState(0);
   const [isValidatingSession, setIsValidatingSession] = useState(true);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast("Please log in to access the admin dashboard");
-        navigate("/admin-login");
-        return;
-      }
-
-      // If session exists but admin check is still loading, wait
-      if (isAdminLoading) {
-        return;
-      }
-
-      // If session exists but not admin, try refreshing admin role
-      if (!isAdmin && authCheckAttempts < 3) {
-        console.log(`Admin check attempt ${authCheckAttempts + 1}/3`);
-        setAuthCheckAttempts(prev => prev + 1);
-        await refetchAdminRole();
-        return;
-      }
-
-      // If still not admin after retries, redirect
-      if (!isAdmin && authCheckAttempts >= 3) {
-        toast("You don't have admin privileges");
-        navigate("/");
-        return;
-      }
-
-      // Admin check passed
-      setIsValidatingSession(false);
-    };
-
-    checkAuth();
-  }, [navigate, isAdmin, isAdminLoading, refetchAdminRole, authCheckAttempts]);
-
-  // Show loading state while validating
-  if (isValidatingSession && isAdminLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Validating admin session...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Keyboard shortcuts
+  // Keyboard shortcuts - MUST be before any conditional returns
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.altKey) {
@@ -180,6 +131,64 @@ const AdminDashboard = () => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
 
+  // Auth check - AFTER all hooks
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast("Please log in to access the admin dashboard");
+        navigate("/admin-login");
+        return;
+      }
+
+      // If session exists but admin check is still loading, wait
+      if (isAdminLoading) {
+        return;
+      }
+
+      // If session exists but not admin, try refreshing admin role
+      if (!isAdmin && authCheckAttempts < 3) {
+        console.log(`Admin check attempt ${authCheckAttempts + 1}/3`);
+        setAuthCheckAttempts(prev => prev + 1);
+        await refetchAdminRole();
+        return;
+      }
+
+      // If still not admin after retries, redirect
+      if (!isAdmin && authCheckAttempts >= 3) {
+        toast("You don't have admin privileges");
+        navigate("/");
+        return;
+      }
+
+      // Admin check passed
+      setIsValidatingSession(false);
+    };
+
+    checkAuth();
+  }, [navigate, isAdmin, isAdminLoading, refetchAdminRole, authCheckAttempts]);
+
+  // Show loading state while validating - AFTER all hooks
+  if (isValidatingSession && isAdminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Validating admin session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading check - AFTER all hooks
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
   const handleApprove = async (id: string) => {
     await updateRequest({ id, status: 'approved', notes });
     setSelectedRequest(null);
@@ -196,14 +205,6 @@ const AdminDashboard = () => {
     await supabase.auth.signOut();
     navigate('/admin-login');
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
 
   const pendingRequests = requests.filter(r => r.status === 'pending');
   const processedRequests = requests.filter(r => r.status !== 'pending');
