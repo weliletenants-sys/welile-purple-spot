@@ -5,6 +5,7 @@ import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { AdminWithdrawalDialog } from "@/components/AdminWithdrawalDialog";
 import { ResponsiveContainer as AppResponsiveContainer } from "@/components/ResponsiveContainer";
 import { ResponsiveCard, ResponsiveCardGrid } from "@/components/ResponsiveCard";
+import { AdminBottomNav } from "@/components/AdminBottomNav";
 import { useComprehensiveStats } from "@/hooks/useComprehensiveStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -263,7 +264,7 @@ const AdminDashboard = () => {
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto pb-20 lg:pb-0">
             <AppResponsiveContainer className="max-w-7xl mx-auto">
               {activeSection === 'requests' && <RequestsSection 
                 pendingRequests={pendingRequests}
@@ -294,6 +295,12 @@ const AdminDashboard = () => {
 
       {/* Floating Quick Actions Panel */}
       <FloatingQuickActionsPanel />
+      
+      {/* Mobile Bottom Navigation */}
+      <AdminBottomNav 
+        activeSection={activeSection} 
+        onSectionChange={setActiveSection}
+      />
     </SidebarProvider>
   );
 };
