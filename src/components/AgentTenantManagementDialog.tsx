@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -26,6 +27,7 @@ export const AgentTenantManagementDialog = ({
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
 
   // Fetch agent's tenants
   const { data: agentTenants, refetch: refetchAgentTenants } = useQuery({
@@ -157,6 +159,71 @@ export const AgentTenantManagementDialog = ({
     }
   };
 
+  const handleBulkAssign = async () => {
+    if (!agent || selectedTenants.length === 0) return;
+    
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from("tenants")
+        .update({
+          agent_id: agent.id,
+          agent_name: agent.name,
+          agent_phone: agent.phone,
+          edited_by: "Admin",
+          edited_at: new Date().toISOString(),
+        })
+        .in("id", selectedTenants);
+
+      if (error) throw error;
+
+      // Log the activity
+      await supabase.rpc("log_agent_activity", {
+        p_agent_id: agent.id,
+        p_agent_name: agent.name,
+        p_agent_phone: agent.phone,
+        p_action_type: "bulk_tenant_assigned",
+        p_action_description: `${selectedTenants.length} tenants assigned by admin`,
+        p_metadata: { tenant_ids: selectedTenants, count: selectedTenants.length }
+      });
+
+      toast({
+        title: "Tenants Assigned",
+        description: `${selectedTenants.length} tenants have been assigned to ${agent.name}`,
+      });
+
+      setSelectedTenants([]);
+      refetchAgentTenants();
+      refetchUnassigned();
+      onSuccess?.();
+    } catch (error) {
+      console.error("Error assigning tenants:", error);
+      toast({
+        title: "Assignment Failed",
+        description: "Failed to assign tenants. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const toggleTenantSelection = (tenantId: string) => {
+    setSelectedTenants(prev =>
+      prev.includes(tenantId)
+        ? prev.filter(id => id !== tenantId)
+        : [...prev, tenantId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedTenants.length === filteredUnassignedTenants.length) {
+      setSelectedTenants([]);
+    } else {
+      setSelectedTenants(filteredUnassignedTenants.map(t => t.id));
+    }
+  };
+
   const filteredAgentTenants = agentTenants?.filter(tenant => 
     tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tenant.contact.toLowerCase().includes(searchTerm.toLowerCase())
@@ -249,41 +316,74 @@ export const AgentTenantManagementDialog = ({
                 {searchTerm ? "No tenants found matching your search" : "No unassigned tenants available"}
               </div>
             ) : (
-              <div className="space-y-2">
-                {filteredUnassignedTenants.map((tenant) => (
-                  <div
-                    key={tenant.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50"
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium">{tenant.name}</div>
-                      <div className="text-sm text-muted-foreground">{tenant.contact}</div>
-                      <div className="text-xs text-muted-foreground">{tenant.address}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-xs">
-                          UGX {tenant.rent_amount.toLocaleString()}
-                        </Badge>
-                        <Badge variant={tenant.status === "active" ? "default" : "outline"} className="text-xs">
-                          {tenant.status}
-                        </Badge>
-                      </div>
-                    </div>
+              <>
+                <div className="flex items-center justify-between mb-4 p-3 border rounded-lg bg-accent/20">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedTenants.length === filteredUnassignedTenants.length && filteredUnassignedTenants.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                      id="select-all"
+                    />
+                    <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+                      Select All ({selectedTenants.length}/{filteredUnassignedTenants.length})
+                    </label>
+                  </div>
+                  {selectedTenants.length > 0 && (
                     <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleAssignTenant(tenant.id, tenant.name)}
+                      onClick={handleBulkAssign}
                       disabled={isUpdating}
+                      size="sm"
                     >
                       {isUpdating ? (
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
                         <UserCog className="h-4 w-4 mr-2" />
                       )}
-                      Assign
+                      Assign {selectedTenants.length} Selected
                     </Button>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {filteredUnassignedTenants.map((tenant) => (
+                    <div
+                      key={tenant.id}
+                      className="flex items-center gap-3 p-4 border rounded-lg hover:bg-accent/50"
+                    >
+                      <Checkbox
+                        checked={selectedTenants.includes(tenant.id)}
+                        onCheckedChange={() => toggleTenantSelection(tenant.id)}
+                        id={`tenant-${tenant.id}`}
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium">{tenant.name}</div>
+                        <div className="text-sm text-muted-foreground">{tenant.contact}</div>
+                        <div className="text-xs text-muted-foreground">{tenant.address}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="text-xs">
+                            UGX {tenant.rent_amount.toLocaleString()}
+                          </Badge>
+                          <Badge variant={tenant.status === "active" ? "default" : "outline"} className="text-xs">
+                            {tenant.status}
+                          </Badge>
+                        </div>
+                      </div>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleAssignTenant(tenant.id, tenant.name)}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <UserCog className="h-4 w-4 mr-2" />
+                        )}
+                        Assign
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </TabsContent>
         </Tabs>
