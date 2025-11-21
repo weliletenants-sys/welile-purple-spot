@@ -72,7 +72,7 @@ const AgentDashboard = () => {
     let comparison = 0;
     switch (sortBy) {
       case "earned":
-        comparison = b.earnedCommission - a.earnedCommission;
+        comparison = (((b.commissions || 0) + (b.recordingBonuses || 0) + (b.pipelineBonuses || 0)) - ((a.commissions || 0) + (a.recordingBonuses || 0) + (a.pipelineBonuses || 0)));
         break;
       case "recording":
         comparison = (b.recordingBonuses || 0) - (a.recordingBonuses || 0);
@@ -81,7 +81,7 @@ const AgentDashboard = () => {
         comparison = b.tenantsCount - a.tenantsCount;
         break;
       case "available":
-        comparison = (((b.commissions || 0) + (b.recordingBonuses || 0) - (b.withdrawnCommission || 0)) - (((a.commissions || 0) + (a.recordingBonuses || 0) - (a.withdrawnCommission || 0))));
+        comparison = (((b.commissions || 0) + (b.recordingBonuses || 0) + (b.pipelineBonuses || 0) - (b.withdrawnCommission || 0)) - (((a.commissions || 0) + (a.recordingBonuses || 0) + (a.pipelineBonuses || 0) - (a.withdrawnCommission || 0))));
         break;
       default:
         comparison = 0;
@@ -222,7 +222,8 @@ const AgentDashboard = () => {
     }
   };
 
-  const totalEarnedCommissions = agents?.reduce((sum, agent) => sum + agent.earnedCommission, 0) || 0;
+  const totalEarnedCommissions = agents?.reduce((sum, agent) => 
+    sum + ((agent.commissions || 0) + (agent.recordingBonuses || 0) + (agent.pipelineBonuses || 0)), 0) || 0;
   const totalExpectedCommissions = agents?.reduce((sum, agent) => sum + agent.expectedCommission, 0) || 0;
   const totalWithdrawnCommissions = agents?.reduce((sum, agent) => sum + agent.withdrawnCommission, 0) || 0;
   const totalAvailableCommissions = agents?.reduce((sum, agent) =>
@@ -428,7 +429,7 @@ const AgentDashboard = () => {
               <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Earned Commission</p>
+                    <p className="text-sm font-medium text-muted-foreground">Earned (Withdrawable)</p>
                     <p className="text-3xl font-bold text-foreground">UGX {totalEarnedCommissions.toLocaleString()}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
@@ -770,9 +771,9 @@ const AgentDashboard = () => {
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Earned</span>
+                      <span className="text-sm text-muted-foreground">Earned (Withdrawable)</span>
                       <span className="text-xl font-bold text-primary">
-                        UGX {agent.earnedCommission.toLocaleString()}
+                        UGX {((agent.commissions || 0) + (agent.recordingBonuses || 0) + (agent.pipelineBonuses || 0)).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
