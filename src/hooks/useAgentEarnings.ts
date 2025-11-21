@@ -239,7 +239,7 @@ export const useAgentEarnings = (period?: string) => {
     },
   });
 
-  // Subscribe to realtime changes for agent_earnings, tenants, and daily_payments
+  // Subscribe to realtime changes for agent_earnings, tenants, daily_payments, and withdrawal_requests
   useEffect(() => {
     const earningsChannel = supabase
       .channel('agent-earnings-changes')
@@ -286,10 +286,26 @@ export const useAgentEarnings = (period?: string) => {
       )
       .subscribe();
 
+    const withdrawalsChannel = supabase
+      .channel('agent-withdrawals-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'withdrawal_requests'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(earningsChannel);
       supabase.removeChannel(tenantsChannel);
       supabase.removeChannel(paymentsChannel);
+      supabase.removeChannel(withdrawalsChannel);
     };
   }, [queryClient]);
 
