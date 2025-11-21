@@ -27,6 +27,18 @@ const AdminSetup = () => {
       if (error) throw error;
 
       if (data.error) {
+        // If admin already exists, redirect to login
+        if (data.error.includes("already exists")) {
+          toast({
+            title: "Admin exists",
+            description: "Redirecting to login page...",
+          });
+          setTimeout(() => {
+            navigate('/admin-login');
+          }, 1500);
+          return;
+        }
+        
         toast({
           title: "Setup failed",
           description: data.error,
@@ -44,11 +56,23 @@ const AdminSetup = () => {
         navigate('/admin-login');
       }, 1500);
     } catch (error: any) {
-      toast({
-        title: "Setup failed",
-        description: error.message || "Failed to create admin account.",
-        variant: "destructive",
-      });
+      // Check if error message indicates admin already exists
+      const errorMessage = error.message || "Failed to create admin account.";
+      if (errorMessage.includes("already exists")) {
+        toast({
+          title: "Admin exists",
+          description: "Redirecting to login page...",
+        });
+        setTimeout(() => {
+          navigate('/admin-login');
+        }, 1500);
+      } else {
+        toast({
+          title: "Setup failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
