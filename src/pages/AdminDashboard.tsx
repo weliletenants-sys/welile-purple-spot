@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { AdminWithdrawalDialog } from "@/components/AdminWithdrawalDialog";
+import { ResponsiveContainer as AppResponsiveContainer } from "@/components/ResponsiveContainer";
+import { ResponsiveCard, ResponsiveCardGrid } from "@/components/ResponsiveCard";
 import { useComprehensiveStats } from "@/hooks/useComprehensiveStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -220,45 +222,49 @@ const AdminDashboard = () => {
         <div className="flex-1 flex flex-col">
           {/* Header */}
           <header className="border-b bg-background sticky top-0 z-10">
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-4">
-                <SidebarTrigger />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate(-1)}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <div>
-                  <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-                  <p className="text-sm text-muted-foreground">Manage withdrawal requests</p>
+            <div className="container-padding py-3 sm:py-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                  <SidebarTrigger className="shrink-0" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate(-1)}
+                    className="shrink-0 h-9 w-9 sm:h-10 sm:w-10"
+                  >
+                    <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </Button>
+                  <div className="min-w-0">
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">Admin Dashboard</h1>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">Manage withdrawal requests</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <AdminWithdrawalDialog />
-                <Button variant="outline" size="sm" onClick={() => navigate('/')}>
-                  <Home className="h-4 w-4 mr-2" />
-                  Home
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/agent-portal-login')}>
-                  🔐 Agent Portal
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/monthly-summary')}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Monthly Summary
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <AdminWithdrawalDialog />
+                  <Button variant="outline" size="sm" onClick={() => navigate('/')} className="tap-target">
+                    <Home className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Home</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/agent-portal-login')} className="tap-target">
+                    <span className="text-sm">🔐</span>
+                    <span className="hidden sm:inline ml-2">Agent Portal</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/monthly-summary')} className="tap-target">
+                    <FileText className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Monthly Summary</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleLogout} className="tap-target">
+                    <LogOut className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </Button>
+                </div>
               </div>
             </div>
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-auto p-4 md:p-8">
-            <div className="max-w-7xl mx-auto">
+          <main className="flex-1 overflow-auto">
+            <AppResponsiveContainer className="max-w-7xl mx-auto">
               {activeSection === 'requests' && <RequestsSection 
                 pendingRequests={pendingRequests}
                 processedRequests={processedRequests}
@@ -281,7 +287,7 @@ const AdminDashboard = () => {
               {activeSection === 'rankings' && <AgentRankingComparison />}
               {activeSection === 'multi-agent' && <MultiAgentComparison />}
               {activeSection === 'goals' && <PerformanceGoalsTracking />}
-            </div>
+            </AppResponsiveContainer>
           </main>
         </div>
       </div>
@@ -621,9 +627,9 @@ const AgentManagementSection = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <ResponsiveCardGrid cols={4}>
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
@@ -665,20 +671,20 @@ const AgentManagementSection = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </ResponsiveCardGrid>
 
       {/* Agent Workload Overview Widget */}
       <AgentWorkloadOverview />
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Agent Management</CardTitle>
-              <CardDescription>Add, edit, and manage agents</CardDescription>
+              <CardTitle className="text-responsive-lg">Agent Management</CardTitle>
+              <CardDescription className="text-responsive-sm">Add, edit, and manage agents</CardDescription>
             </div>
             <AddAgentDialog onSuccess={refetch}>
-              <Button className="gap-2">
+              <Button className="gap-2 tap-target w-full sm:w-auto">
                 <UserPlus className="h-4 w-4" />
                 Add New Agent
               </Button>
@@ -691,7 +697,7 @@ const AgentManagementSection = () => {
               placeholder="Search agents by name or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-10 sm:h-11 tap-target"
             />
           </div>
         </CardHeader>
@@ -703,17 +709,17 @@ const AgentManagementSection = () => {
               {searchTerm ? "No agents found matching your search" : "No agents found"}
             </div>
           ) : (
-            <div className="rounded-md border overflow-x-auto">
-              <table className="w-full">
+            <div className="mobile-scroll rounded-md border">
+              <table className="w-full min-w-[768px]">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left p-4 font-medium">Name</th>
-                    <th className="text-left p-4 font-medium">Phone</th>
-                    <th className="text-left p-4 font-medium">Tenants</th>
-                    <th className="text-left p-4 font-medium">Last Login</th>
-                    <th className="text-left p-4 font-medium">Total Logins</th>
-                    <th className="text-left p-4 font-medium">Recent Action</th>
-                    <th className="text-right p-4 font-medium">Actions</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-xs sm:text-sm">Name</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-xs sm:text-sm">Phone</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-xs sm:text-sm">Tenants</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-xs sm:text-sm">Last Login</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-xs sm:text-sm">Total Logins</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-xs sm:text-sm">Recent Action</th>
+                    <th className="text-right p-3 sm:p-4 font-medium text-xs sm:text-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -723,14 +729,14 @@ const AgentManagementSection = () => {
                     
                     return (
                       <tr key={agent.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="p-4 font-medium">{agent.name}</td>
-                        <td className="p-4">{agent.phone}</td>
-                        <td className="p-4">
-                          <Badge variant="secondary">
+                        <td className="p-3 sm:p-4 font-medium text-xs sm:text-sm">{agent.name}</td>
+                        <td className="p-3 sm:p-4 text-xs sm:text-sm">{agent.phone}</td>
+                        <td className="p-3 sm:p-4">
+                          <Badge variant="secondary" className="text-xs">
                             {tenantCount} tenant{tenantCount !== 1 ? 's' : ''}
                           </Badge>
                         </td>
-                        <td className="p-4 text-sm">
+                        <td className="p-3 sm:p-4 text-xs sm:text-sm">
                           {agent.last_login_at ? (
                             <div className="flex flex-col">
                               <span>{format(new Date(agent.last_login_at), "MMM d, yyyy")}</span>
@@ -742,12 +748,12 @@ const AgentManagementSection = () => {
                             <span className="text-muted-foreground">Never</span>
                           )}
                         </td>
-                        <td className="p-4 text-sm">
-                          <Badge variant="outline">
+                        <td className="p-3 sm:p-4 text-xs sm:text-sm">
+                          <Badge variant="outline" className="text-xs">
                             {agent.total_logins || 0} login{agent.total_logins !== 1 ? 's' : ''}
                           </Badge>
                         </td>
-                        <td className="p-4 text-sm">
+                        <td className="p-3 sm:p-4 text-xs sm:text-sm">
                           {recentActivity ? (
                             <div className="flex flex-col">
                               <span className="font-medium capitalize">{recentActivity.action_type}</span>
@@ -764,8 +770,8 @@ const AgentManagementSection = () => {
                             <span className="text-muted-foreground">No activity</span>
                           )}
                         </td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="p-3 sm:p-4">
+                          <div className="flex items-center justify-end gap-1 sm:gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -774,11 +780,12 @@ const AgentManagementSection = () => {
                                 setIsTenantDialogOpen(true);
                               }}
                               title="Manage Tenants"
+                              className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                             >
                               <UserCog className="h-4 w-4" />
                             </Button>
                             <EditAgentDialog agent={agent} onSuccess={refetch}>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                                 <Pencil className="h-4 w-4" />
                               </Button>
                             </EditAgentDialog>
@@ -786,6 +793,7 @@ const AgentManagementSection = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => openDeleteDialog(agent)}
+                              className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -1000,7 +1008,7 @@ const RequestsSection = ({
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Today's Payment Performance */}
       <TodayPaymentCard />
       
@@ -1010,43 +1018,45 @@ const RequestsSection = ({
       {/* Date Range Filter & Export */}
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5" />
-                Date Range Filter
-              </CardTitle>
-              <CardDescription>Filter statistics by date range</CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <WidgetCustomizer
-                widgets={widgets}
-                onToggleWidget={toggleWidget}
-              />
-              <ExportButtons
-                data={{
-                  title: "Admin Dashboard Report",
-                  timestamp: new Date().toLocaleString(),
-                  stats: [
-                    { label: "Outstanding Balance", value: `UGX ${(stats?.outstandingBalance || 0).toLocaleString()}` },
-                    { label: "Period Payments", value: `UGX ${(dailyPayments?.total || 0).toLocaleString()}` },
-                    { label: "Total Tenants", value: stats?.numberOfTenants || 0 },
-                    { label: "Collection Rate", value: `${stats?.collectionRate || 0}%` },
-                    { label: "Total Agents", value: stats?.totalAgents || 0 },
-                    { label: "Service Centers", value: stats?.totalServiceCenters || 0 },
-                    { label: "Tenants At Risk", value: stats?.tenantsAtRisk || 0 },
-                    { label: "Pending Withdrawals", value: stats?.pendingWithdrawals || 0 },
-                  ],
-                }}
-              />
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-responsive-lg">
+                  <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Date Range Filter
+                </CardTitle>
+                <CardDescription className="text-responsive-sm">Filter statistics by date range</CardDescription>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <WidgetCustomizer
+                  widgets={widgets}
+                  onToggleWidget={toggleWidget}
+                />
+                <ExportButtons
+                  data={{
+                    title: "Admin Dashboard Report",
+                    timestamp: new Date().toLocaleString(),
+                    stats: [
+                      { label: "Outstanding Balance", value: `UGX ${(stats?.outstandingBalance || 0).toLocaleString()}` },
+                      { label: "Period Payments", value: `UGX ${(dailyPayments?.total || 0).toLocaleString()}` },
+                      { label: "Total Tenants", value: stats?.numberOfTenants || 0 },
+                      { label: "Collection Rate", value: `${stats?.collectionRate || 0}%` },
+                      { label: "Total Agents", value: stats?.totalAgents || 0 },
+                      { label: "Service Centers", value: stats?.totalServiceCenters || 0 },
+                      { label: "Tenants At Risk", value: stats?.tenantsAtRisk || 0 },
+                      { label: "Pending Withdrawals", value: stats?.pendingWithdrawals || 0 },
+                    ],
+                  }}
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                <Button variant="outline" className="w-full sm:w-[240px] justify-start text-left font-normal tap-target">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateRange.from ? format(dateRange.from, "PPP") : "Pick start date"}
                 </Button>
@@ -1061,11 +1071,11 @@ const RequestsSection = ({
               </PopoverContent>
             </Popover>
             
-            <span className="text-muted-foreground">to</span>
+            <span className="text-muted-foreground text-center sm:text-left text-responsive-sm">to</span>
             
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                <Button variant="outline" className="w-full sm:w-[240px] justify-start text-left font-normal tap-target">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateRange.to ? format(dateRange.to, "PPP") : "Pick end date"}
                 </Button>
@@ -1081,7 +1091,7 @@ const RequestsSection = ({
             </Popover>
 
             {(dateRange.from || dateRange.to) && (
-              <Button variant="ghost" onClick={() => setDateRange({})}>
+              <Button variant="ghost" onClick={() => setDateRange({})} className="tap-target">
                 Clear
               </Button>
             )}
@@ -1090,29 +1100,29 @@ const RequestsSection = ({
       </Card>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <ResponsiveCardGrid cols={4} className="gap-3 sm:gap-4">
         {/* Prominent Daily Payments Card - Spans 2 columns */}
-        <div className="md:col-span-2">
-          <Card className="p-6 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-2 border-primary/30 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
+        <div className="sm:col-span-2">
+          <Card className="p-4 sm:p-6 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-2 border-primary/30 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-lg font-semibold text-foreground">
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
                     {dateRange.from && dateRange.to ? "Period Payments" : "Today's Payments"}
                   </h3>
-                  <Badge className="bg-gradient-to-r from-primary to-accent text-white">
+                  <Badge className="bg-gradient-to-r from-primary to-accent text-white text-xs shrink-0">
                     Live
                   </Badge>
                 </div>
-                <p className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   UGX {(dailyPayments?.total || 0).toLocaleString()}
                 </p>
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                   {dailyPayments?.count || 0} payments recorded
                 </p>
               </div>
-              <div className="p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg">
-                <DollarSign className="h-8 w-8 text-primary" />
+              <div className="p-2 sm:p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg shrink-0">
+                <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
             </div>
           </Card>
@@ -1163,22 +1173,22 @@ const RequestsSection = ({
           icon={Clock}
           description={`${stats?.approvedWithdrawals || 0} approved`}
         />
-      </div>
+      </ResponsiveCardGrid>
 
       {/* Daily Payment Comparison */}
       <DailyPaymentComparison />
 
       {/* Visual Analytics Section */}
-      <Tabs defaultValue="trends" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3">
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="distribution">Distribution</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
+      <Tabs defaultValue="trends" className="space-y-3 sm:space-y-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 h-auto">
+          <TabsTrigger value="trends" className="text-xs sm:text-sm tap-target">Trends</TabsTrigger>
+          <TabsTrigger value="distribution" className="text-xs sm:text-sm tap-target">Distribution</TabsTrigger>
+          <TabsTrigger value="performance" className="text-xs sm:text-sm tap-target">Performance</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="trends" className="space-y-4">
+        <TabsContent value="trends" className="space-y-3 sm:space-y-4">
           {trendData && (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
               {visibleWidgets.find(w => w.id === "payment-trends") && (
                 <MultiLineTrendChart
                   data={trendData.paymentTrend}
@@ -1205,9 +1215,9 @@ const RequestsSection = ({
           )}
         </TabsContent>
 
-        <TabsContent value="distribution" className="space-y-4">
+        <TabsContent value="distribution" className="space-y-3 sm:space-y-4">
           {distributionData && (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {visibleWidgets.find(w => w.id === "status-distribution") && (
                 <DistributionPieChart
                   data={distributionData.statusDistribution}
@@ -1237,18 +1247,19 @@ const RequestsSection = ({
           )}
         </TabsContent>
 
-        <TabsContent value="performance" className="space-y-4">
+        <TabsContent value="performance" className="space-y-3 sm:space-y-4">
           {paymentTrends && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-responsive-lg">
+                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
                   Payment Performance Overview
                 </CardTitle>
-                <CardDescription>Daily payment collection vs expected amounts</CardDescription>
+                <CardDescription className="text-responsive-sm">Daily payment collection vs expected amounts</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <div className="w-full h-[250px] sm:h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={paymentTrends || []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
@@ -1260,7 +1271,8 @@ const RequestsSection = ({
                     <Bar dataKey="expected" fill="hsl(var(--muted))" name="Expected" radius={[8, 8, 0, 0]} />
                     <Bar dataKey="paid" fill="hsl(var(--primary))" name="Paid" radius={[8, 8, 0, 0]} />
                   </BarChart>
-                </ResponsiveContainer>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -1279,33 +1291,33 @@ const RequestsSection = ({
       {/* Geographic Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-responsive-lg">
+            <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
             Outstanding Balance by Service Center
           </CardTitle>
-          <CardDescription>Regional breakdown of outstanding balances</CardDescription>
+          <CardDescription className="text-responsive-sm">Regional breakdown of outstanding balances</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {geoBreakdown?.map((center) => (
-              <div key={center.name} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
+              <div key={center.name} className="border rounded-lg p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0 mb-2 sm:mb-2">
                   <div>
-                    <h3 className="font-semibold">{center.name}</h3>
-                    <p className="text-sm text-muted-foreground">{center.tenantCount} tenants</p>
+                    <h3 className="font-semibold text-responsive-base">{center.name}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{center.tenantCount} tenants</p>
                   </div>
-                  <Badge variant={center.outstanding > 0 ? "destructive" : "default"}>
+                  <Badge variant={center.outstanding > 0 ? "destructive" : "default"} className="text-xs self-start sm:self-auto">
                     UGX {center.outstanding.toLocaleString()}
                   </Badge>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-sm mt-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm mt-3">
                   <div>
                     <p className="text-muted-foreground">Expected</p>
-                    <p className="font-medium">UGX {center.totalExpected.toLocaleString()}</p>
+                    <p className="font-medium truncate">UGX {center.totalExpected.toLocaleString()}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Paid</p>
-                    <p className="font-medium text-green-600">UGX {center.totalPaid.toLocaleString()}</p>
+                    <p className="font-medium text-green-600 truncate">UGX {center.totalPaid.toLocaleString()}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Collection Rate</p>
@@ -1327,35 +1339,35 @@ const RequestsSection = ({
     
       {/* Pending Requests */}
       <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
-          Pending Requests ({pendingRequests.length})
-        </CardTitle>
-        <CardDescription>
-          Review and approve agent commission withdrawal requests
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-responsive-lg">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+            Pending Requests ({pendingRequests.length})
+          </CardTitle>
+          <CardDescription className="text-responsive-sm">
+            Review and approve agent commission withdrawal requests
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 sm:space-y-4">
         {pendingRequests.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
+          <p className="text-center text-muted-foreground py-8 text-responsive-sm">
             No pending withdrawal requests
           </p>
         ) : (
           pendingRequests.map((request) => (
             <Card key={request.id} className="border-2">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
+              <CardContent className="pt-4 sm:pt-6 p-3 sm:p-6">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
                     <div className="space-y-1">
-                      <h3 className="font-semibold text-lg">{request.agent_name}</h3>
-                      <p className="text-sm text-muted-foreground">{request.agent_phone}</p>
+                      <h3 className="font-semibold text-base sm:text-lg">{request.agent_name}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{request.agent_phone}</p>
                       <p className="text-xs text-muted-foreground">
                         Requested: {format(new Date(request.requested_at), 'PPp')}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">
+                    <div className="text-left sm:text-right">
+                      <p className="text-xl sm:text-2xl font-bold text-primary">
                         UGX {request.amount.toLocaleString()}
                       </p>
                       <Badge variant="outline" className="mt-1">
@@ -1368,23 +1380,24 @@ const RequestsSection = ({
                     <div className="space-y-3 pt-2">
                       <Separator />
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Notes (optional)</label>
+                        <label className="text-xs sm:text-sm font-medium">Notes (optional)</label>
                         <Textarea
                           placeholder="Add any notes about this request..."
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
                           rows={3}
+                          className="text-sm sm:text-base"
                         />
                       </div>
                     </div>
                   )}
 
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
                     {selectedRequest === request.id ? (
                       <>
                         <Button
                           onClick={() => handleApprove(request.id)}
-                          className="flex-1"
+                          className="flex-1 tap-target"
                           variant="default"
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
@@ -1392,7 +1405,7 @@ const RequestsSection = ({
                         </Button>
                         <Button
                           onClick={() => handleReject(request.id)}
-                          className="flex-1"
+                          className="flex-1 tap-target"
                           variant="destructive"
                         >
                           <XCircle className="h-4 w-4 mr-2" />
@@ -1404,6 +1417,7 @@ const RequestsSection = ({
                             setNotes("");
                           }}
                           variant="outline"
+                          className="tap-target"
                         >
                           Cancel
                         </Button>
@@ -1412,7 +1426,7 @@ const RequestsSection = ({
                       <>
                         <Button
                           onClick={() => setSelectedRequest(request.id)}
-                          className="flex-1"
+                          className="flex-1 tap-target"
                           variant="default"
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
@@ -1420,7 +1434,7 @@ const RequestsSection = ({
                         </Button>
                         <Button
                           onClick={() => setSelectedRequest(request.id)}
-                          className="flex-1"
+                          className="flex-1 tap-target"
                           variant="outline"
                         >
                           <XCircle className="h-4 w-4 mr-2" />
@@ -1441,32 +1455,33 @@ const RequestsSection = ({
     {processedRequests.length > 0 && (
       <Card>
         <CardHeader>
-          <CardTitle>Processed Requests ({processedRequests.length})</CardTitle>
-          <CardDescription>Recently approved or rejected requests</CardDescription>
+          <CardTitle className="text-responsive-lg">Processed Requests ({processedRequests.length})</CardTitle>
+          <CardDescription className="text-responsive-sm">Recently approved or rejected requests</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {processedRequests.map((request) => (
             <Card key={request.id} className="border">
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
+              <CardContent className="pt-3 sm:pt-4 p-3 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                   <div className="space-y-1">
-                    <h4 className="font-medium">{request.agent_name}</h4>
-                    <p className="text-sm text-muted-foreground">{request.agent_phone}</p>
+                    <h4 className="font-medium text-responsive-base">{request.agent_name}</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{request.agent_phone}</p>
                     <p className="text-xs text-muted-foreground">
                       Processed: {request.processed_at ? format(new Date(request.processed_at), 'PPp') : 'N/A'}
                     </p>
                     {request.notes && (
-                      <p className="text-sm text-muted-foreground mt-2">
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                         Note: {request.notes}
                       </p>
                     )}
                   </div>
-                  <div className="text-right space-y-2">
-                    <p className="text-xl font-semibold">
+                  <div className="text-left sm:text-right space-y-2">
+                    <p className="text-lg sm:text-xl font-semibold">
                       UGX {request.amount.toLocaleString()}
                     </p>
                     <Badge
                       variant={request.status === 'approved' ? 'default' : 'destructive'}
+                      className="text-xs"
                     >
                       {request.status}
                     </Badge>
