@@ -72,14 +72,15 @@ serve(async (req) => {
       );
     }
 
-    // Generate access tokens for the admin user using recovery type
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
+    // Use admin API to create a session directly by verifying the user
+    // First, we'll use the admin privileges to generate an OTP
+    const { data: otpData, error: otpError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
       email: user.email!,
     });
 
-    if (linkError || !linkData) {
-      console.error('Error generating session:', linkError);
+    if (otpError || !otpData) {
+      console.error('Error generating OTP:', otpError);
       return new Response(
         JSON.stringify({ error: 'Failed to create session' }),
         { 
@@ -89,17 +90,37 @@ serve(async (req) => {
       );
     }
 
-    // Extract tokens from the action link URL (they're in the hash fragment for recovery links)
-    const actionLinkUrl = new URL(linkData.properties.action_link);
-    const hashParams = new URLSearchParams(actionLinkUrl.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const refreshToken = hashParams.get('refresh_token');
+    // Extract the token from the magic link
+    const magicLinkUrl = new URL(otpData.properties.action_link);
+    const token = magicLinkUrl.searchParams.get('token');
+    const type = magicLinkUrl.searchParams.get('type');
 
-    if (!accessToken || !refreshToken) {
-      console.error('Failed to extract tokens from action link');
-      console.error('Action link:', linkData.properties.action_link);
+    if (!token) {
+      console.error('Failed to extract token from magic link');
       return new Response(
         JSON.stringify({ error: 'Failed to create session tokens' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Now verify the token to create a session using the regular auth client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+
+    const { data: sessionData, error: sessionError } = await supabaseClient.auth.verifyOtp({
+      token_hash: token,
+      type: type as any,
+    });
+
+    if (sessionError || !sessionData.session) {
+      console.error('Error verifying OTP:', sessionError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create session' }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -112,11 +133,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        session: {
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        },
-        user: linkData.user
+        session: sessionData.session,
+        user: sessionData.user
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
