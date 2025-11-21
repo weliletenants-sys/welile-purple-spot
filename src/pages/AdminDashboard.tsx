@@ -45,10 +45,11 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight, DollarSign, TrendingUp, Calendar as CalendarIcon, BarChart3, Download, UserPlus, Search, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, LogOut, Clock, FileText, LineChart, GitCompare, UserCheck, Trophy, Users, Target, Home, ChevronDown, GripVertical, MapPin, Building2, ArrowLeftRight, DollarSign, TrendingUp, Calendar as CalendarIcon, BarChart3, Download, UserPlus, Search, Pencil, Trash2, UserCog } from "lucide-react";
 import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
-import { useAgents } from "@/hooks/useAgents";
+import { AgentTenantManagementDialog } from "@/components/AgentTenantManagementDialog";
+import { useAgents, Agent } from "@/hooks/useAgents";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -519,6 +520,9 @@ const AdminSidebar = ({
 
 // Agent Management Section Component
 const AgentManagementSection = () => {
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
+  
   // Fetch agents with activity tracking data
   const { data: agents, isLoading, refetch } = useQuery({
     queryKey: ["agents-full"],
@@ -758,6 +762,17 @@ const AgentManagementSection = () => {
                         </td>
                         <td className="p-4">
                           <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedAgent(agent);
+                                setIsTenantDialogOpen(true);
+                              }}
+                              title="Manage Tenants"
+                            >
+                              <UserCog className="h-4 w-4" />
+                            </Button>
                             <EditAgentDialog agent={agent} onSuccess={refetch}>
                               <Button variant="ghost" size="sm">
                                 <Pencil className="h-4 w-4" />
@@ -796,6 +811,15 @@ const AgentManagementSection = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AgentTenantManagementDialog
+        agent={selectedAgent}
+        open={isTenantDialogOpen}
+        onOpenChange={setIsTenantDialogOpen}
+        onSuccess={() => {
+          refetch();
+        }}
+      />
     </div>
   );
 };
