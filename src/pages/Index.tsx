@@ -109,6 +109,51 @@ const Index = () => {
     },
   });
 
+  // Subscribe to realtime changes for agent stats
+  useEffect(() => {
+    const channel = supabase
+      .channel('homepage-agent-stats')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tenants'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["all-tenants-for-stats"] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_payments'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["all-payments-for-stats"] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agents'
+        },
+        () => {
+          refetchAgents();
+          queryClient.invalidateQueries({ queryKey: ["all-tenants-for-stats"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, refetchAgents]);
+
   // Calculate agent stats using agent_id
   const agentStats = useMemo(() => {
     if (!agents || !allTenants || !allPayments) return {};
