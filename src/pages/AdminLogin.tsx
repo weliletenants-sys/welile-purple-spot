@@ -43,13 +43,17 @@ const AdminLogin = () => {
         if (sessionError) {
           throw sessionError;
         }
-      }
 
-      toast({
-        title: "Access granted",
-        description: "Welcome to the admin dashboard!",
-      });
-      navigate('/admin-dashboard');
+        toast({
+          title: "Access granted",
+          description: "Welcome to the admin dashboard!",
+        });
+        
+        // Wait a moment for session to propagate, then navigate
+        setTimeout(() => {
+          navigate('/admin-dashboard');
+        }, 500);
+      }
     } catch (error: any) {
       toast({
         title: "Access denied",
