@@ -89,13 +89,15 @@ serve(async (req) => {
       );
     }
 
-    // Extract tokens from the action link URL
+    // Extract tokens from the action link URL (they're in the hash fragment for recovery links)
     const actionLinkUrl = new URL(linkData.properties.action_link);
-    const accessToken = actionLinkUrl.searchParams.get('access_token');
-    const refreshToken = actionLinkUrl.searchParams.get('refresh_token');
+    const hashParams = new URLSearchParams(actionLinkUrl.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
 
     if (!accessToken || !refreshToken) {
       console.error('Failed to extract tokens from action link');
+      console.error('Action link:', linkData.properties.action_link);
       return new Response(
         JSON.stringify({ error: 'Failed to create session tokens' }),
         { 
