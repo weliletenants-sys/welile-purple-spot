@@ -113,7 +113,7 @@ const AgentManagement = () => {
     const { data, error } = await supabase
       .from("agents")
       .select("*")
-      .order("name");
+      .order("name", { ascending: true });
 
     if (error) {
       toast({
@@ -127,21 +127,21 @@ const AgentManagement = () => {
     setFullAgents(data || []);
   };
 
-  useState(() => {
+  useEffect(() => {
     fetchFullAgents();
-  });
+  }, []);
 
   // Fetch performance metrics for all agents
   const fetchAgentPerformance = async () => {
     try {
-      // Fetch all tenants
+      // Fetch all tenants with agent_id
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
-        .select("agent_phone, status");
+        .select("agent_id, status");
 
       if (tenantsError) throw tenantsError;
 
-      // Fetch all earnings
+      // Fetch all earnings with agent_phone for matching
       const { data: earnings, error: earningsError } = await supabase
         .from("agent_earnings")
         .select("agent_phone, amount");
@@ -152,15 +152,18 @@ const AgentManagement = () => {
       const performance: Record<string, AgentPerformance> = {};
 
       fullAgents.forEach((agent) => {
-        const agentTenants = tenants?.filter(t => t.agent_phone === agent.phone) || [];
+        // Match tenants by agent_id (proper FK relationship)
+        const agentTenants = tenants?.filter(t => t.agent_id === agent.id) || [];
         const activeTenants = agentTenants.filter(t => t.status === "active").length;
         const pipelineTenants = agentTenants.filter(t => t.status === "pipeline").length;
         const totalTenants = agentTenants.length;
+        
+        // Match earnings by agent_phone
         const agentEarnings = earnings?.filter(e => e.agent_phone === agent.phone) || [];
         const totalEarnings = agentEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
         const conversionRate = totalTenants > 0 ? (activeTenants / totalTenants) * 100 : 0;
 
-        performance[agent.phone] = {
+        performance[agent.id] = {
           totalTenants,
           activeTenants,
           pipelineTenants,
@@ -179,6 +182,54 @@ const AgentManagement = () => {
     if (fullAgents.length > 0) {
       fetchAgentPerformance();
     }
+  }, [fullAgents]);
+
+  // Subscribe to realtime changes
+  useEffect(() => {
+    const agentsChannel = supabase
+      .channel('agents-management-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agents'
+        },
+        () => {
+          fetchFullAgents();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tenants'
+        },
+        () => {
+          if (fullAgents.length > 0) {
+            fetchAgentPerformance();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agent_earnings'
+        },
+        () => {
+          if (fullAgents.length > 0) {
+            fetchAgentPerformance();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(agentsChannel);
+    };
   }, [fullAgents]);
 
   const handleDelete = async () => {
@@ -279,14 +330,14 @@ const AgentManagement = () => {
     
     return matchesSearch && matchesStatus;
   }).sort((a, b) => {
-    const perfA = agentPerformance[a.phone] || {
+    const perfA = agentPerformance[a.id] || {
       totalTenants: 0,
       activeTenants: 0,
       pipelineTenants: 0,
       totalEarnings: 0,
       conversionRate: 0,
     };
-    const perfB = agentPerformance[b.phone] || {
+    const perfB = agentPerformance[b.id] || {
       totalTenants: 0,
       activeTenants: 0,
       pipelineTenants: 0,
@@ -766,7 +817,7 @@ const AgentManagement = () => {
                     </TableHeader>
                     <TableBody>
                       {filteredAgents.map((agent) => {
-                        const performance = agentPerformance[agent.phone] || {
+                        const performance = agentPerformance[agent.id] || {
                           totalTenants: 0,
                           activeTenants: 0,
                           pipelineTenants: 0,
