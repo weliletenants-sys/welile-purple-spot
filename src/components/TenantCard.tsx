@@ -118,21 +118,21 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
       }`}
       onClick={() => navigate(`/tenant/${tenant.id}`)}
     >
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {/* Header with Name, Performance and Actions */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold text-lg shadow-lg shrink-0">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold text-base sm:text-lg shadow-lg shrink-0">
               {tenant.name.charAt(0)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 {tenantNumber && (
-                  <span className="px-2 py-0.5 rounded-md bg-primary/20 text-primary text-xs font-bold">
+                  <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-primary/20 text-primary text-xs font-bold">
                     #{tenantNumber}
                   </span>
                 )}
-                <h3 className={`font-semibold text-lg group-hover:text-primary transition-colors truncate ${
+                <h3 className={`font-semibold text-base sm:text-lg group-hover:text-primary transition-colors truncate ${
                   (tenant.status as string) === 'pipeline' 
                     ? 'text-amber-600 dark:text-amber-400' 
                     : 'text-foreground'
@@ -140,16 +140,16 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
                   {tenant.name}
                 </h3>
               </div>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
                 <Phone className="w-3 h-3 text-muted-foreground shrink-0" />
-                <span className="text-sm text-muted-foreground truncate">{tenant.contact}</span>
+                <span className="text-xs sm:text-sm text-muted-foreground truncate">{tenant.contact}</span>
                 <ContactButtons phoneNumber={tenant.contact} iconOnly />
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <div className={`flex items-center gap-1 font-bold text-xl ${getPerformanceColor(tenant.performance)}`}>
-              <TrendingUp className="w-5 h-5" />
+          <div className="flex flex-col items-end gap-1.5 sm:gap-2 shrink-0">
+            <div className={`flex items-center gap-1 font-bold text-lg sm:text-xl ${getPerformanceColor(tenant.performance)}`}>
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
               {tenant.performance}%
             </div>
             <div className="flex items-center gap-1">
@@ -157,12 +157,12 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-7 w-7 sm:h-8 sm:w-8 tap-target"
                   onClick={(e) => {
                     e.stopPropagation();
                   }}
                 >
-                  <Edit className="h-4 w-4 text-primary" />
+                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                 </Button>
               </EditTenantForm>
               <AlertDialog>
@@ -170,12 +170,12 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7 sm:h-8 sm:w-8 tap-target"
                     onClick={(e) => {
                       e.stopPropagation();
                     }}
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent onClick={(e) => e.stopPropagation()}>
@@ -198,7 +198,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
         </div>
 
         {/* Status Badges with Priority Indicator */}
-        <div className="flex gap-3 flex-wrap items-center">
+        <div className="flex gap-2 sm:gap-3 flex-wrap items-center">
           <PriorityIndicator 
             priority={priorityLevel} 
             size="sm"
@@ -210,13 +210,13 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
               'On track'
             }
           />
-          <Badge variant="outline" className={`${getStatusColor(tenant.status)} px-4 py-2 text-base font-bold shadow-sm`}>
+          <Badge variant="outline" className={`${getStatusColor(tenant.status)} px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base font-bold shadow-sm`}>
             {tenant.status === 'active' && '✅ '}
             {tenant.status === 'pending' && '⏳ '}
             {tenant.status === 'review' && '⚠️ '}
             {tenant.status.toUpperCase()}
           </Badge>
-          <Badge variant="outline" className={`${getPaymentColor(tenant.paymentStatus)} px-4 py-2 text-base font-bold shadow-sm`}>
+          <Badge variant="outline" className={`${getPaymentColor(tenant.paymentStatus)} px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base font-bold shadow-sm`}>
             {tenant.paymentStatus === 'paid' && '✅ '}
             {tenant.paymentStatus === 'cleared' && '✅ '}
             {tenant.paymentStatus === 'pending' && '⏳ '}
@@ -227,24 +227,24 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
 
         {/* Details */}
         <div className="space-y-2 pt-2 border-t border-border">
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span className="text-foreground font-medium">{tenant.address}</span>
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0" />
+            <span className="text-foreground font-medium truncate">{tenant.address}</span>
           </div>
-          <div className="flex items-start gap-2 text-sm">
-            <User className="w-4 h-4 text-accent mt-0.5" />
-            <div className="flex-1">
-              <p className="text-foreground font-medium">{tenant.landlord}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-muted-foreground text-xs">{tenant.landlordContact}</p>
+          <div className="flex items-start gap-2 text-xs sm:text-sm">
+            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-foreground font-medium truncate">{tenant.landlord}</p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <p className="text-muted-foreground text-xs truncate">{tenant.landlordContact}</p>
                 <ContactButtons phoneNumber={tenant.landlordContact} iconOnly />
               </div>
             </div>
           </div>
-          <div className="flex items-start gap-2 text-sm">
-            <UserCheck className="w-4 h-4 text-primary mt-0.5" />
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-1">
+          <div className="flex items-start gap-2 text-xs sm:text-sm">
+            <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1 gap-2">
                 <p className="text-xs text-muted-foreground">Agent</p>
                 {isAdmin && (
                   <Button

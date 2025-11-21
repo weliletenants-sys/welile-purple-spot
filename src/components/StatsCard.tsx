@@ -46,29 +46,29 @@ export const StatsCard = ({
         <TooltipTrigger asChild>
           <Card 
             className={cn(
-              "p-6 bg-gradient-to-br transition-all duration-300 hover-scale",
+              "p-4 sm:p-5 md:p-6 bg-gradient-to-br transition-all duration-300 hover-scale",
               colorClasses[color],
               onClick && 'cursor-pointer hover:scale-[1.02] hover:shadow-lg'
             )}
             onClick={onClick}
           >
-            <div className="flex items-start justify-between">
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-muted-foreground">{title}</p>
-                  {tooltip && <Info className="h-3 w-3 text-muted-foreground" />}
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1 sm:space-y-2 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
+                  {tooltip && <Info className="h-3 w-3 text-muted-foreground shrink-0" />}
                 </div>
-                <p className="text-3xl font-bold text-foreground">{value}</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">{value}</p>
                 {description && (
-                  <p className="text-xs text-muted-foreground">{description}</p>
+                  <p className="text-xs text-muted-foreground truncate">{description}</p>
                 )}
               </div>
-              <div className={cn("p-3 rounded-lg bg-gradient-to-br", iconBgClasses[color])}>
-                <Icon className="w-6 h-6 text-white" />
+              <div className={cn("p-2 sm:p-2.5 md:p-3 rounded-lg bg-gradient-to-br shrink-0", iconBgClasses[color])}>
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
               </div>
             </div>
             {trend && (
-              <div className="mt-4 pt-4 border-t border-border">
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
                 <span className="text-xs font-medium flex items-center gap-1">
                   {trend.includes('+') && <TrendingUp className="h-3 w-3 text-green-600" />}
                   {trend.includes('-') && <TrendingDown className="h-3 w-3 text-red-600" />}

@@ -112,10 +112,10 @@ const App = () => {
             <SidebarProvider defaultOpen={false}>
               <div className="flex min-h-screen w-full">
                 <AppSidebar />
-                <div className="flex-1 flex flex-col w-full">
+                <div className="flex-1 flex flex-col w-full min-w-0">
                   <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                    <div className="flex h-14 sm:h-16 items-center px-3 sm:px-4 gap-2 sm:gap-4">
-                      <SidebarTrigger className="h-9 w-9 sm:h-10 sm:w-10" />
+                    <div className="flex h-12 sm:h-14 md:h-16 items-center px-2 sm:px-3 md:px-4 gap-2 sm:gap-3 md:gap-4">
+                      <SidebarTrigger className="tap-target shrink-0" />
                       <div className="flex-1 min-w-0">
                         <HelpChatbot />
                       </div>
@@ -123,7 +123,7 @@ const App = () => {
                   </header>
                   <InstallBanner />
                   <DynamicBreadcrumb />
-                  <main className="flex-1">
+                  <main className="flex-1 w-full overflow-x-hidden">
                     <Suspense fallback={<PageLoader />}>
                       <Routes>
               <Route path="/" element={<Index />} />
