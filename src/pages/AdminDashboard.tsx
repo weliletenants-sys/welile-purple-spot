@@ -84,7 +84,9 @@ const AdminDashboard = () => {
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [activeSection, setActiveSection] = useState("requests");
-  const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
+  const { isAdmin, isLoading: isAdminLoading, refetch: refetchAdminRole } = useAdminRole();
+  const [authCheckAttempts, setAuthCheckAttempts] = useState(0);
+  const [isValidatingSession, setIsValidatingSession] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -96,15 +98,44 @@ const AdminDashboard = () => {
         return;
       }
 
-      if (!isAdminLoading && !isAdmin) {
+      // If session exists but admin check is still loading, wait
+      if (isAdminLoading) {
+        return;
+      }
+
+      // If session exists but not admin, try refreshing admin role
+      if (!isAdmin && authCheckAttempts < 3) {
+        console.log(`Admin check attempt ${authCheckAttempts + 1}/3`);
+        setAuthCheckAttempts(prev => prev + 1);
+        await refetchAdminRole();
+        return;
+      }
+
+      // If still not admin after retries, redirect
+      if (!isAdmin && authCheckAttempts >= 3) {
         toast("You don't have admin privileges");
         navigate("/");
         return;
       }
+
+      // Admin check passed
+      setIsValidatingSession(false);
     };
 
     checkAuth();
-  }, [navigate, isAdmin, isAdminLoading]);
+  }, [navigate, isAdmin, isAdminLoading, refetchAdminRole, authCheckAttempts]);
+
+  // Show loading state while validating
+  if (isValidatingSession && isAdminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Validating admin session...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Keyboard shortcuts
   useEffect(() => {
