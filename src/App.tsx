@@ -27,7 +27,6 @@ const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
 const TopPerformers = lazy(() => import("./pages/TopPerformers"));
 const RecordingActivity = lazy(() => import("./pages/RecordingActivity"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const BulkAddAdekeAnnet = lazy(() => import("./pages/BulkAddAdekeAnnet"));
 const AutoImportTenants = lazy(() => import("./pages/AutoImportTenants"));
 const MissedPayments = lazy(() => import("./pages/MissedPayments"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
@@ -134,7 +133,6 @@ const App = () => {
               <Route path="/agent/:agentPhone/pipeline" element={<AgentPipelineTenants />} />
               <Route path="/top-performers" element={<TopPerformers />} />
               <Route path="/recording-activity" element={<RecordingActivity />} />
-              <Route path="/bulk-add" element={<BulkAddAdekeAnnet />} />
               <Route path="/auto-import" element={<AutoImportTenants />} />
               <Route path="/missed-payments" element={<MissedPayments />} />
               <Route path="/admin-setup" element={<AdminSetup />} />

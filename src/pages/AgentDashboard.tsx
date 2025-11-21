@@ -20,7 +20,6 @@ import { AgentEarningsBreakdown } from "@/components/AgentEarningsBreakdown";
 import { Badge } from "@/components/ui/badge";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
 import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
-import { EarningsNotificationDemo } from "@/components/EarningsNotificationDemo";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { BulkEditAgentsDialog } from "@/components/BulkEditAgentsDialog";
 import { BulkEditUndoHistory } from "@/components/BulkEditUndoHistory";
@@ -883,14 +882,6 @@ const AgentDashboard = () => {
         {/* Tenants List - Only show when viewing a specific agent */}
         {routeAgentName && (
           <div className="mt-12">
-            {/* Notification Demo for testing */}
-            {paginatedAgents && paginatedAgents.length > 0 && (
-              <EarningsNotificationDemo
-                agentName={paginatedAgents[0].agentName}
-                agentPhone={paginatedAgents[0].agentPhone}
-              />
-            )}
-            
             <h2 className="text-2xl font-bold text-foreground mb-6">
               Tenants ({agentTenants.length})
             </h2>
