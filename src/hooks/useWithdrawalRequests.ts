@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 export interface WithdrawalRequest {
   id: string;
@@ -31,6 +32,29 @@ export const useWithdrawalRequests = () => {
       return data as WithdrawalRequest[];
     },
   });
+
+  // Subscribe to realtime changes for withdrawal_requests
+  useEffect(() => {
+    const channel = supabase
+      .channel('withdrawal-requests-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'withdrawal_requests'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['withdrawalRequests'] });
+          queryClient.invalidateQueries({ queryKey: ['agentEarnings'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const createRequest = useMutation({
     mutationFn: async (request: { agent_name: string; agent_phone: string; amount: number }) => {

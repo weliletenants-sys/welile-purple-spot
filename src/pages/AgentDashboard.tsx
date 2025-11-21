@@ -45,6 +45,7 @@ const AgentDashboard = () => {
   const { createRequest } = useWithdrawalRequests();
   const { data: agentsList } = useAgents();
   const [selectedAgent, setSelectedAgent] = useState<{ phone: string; name: string } | null>(null);
+  const [earningsUpdated, setEarningsUpdated] = useState(false);
   
   // Enable real-time earnings notifications for specific agent view
   useEarningsNotifications({
@@ -104,13 +105,37 @@ const AgentDashboard = () => {
     searchTerm: routeAgentName ? decodeURIComponent(routeAgentName) : "",
   });
 
-  // Auto-refresh data every minute
+  // Auto-refresh data every minute and subscribe to realtime updates
   useEffect(() => {
     const intervalId = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
     }, 60000);
 
-    return () => clearInterval(intervalId);
+    // Subscribe to withdrawal_requests changes
+    const withdrawalsChannel = supabase
+      .channel('dashboard-withdrawals-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'withdrawal_requests'
+        },
+        () => {
+          setEarningsUpdated(true);
+          setTimeout(() => setEarningsUpdated(false), 3000);
+          queryClient.invalidateQueries({ queryKey: ["agentEarnings"] });
+          toast.success("Withdrawal status updated", {
+            description: "Agent earnings have been refreshed"
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(intervalId);
+      supabase.removeChannel(withdrawalsChannel);
+    };
   }, [queryClient]);
 
   // Keyboard shortcuts
@@ -415,7 +440,15 @@ const AgentDashboard = () => {
               <Card className="p-6 bg-gradient-to-br from-card to-primary/5 border-border">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Withdrawn</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-muted-foreground">Withdrawn</p>
+                      {earningsUpdated && (
+                        <Badge variant="outline" className="animate-in fade-in slide-in-from-left-2 flex items-center gap-1 border-primary/50 text-primary text-xs">
+                          <Zap className="h-2 w-2 animate-pulse" />
+                          Updated
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-3xl font-bold text-foreground">UGX {totalWithdrawnCommissions.toLocaleString()}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-gradient-to-br from-destructive/20 to-destructive/10">
@@ -573,8 +606,14 @@ const AgentDashboard = () => {
             {paginatedAgents.map((agent) => (
               <Card
                 key={agent.agentPhone}
-                className="p-6 bg-gradient-to-br from-card to-primary/5 border-border hover:shadow-[var(--shadow-card)] transition-all duration-300"
+                className={`p-6 bg-gradient-to-br from-card to-primary/5 border-border hover:shadow-[var(--shadow-card)] transition-all duration-300 ${earningsUpdated ? 'ring-2 ring-primary/50 animate-pulse' : ''}`}
               >
+                {earningsUpdated && (
+                  <div className="flex items-center gap-2 mb-3 text-xs text-primary animate-in fade-in slide-in-from-top-1">
+                    <Zap className="h-3 w-3 animate-pulse" />
+                    <span className="font-medium">Live update</span>
+                  </div>
+                )}
                 <div className="space-y-4">
                   {/* Agent Info */}
                   <div className="flex items-start gap-3">
@@ -738,9 +777,14 @@ const AgentDashboard = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Withdrawn</span>
-                      <span className="text-lg font-semibold text-destructive">
-                        UGX {agent.withdrawnCommission.toLocaleString()}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {earningsUpdated && (
+                          <Wallet className="h-4 w-4 text-destructive animate-pulse" />
+                        )}
+                        <span className="text-lg font-semibold text-destructive">
+                          UGX {agent.withdrawnCommission.toLocaleString()}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between pt-2 border-t border-border">
                       <div className="flex items-center gap-1">
