@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { useWithdrawalRequests } from "@/hooks/useWithdrawalRequests";
+import { AdminWithdrawalDialog } from "@/components/AdminWithdrawalDialog";
 import { useComprehensiveStats } from "@/hooks/useComprehensiveStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -233,6 +234,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
               <div className="flex gap-2">
+                <AdminWithdrawalDialog />
                 <Button variant="outline" size="sm" onClick={() => navigate('/')}>
                   <Home className="h-4 w-4 mr-2" />
                   Home
