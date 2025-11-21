@@ -5,7 +5,7 @@ import { useAuth } from "./useAuth";
 export const useAdminRole = () => {
   const { user } = useAuth();
 
-  const { data: isAdmin = false, isLoading } = useQuery({
+  const { data: isAdmin = false, isLoading, refetch } = useQuery({
     queryKey: ["admin-role", user?.id],
     queryFn: async () => {
       if (!user?.id) return false;
@@ -22,7 +22,10 @@ export const useAdminRole = () => {
       return data as boolean;
     },
     enabled: !!user?.id,
+    staleTime: 0, // Always refetch when needed
+    retry: 3, // Retry up to 3 times if failed
+    retryDelay: 1000, // Wait 1 second between retries
   });
 
-  return { isAdmin, isLoading };
+  return { isAdmin, isLoading, refetch };
 };
