@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit, MessageSquare, Send, CreditCard, Sparkles, ArrowLeftRight } from "lucide-react";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit, MessageSquare, Send, CreditCard, Sparkles, ArrowLeftRight, UserCog } from "lucide-react";
 import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import { useNavigate } from "react-router-dom";
 import { EditTenantForm } from "./EditTenantForm";
@@ -17,6 +17,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { TransferTenantDialog } from "./TransferTenantDialog";
 import { TenantTransferHistory } from "./TenantTransferHistory";
 import { PriorityIndicator, PriorityLevel } from "@/components/PriorityIndicator";
+import { AssignTenantToAgentDialog } from "./AssignTenantToAgentDialog";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +41,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
   const navigate = useNavigate();
   const { deleteTenant } = useTenants();
   const { toast } = useToast();
+  const { isAdmin } = useAdminRole();
   const repaymentDetails = calculateRepaymentDetails(tenant.rentAmount, tenant.repaymentDays);
   const { payments } = usePayments(tenant.id);
   const { comments, totalComments, addComment, deleteComment, hasMore, loadMore, resetPage } = useTenantComments(tenant.id);
@@ -46,6 +49,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
   const [commenterName, setCommenterName] = useState("");
   const [commentText, setCommentText] = useState("");
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [isAssignAgentOpen, setIsAssignAgentOpen] = useState(false);
 
   // Calculate balance for this tenant
   const totalPaid = payments?.filter(p => p.paid).reduce((sum, p) => sum + (p.paidAmount || p.amount), 0) || 0;
@@ -240,7 +244,23 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
           <div className="flex items-start gap-2 text-sm">
             <UserCheck className="w-4 h-4 text-primary mt-0.5" />
             <div className="flex-1">
-              <p className="text-xs text-muted-foreground mb-1">Agent</p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs text-muted-foreground">Agent</p>
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsAssignAgentOpen(true);
+                    }}
+                  >
+                    <UserCog className="w-3 h-3 mr-1" />
+                    {tenant.agentName ? 'Reassign' : 'Assign'}
+                  </Button>
+                )}
+              </div>
               {tenant.agentName ? (
                 <>
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30">
@@ -509,11 +529,22 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
         )}
       </div>
 
-      {/* Transfer Tenant Dialog */}
+      {/* Transfer Dialog */}
       <TransferTenantDialog
         tenant={tenant}
         open={isTransferOpen}
         onOpenChange={setIsTransferOpen}
+      />
+
+      {/* Assign Agent Dialog */}
+      <AssignTenantToAgentDialog
+        tenant={tenant}
+        open={isAssignAgentOpen}
+        onOpenChange={setIsAssignAgentOpen}
+        onSuccess={() => {
+          setIsAssignAgentOpen(false);
+          window.location.reload();
+        }}
       />
     </Card>
   );
