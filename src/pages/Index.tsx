@@ -111,6 +111,11 @@ const Index = () => {
 
   // Subscribe to realtime changes for agent stats
   useEffect(() => {
+    const showRefreshIndicator = () => {
+      setRefreshingAgents(true);
+      setTimeout(() => setRefreshingAgents(false), 2000);
+    };
+
     const channel = supabase
       .channel('homepage-agent-stats')
       .on(
@@ -121,6 +126,7 @@ const Index = () => {
           table: 'tenants'
         },
         () => {
+          showRefreshIndicator();
           queryClient.invalidateQueries({ queryKey: ["all-tenants-for-stats"] });
         }
       )
@@ -132,6 +138,7 @@ const Index = () => {
           table: 'daily_payments'
         },
         () => {
+          showRefreshIndicator();
           queryClient.invalidateQueries({ queryKey: ["all-payments-for-stats"] });
         }
       )
@@ -143,6 +150,7 @@ const Index = () => {
           table: 'agents'
         },
         () => {
+          showRefreshIndicator();
           refetchAgents();
           queryClient.invalidateQueries({ queryKey: ["all-tenants-for-stats"] });
         }
@@ -190,6 +198,7 @@ const Index = () => {
   const [agentSearchTerm, setAgentSearchTerm] = useState("");
   const [agentSortBy, setAgentSortBy] = useState<"name" | "tenants" | "active">("name");
   const [agentTenantCountFilter, setAgentTenantCountFilter] = useState<"all" | "active" | "inactive">("all");
+  const [refreshingAgents, setRefreshingAgents] = useState(false);
   const pageSize = 10;
 
   // Filter and sort agents
@@ -681,10 +690,18 @@ const Index = () => {
             <Card>
               <CardHeader>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <CardTitle className="text-2xl flex items-center gap-2">
-                    <UserCog className="h-6 w-6" />
-                    Active Agents ({agents?.length || 0})
-                  </CardTitle>
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <UserCog className="h-6 w-6" />
+                      Active Agents ({agents?.length || 0})
+                    </CardTitle>
+                    {refreshingAgents && (
+                      <Badge variant="outline" className="animate-in fade-in slide-in-from-left-2 flex items-center gap-1.5 border-primary/50 text-primary">
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                        Live
+                      </Badge>
+                    )}
+                  </div>
                   <Link to="/agent-management">
                     <Button variant="outline" size="sm">
                       View All
@@ -746,13 +763,24 @@ const Index = () => {
                         filteredAndSortedAgents.map((agent) => {
                           const stats = agentStats[agent.id] || { totalTenants: 0, activeTenants: 0, totalCollected: 0 };
                           return (
-                            <Card key={agent.id} className="hover:shadow-lg transition-shadow">
+                            <Card key={agent.id} className={`hover:shadow-lg transition-all ${refreshingAgents ? 'ring-2 ring-primary/30' : ''}`}>
                               <CardContent className="pt-6">
+                                {refreshingAgents && (
+                                  <div className="flex items-center gap-2 mb-3 text-xs text-primary animate-in fade-in slide-in-from-top-1">
+                                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                                    <span className="font-medium">Live update...</span>
+                                  </div>
+                                )}
                                 <div className="flex items-start justify-between mb-4">
                                   <div className="flex-1">
-                                    <h3 className="font-semibold text-lg mb-2">{agent.name}</h3>
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="font-semibold text-lg">{agent.name}</h3>
+                                      {refreshingAgents && (
+                                        <Zap className="h-4 w-4 text-primary animate-pulse" />
+                                      )}
+                                    </div>
                                     {agent.phone && (
-                                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 mt-2">
                                         <Phone className="h-4 w-4" />
                                         <span>{agent.phone}</span>
                                       </div>
