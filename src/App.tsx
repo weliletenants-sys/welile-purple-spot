@@ -65,6 +65,7 @@ const TeamEarningsLeaderboard = lazy(() => import("./pages/TeamEarningsLeaderboa
 const DataCleanup = lazy(() => import("./pages/DataCleanup"));
 const AgentPipelineTenants = lazy(() => import("./pages/AgentPipelineTenants"));
 const TransferHistory = lazy(() => import("./pages/TransferHistory"));
+const TenantReassignmentHistory = lazy(() => import("./pages/TenantReassignmentHistory"));
 const Settings = lazy(() => import("./pages/Settings"));
 
 const queryClient = new QueryClient({
@@ -164,6 +165,7 @@ const App = () => {
               <Route path="/under-review-tenants" element={<UnderReviewTenants />} />
               <Route path="/status-history" element={<StatusHistoryPage />} />
               <Route path="/transfer-history" element={<TransferHistory />} />
+              <Route path="/tenant-reassignment-history" element={<TenantReassignmentHistory />} />
               <Route path="/agent-earnings-analytics" element={<AgentEarningsAnalytics />} />
               <Route path="/recording-bonus-calculator" element={<RecordingBonusCalculator />} />
               <Route path="/recording-bonus-leaderboard" element={<RecordingBonusLeaderboard />} />

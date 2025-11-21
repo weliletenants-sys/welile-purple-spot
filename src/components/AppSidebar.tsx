@@ -20,7 +20,8 @@ import {
   Database,
   History,
   Star,
-  Settings
+  Settings,
+  ArrowRightLeft
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -71,6 +72,7 @@ const navigationGroups = [
       { title: "Agent Performance", url: "/agent-performance", icon: TrendingUp },
       { title: "Top Performers", url: "/top-performers", icon: Award },
       { title: "Transfer History", url: "/transfer-history", icon: History },
+      { title: "Reassignment History", url: "/tenant-reassignment-history", icon: ArrowRightLeft },
     ],
   },
   {
