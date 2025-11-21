@@ -134,6 +134,14 @@ const AgentManagement = () => {
   // Fetch performance metrics for all agents
   const fetchAgentPerformance = async () => {
     try {
+      // Get fresh agents data
+      const { data: agents, error: agentsError } = await supabase
+        .from("agents")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (agentsError) throw agentsError;
+
       // Fetch all tenants with agent_id
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
@@ -151,7 +159,7 @@ const AgentManagement = () => {
       // Calculate performance metrics for each agent
       const performance: Record<string, AgentPerformance> = {};
 
-      fullAgents.forEach((agent) => {
+      (agents || []).forEach((agent) => {
         // Match tenants by agent_id (proper FK relationship)
         const agentTenants = tenants?.filter(t => t.agent_id === agent.id) || [];
         const activeTenants = agentTenants.filter(t => t.status === "active").length;
@@ -197,6 +205,7 @@ const AgentManagement = () => {
         },
         () => {
           fetchFullAgents();
+          fetchAgentPerformance();
         }
       )
       .on(
@@ -207,9 +216,7 @@ const AgentManagement = () => {
           table: 'tenants'
         },
         () => {
-          if (fullAgents.length > 0) {
-            fetchAgentPerformance();
-          }
+          fetchAgentPerformance();
         }
       )
       .on(
@@ -220,9 +227,7 @@ const AgentManagement = () => {
           table: 'agent_earnings'
         },
         () => {
-          if (fullAgents.length > 0) {
-            fetchAgentPerformance();
-          }
+          fetchAgentPerformance();
         }
       )
       .subscribe();
@@ -230,7 +235,7 @@ const AgentManagement = () => {
     return () => {
       supabase.removeChannel(agentsChannel);
     };
-  }, [fullAgents]);
+  }, []);
 
   const handleDelete = async () => {
     if (!selectedAgent) return;
