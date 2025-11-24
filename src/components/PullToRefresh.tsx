@@ -41,17 +41,34 @@ export const PullToRefresh = ({ onRefresh, children, disabled = false }: PullToR
       if (distance > 0 && scrollTop === 0) {
         e.preventDefault();
         const pull = Math.min(distance * 0.5, maxPullDistance);
+        const prevDistance = pullDistance;
         setPullDistance(pull);
+        
+        // Light haptic feedback when reaching trigger point
+        if (pull >= triggerDistance && prevDistance < triggerDistance) {
+          if ('vibrate' in navigator) {
+            navigator.vibrate(10); // Subtle 10ms vibration
+          }
+        }
       }
     };
 
     const handleTouchEnd = async () => {
       if (pullDistance >= triggerDistance && !isRefreshing) {
+        // Trigger haptic feedback
+        if ('vibrate' in navigator) {
+          navigator.vibrate(50); // 50ms vibration
+        }
+        
         setIsRefreshing(true);
         setPullDistance(maxPullDistance);
         
         try {
           await onRefresh();
+          // Success haptic feedback
+          if ('vibrate' in navigator) {
+            navigator.vibrate([30, 50, 30]); // Double tap pattern
+          }
         } finally {
           setTimeout(() => {
             setIsRefreshing(false);
