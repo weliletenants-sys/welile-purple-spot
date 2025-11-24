@@ -26,6 +26,7 @@ import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 import { AllTenantsExport } from "@/components/AllTenantsExport";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { SwipeableCards } from "@/components/SwipeableCards";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
 import { usePendingTenantsCount } from "@/hooks/usePendingTenants";
@@ -1162,13 +1163,7 @@ const Index = () => {
         {/* Tenant Cards Grid - Fully responsive for all devices */}
         <div className="relative">
           {isLoading ? (
-            <div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6"
-              role="region"
-              aria-busy="true"
-              aria-label="Loading tenant listings"
-            >
-              <span className="sr-only">Loading tenant information, please wait...</span>
+            <SwipeableCards>
               {Array.from({ length: pageSize }).map((_, index) => (
                 <Card key={index} className="p-4" style={{ animationDelay: `${index * 50}ms` }}>
                   <div className="space-y-3">
@@ -1207,9 +1202,9 @@ const Index = () => {
                   </div>
                 </Card>
               ))}
-            </div>
+            </SwipeableCards>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+            <SwipeableCards>
               {tenants.map((tenant, index) => (
                 <TenantCard 
                   key={tenant.id} 
@@ -1218,7 +1213,7 @@ const Index = () => {
                   isFiltered={debouncedSearchTerm.length > 0} 
                 />
               ))}
-            </div>
+            </SwipeableCards>
           )}
         </div>
 
