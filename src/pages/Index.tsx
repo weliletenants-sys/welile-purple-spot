@@ -190,6 +190,7 @@ const Index = () => {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showTenantBreakdown, setShowTenantBreakdown] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -613,7 +614,10 @@ const Index = () => {
                   </ScrollArea>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <QuickAddTenantForm />
+              <QuickAddTenantForm 
+                open={showQuickAdd}
+                onOpenChange={setShowQuickAdd}
+              />
               <AddTenantForm />
             </div>
           </div>
@@ -1163,7 +1167,10 @@ const Index = () => {
         {/* Tenant Cards Grid - Fully responsive for all devices */}
         <div className="relative">
           {isLoading ? (
-            <SwipeableCards>
+            <SwipeableCards
+              onAddNew={() => setShowQuickAdd(true)}
+              addButtonLabel="Add Tenant"
+            >
               {Array.from({ length: pageSize }).map((_, index) => (
                 <Card key={index} className="p-4" style={{ animationDelay: `${index * 50}ms` }}>
                   <div className="space-y-3">
@@ -1204,7 +1211,10 @@ const Index = () => {
               ))}
             </SwipeableCards>
           ) : (
-            <SwipeableCards>
+            <SwipeableCards 
+              onAddNew={() => setShowQuickAdd(true)}
+              addButtonLabel="Add Tenant"
+            >
               {tenants.map((tenant, index) => (
                 <TenantCard 
                   key={tenant.id} 

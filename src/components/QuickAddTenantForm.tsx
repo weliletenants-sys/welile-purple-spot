@@ -26,12 +26,27 @@ interface QuickAddFormData {
   serviceCenter: string;
 }
 
+interface QuickAddTenantFormProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
 const DRAFT_KEY = 'quickAddTenantDraft';
 const DRAFT_TIMESTAMP_KEY = 'quickAddTenantDraftTimestamp';
 
-export const QuickAddTenantForm = () => {
-  const [open, setOpen] = useState(false);
+export const QuickAddTenantForm = ({ open: controlledOpen, onOpenChange }: QuickAddTenantFormProps = {}) => {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  
+  // Use controlled state if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
   const { toast } = useToast();
   const { addTenant } = useTenants();
   const { data: agents = [] } = useAgents();
