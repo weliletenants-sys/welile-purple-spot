@@ -25,6 +25,7 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 import { AllTenantsExport } from "@/components/AllTenantsExport";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenants } from "@/hooks/useTenants";
 import { usePendingTenantsCount } from "@/hooks/usePendingTenants";
@@ -311,6 +312,19 @@ const Index = () => {
     };
   }, [tenants, totalCount]);
 
+  // Pull to refresh handler
+  const handleRefresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["tenants"] }),
+      queryClient.invalidateQueries({ queryKey: ["tenant-locations"] }),
+      queryClient.invalidateQueries({ queryKey: ["executiveStats"] }),
+      queryClient.invalidateQueries({ queryKey: ["all-tenants-for-stats"] }),
+      queryClient.invalidateQueries({ queryKey: ["all-payments-for-stats"] }),
+      queryClient.invalidateQueries({ queryKey: ["pipelineTenantsCount"] }),
+      refetchAgents(),
+    ]);
+  };
+
   const tourSteps = [
     {
       target: '[data-tour="stats"]',
@@ -343,9 +357,10 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
-      {/* Scroll Progress Indicator */}
-      <ScrollProgress />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
+        {/* Scroll Progress Indicator */}
+        <ScrollProgress />
       
       <FloatingQuickActionsPanel 
         onAchievementsClick={() => setShowAchievements(true)}
@@ -1325,7 +1340,8 @@ const Index = () => {
       
       {/* Scroll to Top Button */}
       <ScrollToTop />
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 
