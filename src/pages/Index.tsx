@@ -109,11 +109,16 @@ const Index = () => {
     },
   });
 
-  // Subscribe to realtime changes for agent stats
+  // Subscribe to realtime changes for agent stats (throttled for mobile performance)
   useEffect(() => {
-    const showRefreshIndicator = () => {
-      setRefreshingAgents(true);
-      setTimeout(() => setRefreshingAgents(false), 2000);
+    let updateTimeout: NodeJS.Timeout;
+    
+    const throttledUpdate = () => {
+      clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["all-tenants-for-stats"] });
+        queryClient.invalidateQueries({ queryKey: ["all-payments-for-stats"] });
+      }, 1000); // Throttle updates to once per second max
     };
 
     const channel = supabase
@@ -125,10 +130,7 @@ const Index = () => {
           schema: 'public',
           table: 'tenants'
         },
-        () => {
-          showRefreshIndicator();
-          queryClient.invalidateQueries({ queryKey: ["all-tenants-for-stats"] });
-        }
+        throttledUpdate
       )
       .on(
         'postgres_changes',
@@ -137,10 +139,7 @@ const Index = () => {
           schema: 'public',
           table: 'daily_payments'
         },
-        () => {
-          showRefreshIndicator();
-          queryClient.invalidateQueries({ queryKey: ["all-payments-for-stats"] });
-        }
+        throttledUpdate
       )
       .on(
         'postgres_changes',
@@ -150,14 +149,14 @@ const Index = () => {
           table: 'agents'
         },
         () => {
-          showRefreshIndicator();
           refetchAgents();
-          queryClient.invalidateQueries({ queryKey: ["all-tenants-for-stats"] });
+          throttledUpdate();
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(updateTimeout);
       supabase.removeChannel(channel);
     };
   }, [queryClient, refetchAgents]);
@@ -198,7 +197,6 @@ const Index = () => {
   const [agentSearchTerm, setAgentSearchTerm] = useState("");
   const [agentSortBy, setAgentSortBy] = useState<"name" | "tenants" | "active">("name");
   const [agentTenantCountFilter, setAgentTenantCountFilter] = useState<"all" | "active" | "inactive">("all");
-  const [refreshingAgents, setRefreshingAgents] = useState(false);
   const pageSize = 10;
 
   // Filter and sort agents
@@ -282,13 +280,13 @@ const Index = () => {
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Auto-refresh data every minute
+  // Auto-refresh data every 5 minutes (reduced for mobile performance)
   useEffect(() => {
     const intervalId = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["tenant-locations"] });
       queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
-    }, 60000); // 60000ms = 1 minute
+    }, 300000); // 300000ms = 5 minutes
 
     return () => clearInterval(intervalId);
   }, [queryClient]);
@@ -695,12 +693,6 @@ const Index = () => {
                       <UserCog className="h-6 w-6" />
                       Active Agents ({agents?.length || 0})
                     </CardTitle>
-                    {refreshingAgents && (
-                      <Badge variant="outline" className="animate-in fade-in slide-in-from-left-2 flex items-center gap-1.5 border-primary/50 text-primary">
-                        <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                        Live
-                      </Badge>
-                    )}
                   </div>
                   <Link to="/agent-management">
                     <Button variant="outline" size="sm">
@@ -763,21 +755,12 @@ const Index = () => {
                         filteredAndSortedAgents.map((agent) => {
                           const stats = agentStats[agent.id] || { totalTenants: 0, activeTenants: 0, totalCollected: 0 };
                           return (
-                            <Card key={agent.id} className={`hover:shadow-lg transition-all ${refreshingAgents ? 'ring-2 ring-primary/30' : ''}`}>
+                            <Card key={agent.id} className="hover:shadow-lg transition-all">
                               <CardContent className="pt-6">
-                                {refreshingAgents && (
-                                  <div className="flex items-center gap-2 mb-3 text-xs text-primary animate-in fade-in slide-in-from-top-1">
-                                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                                    <span className="font-medium">Live update...</span>
-                                  </div>
-                                )}
                                 <div className="flex items-start justify-between mb-4">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                       <h3 className="font-semibold text-lg">{agent.name}</h3>
-                                      {refreshingAgents && (
-                                        <Zap className="h-4 w-4 text-primary animate-pulse" />
-                                      )}
                                     </div>
                                     {agent.phone && (
                                       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 mt-2">
