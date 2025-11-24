@@ -1,14 +1,16 @@
 import { ReactNode, useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 
 interface SwipeableCardsProps {
   children: ReactNode[];
   className?: string;
+  onAddNew?: () => void;
+  addButtonLabel?: string;
 }
 
-export const SwipeableCards = ({ children, className }: SwipeableCardsProps) => {
+export const SwipeableCards = ({ children, className, onAddNew, addButtonLabel = "Add New" }: SwipeableCardsProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -97,6 +99,16 @@ export const SwipeableCards = ({ children, className }: SwipeableCardsProps) => 
     return null;
   }
 
+  const handleAddClick = () => {
+    if (onAddNew) {
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(30);
+      }
+      onAddNew();
+    }
+  };
+
   return (
     <div className={cn("relative w-full", className)}>
       {/* Desktop view - show all cards */}
@@ -105,7 +117,7 @@ export const SwipeableCards = ({ children, className }: SwipeableCardsProps) => 
       </div>
 
       {/* Mobile view - swipeable cards */}
-      <div className="md:hidden">
+      <div className="md:hidden relative">
         <div
           ref={containerRef}
           className="relative overflow-hidden"
@@ -202,6 +214,26 @@ export const SwipeableCards = ({ children, className }: SwipeableCardsProps) => 
           <p className="text-center text-xs text-muted-foreground mt-2 animate-pulse">
             👈 Swipe to navigate 👉
           </p>
+        )}
+
+        {/* Floating Action Button - Add New */}
+        {onAddNew && (
+          <Button
+            onClick={handleAddClick}
+            size="lg"
+            className={cn(
+              "fixed bottom-20 right-4 z-40 rounded-full shadow-lg",
+              "h-14 w-14 p-0",
+              "bg-gradient-to-r from-primary to-accent",
+              "hover:shadow-xl hover:scale-110",
+              "transition-all duration-300",
+              "tap-target",
+              "animate-in slide-in-from-bottom-4 fade-in duration-500"
+            )}
+            aria-label={addButtonLabel}
+          >
+            <Plus className="h-6 w-6 text-primary-foreground" />
+          </Button>
         )}
       </div>
     </div>
