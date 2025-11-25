@@ -1,7 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit, MessageSquare, Send, CreditCard, Sparkles, ArrowLeftRight, UserCog } from "lucide-react";
+import { User, Phone, MapPin, TrendingUp, Calendar, DollarSign, Trash2, Wallet, UserCheck, Edit, MessageSquare, Send, CreditCard, Sparkles, ArrowLeftRight, UserCog, Share2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { Tenant, calculateRepaymentDetails } from "@/data/tenants";
 import { useNavigate } from "react-router-dom";
 import { EditTenantForm } from "./EditTenantForm";
@@ -48,6 +50,7 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commenterName, setCommenterName] = useState("");
   const [commentText, setCommentText] = useState("");
+  const [commentCategory, setCommentCategory] = useState("");
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isAssignAgentOpen, setIsAssignAgentOpen] = useState(false);
 
@@ -425,6 +428,17 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
                 onChange={(e) => setCommenterName(e.target.value)}
                 className="text-sm border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500"
               />
+              <Select value={commentCategory} onValueChange={setCommentCategory}>
+                <SelectTrigger className="text-sm border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Pays using cash</SelectItem>
+                  <SelectItem value="mobile_money">Pays using mobile money</SelectItem>
+                  <SelectItem value="bank_transfer">Pays using bank transfer</SelectItem>
+                  <SelectItem value="other">Other payment method</SelectItem>
+                </SelectContent>
+              </Select>
               <Textarea
                 placeholder="Share your thoughts..."
                 value={commentText}
@@ -436,16 +450,18 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (commenterName.trim() && commentText.trim()) {
+                  if (commenterName.trim() && commentText.trim() && commentCategory) {
                     addComment.mutate({
                       commenterName: commenterName.trim(),
                       commentText: commentText.trim(),
+                      category: commentCategory,
                     });
                     setCommenterName("");
                     setCommentText("");
+                    setCommentCategory("");
                   }
                 }}
-                disabled={!commenterName.trim() || !commentText.trim() || addComment.isPending}
+                disabled={!commenterName.trim() || !commentText.trim() || !commentCategory || addComment.isPending}
               >
                 <Send className="w-4 h-4 mr-2" />
                 <span className="font-semibold">Post Comment</span>
@@ -455,40 +471,69 @@ export const TenantCard = ({ tenant, tenantNumber, isFiltered = false }: TenantC
             {/* Comments List */}
             <div className="space-y-2">
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="p-3 rounded-lg bg-card border border-border"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-sm text-foreground">
-                            {comment.commenter_name}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(comment.created_at).toLocaleDateString()} at{" "}
-                            {new Date(comment.created_at).toLocaleTimeString()}
-                          </span>
+                {comments.map((comment) => {
+                  const categoryLabel = comment.category === 'cash' ? 'Pays using cash' :
+                    comment.category === 'mobile_money' ? 'Pays using mobile money' :
+                    comment.category === 'bank_transfer' ? 'Pays using bank transfer' :
+                    comment.category === 'other' ? 'Other payment method' : '';
+                  
+                  const shareMessage = `Tenant: ${tenant.name}\nComment by: ${comment.commenter_name}\n${categoryLabel ? `Payment Method: ${categoryLabel}\n` : ''}Comment: ${comment.comment_text}\nDate: ${new Date(comment.created_at).toLocaleDateString()}`;
+                  
+                  return (
+                    <div
+                      key={comment.id}
+                      className="p-3 rounded-lg bg-card border border-border"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="font-semibold text-sm text-foreground">
+                              {comment.commenter_name}
+                            </span>
+                            {comment.category && (
+                              <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 text-xs font-medium">
+                                {categoryLabel}
+                              </span>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(comment.created_at).toLocaleDateString()} at{" "}
+                              {new Date(comment.created_at).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-foreground break-words">
+                            {comment.comment_text}
+                          </p>
                         </div>
-                        <p className="text-sm text-foreground break-words">
-                          {comment.comment_text}
-                        </p>
+                        <div className="flex gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const encodedMessage = encodeURIComponent(shareMessage);
+                              window.open(`https://wa.me/?text=${encodedMessage}`, "_blank");
+                            }}
+                            title="Share on WhatsApp"
+                          >
+                            <Share2 className="h-3 w-3 text-green-600 dark:text-green-400" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteComment.mutate(comment.id);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteComment.mutate(comment.id);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {comments.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No comments yet. Be the first to comment!

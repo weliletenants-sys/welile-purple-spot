@@ -8,6 +8,7 @@ export interface TenantComment {
   tenant_id: string;
   comment_text: string;
   commenter_name: string;
+  category?: string;
   created_at: string;
   updated_at: string;
 }
@@ -37,13 +38,14 @@ export const useTenantComments = (tenantId: string) => {
   const totalComments = allComments?.length || 0;
 
   const addComment = useMutation({
-    mutationFn: async ({ commentText, commenterName }: { commentText: string; commenterName: string }) => {
+    mutationFn: async ({ commentText, commenterName, category }: { commentText: string; commenterName: string; category?: string }) => {
       const { data, error } = await supabase
         .from("tenant_comments")
         .insert({
           tenant_id: tenantId,
           comment_text: commentText,
           commenter_name: commenterName,
+          category: category || null,
         })
         .select()
         .single();
