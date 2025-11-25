@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, UserPlus, ArrowLeft, Lock, Search, Download, FileSpreadsheet, TrendingUp, DollarSign, Target, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Pencil, Trash2, UserPlus, ArrowLeft, Lock, Search, Download, FileSpreadsheet, TrendingUp, DollarSign, Target, ArrowUpDown, ArrowUp, ArrowDown, KeyRound } from "lucide-react";
 import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
+import { AgentAccountSetup } from "@/components/AgentAccountSetup";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -37,6 +38,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { Users, UserCheck, UserPlus2, Activity, Clock } from "lucide-react";
@@ -52,6 +59,7 @@ interface Agent {
   last_action_at?: string;
   last_action_type?: string;
   last_login_at?: string;
+  user_id?: string | null;
 }
 
 interface AgentPerformance {
@@ -77,6 +85,8 @@ const AgentManagement = () => {
   const [agentPerformance, setAgentPerformance] = useState<Record<string, AgentPerformance>>({});
   const [sortColumn, setSortColumn] = useState<string>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [setupDialogOpen, setSetupDialogOpen] = useState(false);
+  const [agentToSetup, setAgentToSetup] = useState<Agent | null>(null);
 
   // Check if user is already authorized
   useEffect(() => {
@@ -879,6 +889,25 @@ const AgentManagement = () => {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
+                                {!agent.user_id && agent.is_active && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                          setAgentToSetup(agent);
+                                          setSetupDialogOpen(true);
+                                        }}
+                                        title="Setup auth account"
+                                        className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                                      >
+                                        <KeyRound className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Setup Login Account</TooltipContent>
+                                  </Tooltip>
+                                )}
                                 <EditAgentDialog
                                   agent={agent}
                                   onSuccess={() => {
@@ -928,6 +957,30 @@ const AgentManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={setupDialogOpen} onOpenChange={setSetupDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Setup Agent Login Account</DialogTitle>
+          </DialogHeader>
+          {agentToSetup && (
+            <AgentAccountSetup
+              agentId={agentToSetup.id}
+              agentName={agentToSetup.name}
+              agentPhone={agentToSetup.phone || ""}
+              onSuccess={() => {
+                setSetupDialogOpen(false);
+                setAgentToSetup(null);
+                fetchFullAgents();
+                toast({
+                  title: "Success",
+                  description: "Agent account setup successfully",
+                });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

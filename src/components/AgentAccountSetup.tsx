@@ -28,35 +28,18 @@ export function AgentAccountSetup({ agentId, agentName, agentPhone, onSuccess }:
 
     setIsLoading(true);
     try {
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: {
-          name: agentName,
-          phone: agentPhone,
+      // Call edge function to create account securely
+      const { data, error } = await supabase.functions.invoke("setup-agent-account", {
+        body: {
+          agentId,
+          email,
+          agentName,
+          agentPhone,
         },
       });
 
-      if (authError) throw authError;
-
-      // Link agent to auth user
-      const { error: updateError } = await supabase
-        .from('agents')
-        .update({ user_id: authData.user.id })
-        .eq('id', agentId);
-
-      if (updateError) throw updateError;
-
-      // Send magic link for first login
-      const { error: linkError } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
-        }
-      });
-
-      if (linkError) throw linkError;
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
       toast.success(`Account created! Login link sent to ${email}`);
       onSuccess?.();

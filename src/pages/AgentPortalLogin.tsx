@@ -7,68 +7,81 @@ import { Label } from "@/components/ui/label";
 import { WelileLogo } from "@/components/WelileLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UserCheck, LogIn } from "lucide-react";
+import { Mail, LogIn } from "lucide-react";
 
 const AgentPortalLogin = () => {
   const navigate = useNavigate();
-  const [agentName, setAgentName] = useState("");
-  const [agentPhone, setAgentPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!agentName || !agentPhone) {
-      toast.error("Please enter both name and phone number");
+    if (!email) {
+      toast.error("Please enter your email address");
       return;
     }
 
     setIsLoading(true);
     try {
-      // Find agent by name and phone
-      const { data: agent, error: agentError } = await supabase
-        .from('agents')
-        .select('id, user_id, phone')
-        .eq('name', agentName)
-        .eq('phone', agentPhone)
-        .maybeSingle();
-
-      if (agentError || !agent) {
-        toast.error("Agent not found. Please check your credentials.");
-        setIsLoading(false);
-        return;
-      }
-
-      // Check if agent has a linked user account
-      if (!agent.user_id) {
-        toast.error("This agent account needs to be set up. Please contact admin.");
-        setIsLoading(false);
-        return;
-      }
-
-      // Sign in with magic link (passwordless)
-      const email = `${agentPhone}@agent.welile.local`; // Generate email from phone
-      const { error: signInError } = await supabase.auth.signInWithOtp({
+      // Send magic link
+      const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          shouldCreateUser: false, // Don't create new users
+          emailRedirectTo: `${window.location.origin}/agent-portal`,
         }
       });
 
-      if (signInError) {
-        toast.error("Failed to send login link. Please try again.");
-        setIsLoading(false);
-        return;
-      }
+      if (error) throw error;
 
-      toast.success("Login link sent! Check your registered email.");
-    } catch (error) {
+      setEmailSent(true);
+      toast.success("Login link sent! Check your email.");
+    } catch (error: any) {
       console.error('Login error:', error);
-      toast.error("Failed to login. Please try again.");
+      toast.error(error.message || "Failed to send login link");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-4">
+            <div className="flex justify-center">
+              <WelileLogo />
+            </div>
+            <div className="text-center">
+              <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                <Mail className="h-6 w-6 text-primary" />
+                Check Your Email
+              </CardTitle>
+              <CardDescription className="mt-2">
+                We've sent you a login link to {email}
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground text-center">
+              Click the link in your email to access your agent portal.
+            </p>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setEmailSent(false);
+                setEmail("");
+              }}
+            >
+              Try another email
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background flex items-center justify-center p-4">
@@ -79,41 +92,31 @@ const AgentPortalLogin = () => {
           </div>
           <div className="text-center">
             <CardTitle className="text-2xl flex items-center justify-center gap-2">
-              <UserCheck className="h-6 w-6 text-primary" />
-              Agent Portal
+              <Mail className="h-6 w-6 text-primary" />
+              Agent Portal Login
             </CardTitle>
             <CardDescription className="mt-2">
-              Access your performance dashboard
+              Enter your email to receive a login link
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="agentName">Agent Name</Label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
-                id="agentName"
-                placeholder="Enter your full name"
-                value={agentName}
-                onChange={(e) => setAgentName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="agentPhone">Phone Number</Label>
-              <Input
-                id="agentPhone"
-                placeholder="Enter your phone number"
-                value={agentPhone}
-                onChange={(e) => setAgentPhone(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="your.email@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               <LogIn className="h-4 w-4 mr-2" />
-              {isLoading ? 'Logging in...' : 'Access Portal'}
+              {isLoading ? 'Sending link...' : 'Send Login Link'}
             </Button>
           </form>
 
