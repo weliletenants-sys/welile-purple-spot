@@ -829,6 +829,7 @@ export type Database = {
       }
       tenant_comments: {
         Row: {
+          category: string | null
           comment_text: string
           commenter_name: string
           created_at: string
@@ -837,6 +838,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           comment_text: string
           commenter_name: string
           created_at?: string
@@ -845,6 +847,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           comment_text?: string
           commenter_name?: string
           created_at?: string
