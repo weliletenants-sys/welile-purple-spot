@@ -18,6 +18,7 @@ import { AddAgentDialog } from "@/components/AddAgentDialog";
 import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import BulkUploadPipelineTenants from "@/components/BulkUploadPipelineTenants";
+import { BulkUpdateTenantAgents } from "@/components/BulkUpdateTenantAgents";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { AchievementsModal } from "@/components/AchievementsModal";
 import { LeaderboardModal } from "@/components/LeaderboardModal";
@@ -583,6 +584,14 @@ const Index = () => {
                     >
                       <div className="w-full px-2">
                         <LandlordGroupedExport />
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="p-0 mt-2"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <div className="w-full px-2">
+                        <BulkUpdateTenantAgents />
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem
