@@ -211,7 +211,7 @@ const Index = () => {
       // Search filter
       const matchesSearch = agentSearchTerm === "" || 
         agent.name.toLowerCase().includes(agentSearchTerm.toLowerCase()) ||
-        (agent.phone && agent.phone.includes(agentSearchTerm));
+        (agent.phone && agent.phone.toLowerCase().includes(agentSearchTerm.toLowerCase()));
       
       if (!matchesSearch) return false;
       
@@ -762,7 +762,7 @@ const Index = () => {
                           const searchLower = agentSearchTerm.toLowerCase();
                           return (
                             agent.name.toLowerCase().includes(searchLower) ||
-                            agent.phone.toLowerCase().includes(searchLower)
+                            (agent.phone && agent.phone.toLowerCase().includes(searchLower))
                           );
                         })
                         .sort((a, b) => {
