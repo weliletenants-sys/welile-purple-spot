@@ -25,26 +25,43 @@ const AgentPortalLogin = () => {
 
     setIsLoading(true);
     try {
-      // Verify agent exists
-      const { data: tenants } = await supabase
-        .from('tenants')
-        .select('agent_name, agent_phone')
-        .eq('agent_name', agentName)
-        .eq('agent_phone', agentPhone)
-        .limit(1);
+      // Find agent by name and phone
+      const { data: agent, error: agentError } = await supabase
+        .from('agents')
+        .select('id, user_id, phone')
+        .eq('name', agentName)
+        .eq('phone', agentPhone)
+        .maybeSingle();
 
-      if (!tenants || tenants.length === 0) {
+      if (agentError || !agent) {
         toast.error("Agent not found. Please check your credentials.");
         setIsLoading(false);
         return;
       }
 
-      // Store agent info in session storage
-      sessionStorage.setItem('agentName', agentName);
-      sessionStorage.setItem('agentPhone', agentPhone);
-      
-      toast.success(`Welcome back, ${agentName}!`);
-      navigate('/agent-portal');
+      // Check if agent has a linked user account
+      if (!agent.user_id) {
+        toast.error("This agent account needs to be set up. Please contact admin.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Sign in with magic link (passwordless)
+      const email = `${agentPhone}@agent.welile.local`; // Generate email from phone
+      const { error: signInError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false, // Don't create new users
+        }
+      });
+
+      if (signInError) {
+        toast.error("Failed to send login link. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      toast.success("Login link sent! Check your registered email.");
     } catch (error) {
       console.error('Login error:', error);
       toast.error("Failed to login. Please try again.");

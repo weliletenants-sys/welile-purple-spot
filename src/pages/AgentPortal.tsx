@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEarningsNotifications } from "@/hooks/useEarningsNotifications";
 import { AgentTransferTenantDialog } from "@/components/AgentTransferTenantDialog";
 import { AgentTransferHistory } from "@/components/AgentTransferHistory";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AgentStats {
   tenantsManaged: number;
@@ -31,7 +32,9 @@ interface Certificate {
 
 const AgentPortal = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [agentName, setAgentName] = useState("");
+  const [agentId, setAgentId] = useState<string | null>(null);
   const [stats, setStats] = useState<AgentStats | null>(null);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,34 +54,44 @@ const AgentPortal = () => {
   });
 
   useEffect(() => {
-    // Check if agent is logged in
-    const storedAgentName = sessionStorage.getItem('agentName');
-    const storedAgentPhone = sessionStorage.getItem('agentPhone');
-
-    if (!storedAgentName || !storedAgentPhone) {
+    // Check authentication
+    if (authLoading) return;
+    
+    if (!user) {
       navigate('/agent-portal-login');
       return;
     }
 
-    setAgentName(storedAgentName);
-    fetchAgentData(storedAgentName);
-    fetchTenantsList(storedAgentName);
-  }, [navigate]);
-
-  const fetchTenantsList = async (name: string) => {
-    try {
-      const { data: agentData } = await supabase
+    // Fetch agent data for authenticated user
+    const fetchAgentProfile = async () => {
+      const { data: agent, error } = await supabase
         .from('agents')
-        .select('id')
-        .eq('name', name)
+        .select('id, name')
+        .eq('user_id', user.id)
         .maybeSingle();
-      
-      if (!agentData) return;
 
+      if (error || !agent) {
+        toast.error('Agent profile not found');
+        await supabase.auth.signOut();
+        navigate('/agent-portal-login');
+        return;
+      }
+
+      setAgentName(agent.name);
+      setAgentId(agent.id);
+      fetchAgentData(agent.name);
+      fetchTenantsList(agent.id);
+    };
+
+    fetchAgentProfile();
+  }, [user, authLoading, navigate]);
+
+  const fetchTenantsList = async (id: string) => {
+    try {
       const { data: tenants } = await supabase
         .from('tenants')
         .select('id, name, contact, address, rent_amount, status, payment_status')
-        .eq('agent_id', agentData.id)
+        .eq('agent_id', id)
         .order('created_at', { ascending: false });
 
       setTenantsList(tenants || []);
@@ -203,9 +216,8 @@ const AgentPortal = () => {
     }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('agentName');
-    sessionStorage.removeItem('agentPhone');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate('/agent-portal-login');
     toast.success('Logged out successfully');
   };
