@@ -22,8 +22,6 @@ import { BulkUpdateTenantAgents } from "@/components/BulkUpdateTenantAgents";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { AchievementsModal } from "@/components/AchievementsModal";
 import { LeaderboardModal } from "@/components/LeaderboardModal";
-import { OnboardingTour } from "@/components/OnboardingTour";
-import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { LandlordGroupedExport } from "@/components/LandlordGroupedExport";
 import { AllTenantsExport } from "@/components/AllTenantsExport";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -69,7 +67,7 @@ import {
 const Index = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { showTour, completeTour, skipTour } = useOnboardingTour();
+  
   const { isAdmin } = useAdminRole();
   const { data: agents, refetch: refetchAgents } = useAgents();
   const { data: pendingCount = 0 } = usePendingTenantsCount();
@@ -328,36 +326,6 @@ const Index = () => {
     ]);
   };
 
-  const tourSteps = [
-    {
-      target: '[data-tour="stats"]',
-      title: 'Key Metrics at a Glance',
-      description: 'View your most important statistics here. Color-coded for quick understanding.',
-      position: 'bottom' as const,
-      icon: <BarChart3 className="h-5 w-5 text-primary" />
-    },
-    {
-      target: '[data-tour="navigation"]',
-      title: 'Main Navigation',
-      description: 'All major sections are accessible here. Click to explore different areas of the app.',
-      position: 'bottom' as const,
-      icon: <Menu className="h-5 w-5 text-primary" />
-    },
-    {
-      target: '[data-tour="search"]',
-      title: 'Search & Filter',
-      description: 'Quickly find any tenant using search and filters. Real-time results as you type.',
-      position: 'bottom' as const,
-      icon: <Search className="h-5 w-5 text-primary" />
-    },
-    {
-      target: '[data-tour="quick-actions"]',
-      title: 'Quick Actions Panel',
-      description: 'Access common features instantly from this floating panel. Always available while you browse.',
-      position: 'left' as const,
-      icon: <LayoutDashboard className="h-5 w-5 text-primary" />
-    },
-  ];
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -370,14 +338,6 @@ const Index = () => {
         onLeaderboardClick={() => setShowLeaderboard(true)}
       />
       <InstallPrompt />
-      
-      {showTour && (
-        <OnboardingTour
-          steps={tourSteps}
-          onComplete={completeTour}
-          onSkip={skipTour}
-        />
-      )}
 
       <AchievementsModal
         open={showAchievements}
