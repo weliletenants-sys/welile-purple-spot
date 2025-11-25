@@ -67,6 +67,7 @@ const AgentPipelineTenants = lazy(() => import("./pages/AgentPipelineTenants"));
 const TransferHistory = lazy(() => import("./pages/TransferHistory"));
 const TenantReassignmentHistory = lazy(() => import("./pages/TenantReassignmentHistory"));
 const Settings = lazy(() => import("./pages/Settings"));
+const ProcessBulkUpdate = lazy(() => import("./pages/ProcessBulkUpdate"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -173,6 +174,7 @@ const App = () => {
          <Route path="/team-earnings" element={<TeamEarningsLeaderboard />} />
          <Route path="/data-cleanup" element={<DataCleanup />} />
          <Route path="/settings" element={<Settings />} />
+         <Route path="/process-bulk-update" element={<ProcessBulkUpdate />} />
                <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
