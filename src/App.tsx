@@ -4,10 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
-import { InstallPrompt } from "@/components/InstallPrompt";
 import { InstallBanner } from "@/components/InstallBanner";
 import { HelpChatbot } from "@/components/HelpChatbot";
-import { WhatsNewModal } from "@/components/WhatsNewModal";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { DynamicBreadcrumb } from "@/components/DynamicBreadcrumb";
@@ -16,7 +14,6 @@ import { AppFooter } from "@/components/AppFooter";
 import { OfflineQueueProvider } from "@/contexts/OfflineQueueContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
 
@@ -91,8 +88,6 @@ const PageLoader = () => (
 );
 
 const App = () => {
-  const { showWhatsNew, markAsSeen, currentVersion } = useWhatsNew();
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -100,12 +95,6 @@ const App = () => {
           <OfflineIndicator />
           <SyncIndicator />
           <UpdatePrompt />
-          <InstallPrompt />
-          <WhatsNewModal 
-            open={showWhatsNew} 
-            onClose={markAsSeen} 
-            version={currentVersion}
-          />
           <Toaster />
           <Sonner />
           <BrowserRouter>
