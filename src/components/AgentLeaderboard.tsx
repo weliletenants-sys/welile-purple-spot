@@ -177,13 +177,10 @@ export const AgentLeaderboard = () => {
           {paginatedAgents.map((agent, index) => (
             <Card 
               key={agent.agentName}
-              className="p-6 bg-gradient-to-br from-card to-primary/5 border-border hover:shadow-[var(--shadow-card)] transition-all duration-300 relative group"
+              className="p-6 bg-gradient-to-br from-card to-primary/5 border-border hover:shadow-[var(--shadow-card)] transition-all duration-300 relative group cursor-pointer"
+              onClick={() => navigate(`/agent/${encodeURIComponent(agent.agentPhone || agent.agentName)}`)}
             >
-              <div 
-                className="cursor-pointer"
-                onClick={() => navigate(`/agent/${encodeURIComponent(agent.agentName)}`)}
-              >
-                <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold">
                       {startIndex + index + 1}
@@ -330,7 +327,7 @@ export const AgentLeaderboard = () => {
                   <TableRow 
                     key={agent.agentName}
                     className="hover:bg-muted/30 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/agent/${encodeURIComponent(agent.agentName)}`)}
+                    onClick={() => navigate(`/agent/${encodeURIComponent(agent.agentPhone || agent.agentName)}`)}
                   >
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
@@ -340,15 +337,9 @@ export const AgentLeaderboard = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/agent/${encodeURIComponent(agent.agentPhone || agent.agentName)}`);
-                          }}
-                          className="font-semibold text-primary hover:underline"
-                        >
+                        <span className="font-semibold">
                           {agent.agentName}
-                        </button>
+                        </span>
                         {agent.hasRecentRecordingActivity && (
                           <Badge variant="default" className="bg-gradient-to-r from-primary to-accent text-primary-foreground px-2 py-0.5 text-xs animate-pulse">
                             <Zap className="w-3 h-3 mr-1" />
