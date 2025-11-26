@@ -19,6 +19,7 @@ import { EditAgentDialog } from "@/components/EditAgentDialog";
 import { BulkUploadTenants } from "@/components/BulkUploadTenants";
 import BulkUploadPipelineTenants from "@/components/BulkUploadPipelineTenants";
 import { BulkUpdateTenantAgents } from "@/components/BulkUpdateTenantAgents";
+import { BulkDeleteTenantsDialog } from "@/components/BulkDeleteTenantsDialog";
 import { FloatingQuickActionsPanel } from "@/components/FloatingQuickActionsPanel";
 import { AchievementsModal } from "@/components/AchievementsModal";
 import { LeaderboardModal } from "@/components/LeaderboardModal";
@@ -31,13 +32,15 @@ import { useTenants } from "@/hooks/useTenants";
 import { usePendingTenantsCount } from "@/hooks/usePendingTenants";
 import { useUnderReviewTenantsCount } from "@/hooks/useUnderReviewTenants";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard, Building2, Phone, UserCog } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Search, Users, TrendingUp, MapPin, DollarSign, Menu, Award, Zap, AlertTriangle, Hourglass, BarChart3, Clock, Plus, UserPlus, FileText, LayoutDashboard, Building2, Phone, UserCog, Trash2, CheckSquare, XSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { TenantStatusBreakdownDialog } from "@/components/TenantStatusBreakdownDialog";
+import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { AddTenantForm } from "@/components/AddTenantForm";
 import { QuickAddTenantForm } from "@/components/QuickAddTenantForm";
@@ -186,6 +189,7 @@ const Index = () => {
     return statsMap;
   }, [agents, allTenants, allPayments]);
 
+  const { toast } = useToast();
   const [showAchievements, setShowAchievements] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showTenantBreakdown, setShowTenantBreakdown] = useState(false);
@@ -199,6 +203,8 @@ const Index = () => {
   const [agentSearchTerm, setAgentSearchTerm] = useState("");
   const [agentSortBy, setAgentSortBy] = useState<"name" | "tenants" | "active">("name");
   const [agentTenantCountFilter, setAgentTenantCountFilter] = useState<"all" | "active" | "inactive">("all");
+  const [selectedTenantIds, setSelectedTenantIds] = useState<Set<string>>(new Set());
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
   const pageSize = 10;
 
   // Filter and sort agents
@@ -324,6 +330,65 @@ const Index = () => {
       queryClient.invalidateQueries({ queryKey: ["pipelineTenantsCount"] }),
       refetchAgents(),
     ]);
+  };
+
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (tenantIds: string[]) => {
+      // Delete in parallel for better performance
+      const deletePromises = tenantIds.map(async (tenantId) => {
+        // Delete daily payments
+        await supabase.from("daily_payments").delete().eq("tenant_id", tenantId);
+        // Delete agent earnings
+        await supabase.from("agent_earnings").delete().eq("tenant_id", tenantId);
+        // Delete tenant
+        const { error } = await supabase.from("tenants").delete().eq("id", tenantId);
+        if (error) throw error;
+      });
+      
+      await Promise.all(deletePromises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["executiveStats"] });
+      queryClient.invalidateQueries({ queryKey: ["all-tenants-for-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["pipelineTenantsCount"] });
+      toast({
+        title: "Success",
+        description: `${selectedTenantIds.size} tenant(s) deleted successfully.`,
+      });
+      setSelectedTenantIds(new Set());
+      setShowBulkDelete(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete tenants: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBulkDelete = async () => {
+    await bulkDeleteMutation.mutateAsync(Array.from(selectedTenantIds));
+  };
+
+  const toggleTenantSelection = (tenantId: string) => {
+    const newSelection = new Set(selectedTenantIds);
+    if (newSelection.has(tenantId)) {
+      newSelection.delete(tenantId);
+    } else {
+      newSelection.add(tenantId);
+    }
+    setSelectedTenantIds(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedTenantIds.size === tenants.length) {
+      setSelectedTenantIds(new Set());
+    } else {
+      setSelectedTenantIds(new Set(tenants.map(t => t.id)));
+    }
   };
 
 
@@ -566,6 +631,15 @@ const Index = () => {
                     >
                       <BulkUploadPipelineTenants />
                     </DropdownMenuItem>
+                    {selectedTenantIds.size > 0 && (
+                      <DropdownMenuItem
+                        className="cursor-pointer bg-destructive/10 text-destructive hover:bg-destructive/20 font-semibold py-3 px-4 rounded-md mt-2 flex items-center gap-2 border-2 border-destructive/30"
+                        onClick={() => setShowBulkDelete(true)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>🗑️ Delete {selectedTenantIds.size} Selected</span>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       className="cursor-pointer bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 text-green-700 dark:text-green-400 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-950/30 dark:hover:to-emerald-950/30 font-semibold py-3 px-4 rounded-md mt-2 flex items-center gap-2 border-2 border-green-200 dark:border-green-800"
                       onClick={() => navigate("/add-pipeline")}
@@ -1121,16 +1195,52 @@ const Index = () => {
           </TooltipProvider>
         </div>
 
-        {/* Results Count */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <p className="text-sm text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalCount)}</span> of <span className="font-semibold text-foreground">{totalCount.toLocaleString()}</span> tenant{totalCount !== 1 ? 's' : ''}
-          </p>
-          {totalPages > 1 && (
+        {/* Results Count & Bulk Selection */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1">
             <p className="text-sm text-muted-foreground">
-              Page <span className="font-semibold text-foreground">{currentPage}</span> of <span className="font-semibold text-foreground">{totalPages}</span>
+              Showing <span className="font-semibold text-foreground">{((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalCount)}</span> of <span className="font-semibold text-foreground">{totalCount.toLocaleString()}</span> tenant{totalCount !== 1 ? 's' : ''}
             </p>
-          )}
+            {totalPages > 1 && (
+              <p className="text-sm text-muted-foreground">
+                Page <span className="font-semibold text-foreground">{currentPage}</span> of <span className="font-semibold text-foreground">{totalPages}</span>
+              </p>
+            )}
+          </div>
+          
+          {/* Bulk Selection Toolbar */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSelectAll}
+              className="gap-2"
+            >
+              {selectedTenantIds.size === tenants.length && tenants.length > 0 ? (
+                <>
+                  <XSquare className="h-4 w-4" />
+                  Deselect All
+                </>
+              ) : (
+                <>
+                  <CheckSquare className="h-4 w-4" />
+                  Select All
+                </>
+              )}
+            </Button>
+            
+            {selectedTenantIds.size > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowBulkDelete(true)}
+                className="gap-2 animate-fade-in"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete {selectedTenantIds.size} Selected
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Tenant Cards Grid - Fully responsive for all devices */}
@@ -1185,12 +1295,21 @@ const Index = () => {
               addButtonLabel="Add Tenant"
             >
               {tenants.map((tenant, index) => (
-                <TenantCard 
-                  key={tenant.id} 
-                  tenant={tenant} 
-                  tenantNumber={((currentPage - 1) * pageSize) + index + 1}
-                  isFiltered={debouncedSearchTerm.length > 0} 
-                />
+                <div key={tenant.id} className="relative">
+                  <div className="absolute top-4 left-4 z-10">
+                    <Checkbox
+                      checked={selectedTenantIds.has(tenant.id)}
+                      onCheckedChange={() => toggleTenantSelection(tenant.id)}
+                      className="bg-background border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      aria-label={`Select ${tenant.name}`}
+                    />
+                  </div>
+                  <TenantCard 
+                    tenant={tenant} 
+                    tenantNumber={((currentPage - 1) * pageSize) + index + 1}
+                    isFiltered={debouncedSearchTerm.length > 0} 
+                  />
+                </div>
               ))}
             </SwipeableCards>
           )}
@@ -1310,6 +1429,15 @@ const Index = () => {
         activeCount={stats.active}
         pendingCount={pendingCount}
         underReviewCount={underReviewCount}
+      />
+
+      {/* Bulk Delete Dialog */}
+      <BulkDeleteTenantsDialog
+        open={showBulkDelete}
+        onClose={() => setShowBulkDelete(false)}
+        onConfirm={handleBulkDelete}
+        tenantCount={selectedTenantIds.size}
+        isSubmitting={bulkDeleteMutation.isPending}
       />
       
       {/* Scroll to Top Button */}
